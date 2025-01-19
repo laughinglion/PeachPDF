@@ -264,10 +264,23 @@ namespace PeachPDF
         public List<LinkElementData<XRect>> GetLinks()
         {
             var linkElements = new List<LinkElementData<XRect>>();
+
+            var baseElement = DomUtils.GetBoxByTagName(HtmlContainerInt.Root, "base");
+            var baseUrl = "";
+
+            if (baseElement is not null)
+            {
+                baseUrl = baseElement.HtmlTag.TryGetAttribute("href", "");
+            }
+
             foreach (var link in HtmlContainerInt.GetLinks())
             {
-                linkElements.Add(new LinkElementData<XRect>(link.Id, link.Href, Utils.Convert(link.Rectangle)));
+                var linkHref = link.Href;
+                var href = linkHref.StartsWith('#') ? linkHref : baseUrl + linkHref;
+
+                linkElements.Add(new LinkElementData<XRect>(link.Id, href, Utils.Convert(link.Rectangle)));
             }
+
             return linkElements;
         }
 

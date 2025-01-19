@@ -285,19 +285,43 @@ namespace PeachPDF.Html.Core.Utils
         /// <returns>css box if exists or null</returns>
         public static CssBox GetBoxById(CssBox box, string id)
         {
-            if (box != null && !string.IsNullOrEmpty(id))
-            {
-                if (box.HtmlTag != null && id.Equals(box.HtmlTag.TryGetAttribute("id"), StringComparison.OrdinalIgnoreCase))
-                {
-                    return box;
-                }
+            if (box == null || string.IsNullOrEmpty(id)) return null;
 
-                foreach (var childBox in box.Boxes)
-                {
-                    var foundBox = GetBoxById(childBox, id);
-                    if (foundBox != null)
-                        return foundBox;
-                }
+            if (box.HtmlTag != null && id.Equals(box.HtmlTag.TryGetAttribute("id"), StringComparison.OrdinalIgnoreCase))
+            {
+                return box;
+            }
+
+            foreach (var childBox in box.Boxes)
+            {
+                var foundBox = GetBoxById(childBox, id);
+                if (foundBox != null)
+                    return foundBox;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Gets css box under the given subtree with the given tag name
+        /// </summary>
+        /// <param name="box">the box to start search from</param>
+        /// <param name="tagName">the tag name to find the box by</param>
+        /// <returns>css box if exists or null</returns>
+        public static CssBox GetBoxByTagName(CssBox box, string tagName)
+        {
+            if (box == null || string.IsNullOrEmpty(tagName)) return null;
+
+            if (box.HtmlTag is not null && box.HtmlTag.Name.Equals(tagName, StringComparison.OrdinalIgnoreCase))
+            {
+                return box;
+            }
+
+            foreach (var childBox in box.Boxes)
+            {
+                var foundBox = GetBoxByTagName(childBox, tagName);
+                if (foundBox != null)
+                    return foundBox;
             }
 
             return null;

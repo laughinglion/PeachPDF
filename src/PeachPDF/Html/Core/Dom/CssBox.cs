@@ -641,13 +641,10 @@ namespace PeachPDF.Html.Core.Dom
 
             CreateListItemBox(g);
 
-            if (!IsFixed)
-            {
-                var actualWidth = Math.Max(GetMinimumWidth() + GetWidthMarginDeep(this), Size.Width < 90999 ? ActualRight - HtmlContainer.Root.Location.X : 0);
-                HtmlContainer.ActualSize = CommonUtils.Max(HtmlContainer.ActualSize, new RSize(actualWidth, ActualBottom - HtmlContainer.Root.Location.Y));
-            }
+            if (IsFixed) return;
 
-            Console.WriteLine("layout performed: " + HtmlTag + "[w: " + Size.Width + ", h: " + Size.Height + "]");
+            var actualWidth = Math.Max(GetMinimumWidth() + GetWidthMarginDeep(this), Size.Width < 90999 ? ActualRight - HtmlContainer.Root.Location.X : 0);
+            HtmlContainer.ActualSize = CommonUtils.Max(HtmlContainer.ActualSize, new RSize(actualWidth, ActualBottom - HtmlContainer.Root.Location.Y));
         }
 
         /// <summary>
