@@ -12,6 +12,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using PeachPDF.Html.Adapters;
 using PeachPDF.Html.Adapters.Entities;
 using PeachPDF.Html.Core.Utils;
@@ -197,29 +198,6 @@ namespace PeachPDF.Html.Core.Dom
             {
                 b.OffsetTop(dist);
             }
-
-            //float top = cell.ClientTop;
-            //float bottom = cell.ClientBottom;
-            //bool middle = cell.VerticalAlign == CssConstants.Middle;
-
-            //foreach (LineBox line in cell.LineBoxes)
-            //{
-            //    for (int i = 0; i < line.RelatedBoxes.Count; i++)
-            //    {
-
-            //        double diff = bottom - line.RelatedBoxes[i].Rectangles[line].Bottom;
-            //        if (middle) diff /= 2f;
-            //        RectangleF r = line.RelatedBoxes[i].Rectangles[line];
-            //        line.RelatedBoxes[i].Rectangles[line] = new RectangleF(r.X, r.Y + diff, r.Width, r.Height);
-
-            //    }
-
-            //    foreach (BoxWord word in line.Words)
-            //    {
-            //        double gap = word.Top - top;
-            //        word.Top = bottom - gap - word.Height;
-            //    }
-            //}
         }
 
 
@@ -477,7 +455,7 @@ namespace PeachPDF.Html.Core.Dom
             if (line.Words.Count > 0)
             {
                 double left = line.Words[0].Left;
-                double right = line.Words[line.Words.Count - 1].Right;
+                double right = line.Words[^1].Right;
 
                 foreach (CssRect word in line.Words)
                 {
@@ -547,17 +525,9 @@ namespace PeachPDF.Html.Core.Dom
                         lineBox.SetBaseLine(g, box, baseline - lineBox.Rectangles[box].Height * .2f);
                         break;
                     case CssConstants.TextTop:
-
-                        break;
                     case CssConstants.TextBottom:
-
-                        break;
                     case CssConstants.Top:
-
-                        break;
                     case CssConstants.Bottom:
-
-                        break;
                     case CssConstants.Middle:
 
                         break;
@@ -576,7 +546,7 @@ namespace PeachPDF.Html.Core.Dom
         /// <param name="lineBox"></param>
         private static void ApplyJustifyAlignment(RGraphics g, CssLineBox lineBox)
         {
-            if (lineBox.Equals(lineBox.OwnerBox.LineBoxes[lineBox.OwnerBox.LineBoxes.Count - 1]))
+            if (lineBox.Equals(lineBox.OwnerBox.LineBoxes[^1]))
                 return;
 
             double indent = lineBox.Equals(lineBox.OwnerBox.LineBoxes[0]) ? lineBox.OwnerBox.ActualTextIndent : 0f;
@@ -601,7 +571,7 @@ namespace PeachPDF.Html.Core.Dom
                 word.Left = curx;
                 curx = word.Right + spacing;
 
-                if (word == lineBox.Words[lineBox.Words.Count - 1])
+                if (word == lineBox.Words[^1])
                 {
                     word.Left = lineBox.OwnerBox.ClientRight - word.Width;
                 }
@@ -618,7 +588,7 @@ namespace PeachPDF.Html.Core.Dom
             if (line.Words.Count == 0)
                 return;
 
-            CssRect lastWord = line.Words[line.Words.Count - 1];
+            CssRect lastWord = line.Words[^1];
             double right = line.OwnerBox.ActualRight - line.OwnerBox.ActualPaddingRight - line.OwnerBox.ActualBorderRightWidth;
             double diff = right - lastWord.Right - lastWord.OwnerBox.ActualBorderRightWidth - lastWord.OwnerBox.ActualPaddingRight;
             diff /= 2;
@@ -652,7 +622,7 @@ namespace PeachPDF.Html.Core.Dom
                 return;
 
 
-            CssRect lastWord = line.Words[line.Words.Count - 1];
+            CssRect lastWord = line.Words[^1];
             double right = line.OwnerBox.ActualRight - line.OwnerBox.ActualPaddingRight - line.OwnerBox.ActualBorderRightWidth;
             double diff = right - lastWord.Right - lastWord.OwnerBox.ActualBorderRightWidth - lastWord.OwnerBox.ActualPaddingRight;
 
@@ -681,22 +651,7 @@ namespace PeachPDF.Html.Core.Dom
         /// <param name="line"></param>
         private static void ApplyLeftAlignment(RGraphics g, CssLineBox line)
         {
-            //No alignment needed.
 
-            //foreach (LineBoxRectangle r in line.Rectangles)
-            //{
-            //    double curx = r.Left + (r.Index == 0 ? r.OwnerBox.ActualPaddingLeft + r.OwnerBox.ActualBorderLeftWidth / 2 : 0);
-
-            //    if (r.SpaceBefore) curx += r.OwnerBox.ActualWordSpacing;
-
-            //    foreach (BoxWord word in r.Words)
-            //    {
-            //        word.Left = curx;
-            //        word.Top = r.Top;// +r.OwnerBox.ActualPaddingTop + r.OwnerBox.ActualBorderTopWidth / 2;
-
-            //        curx = word.Right + r.OwnerBox.ActualWordSpacing;
-            //    }
-            //}
         }
 
         /// <summary>
@@ -704,12 +659,7 @@ namespace PeachPDF.Html.Core.Dom
         /// </summary>
         private static List<T> ToList<T>(IEnumerable<T> collection)
         {
-            List<T> result = new List<T>();
-            foreach (T item in collection)
-            {
-                result.Add(item);
-            }
-            return result;
+            return collection.ToList();
         }
 
         #endregion

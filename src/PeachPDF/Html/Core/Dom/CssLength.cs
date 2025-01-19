@@ -16,11 +16,6 @@ namespace PeachPDF.Html.Core.Dom
         #region Fields
 
         private readonly double _number;
-        private readonly bool _isRelative;
-        private readonly CssUnit _unit;
-        private readonly string _length;
-        private readonly bool _isPercentage;
-        private readonly bool _hasError;
 
         #endregion
 
@@ -31,20 +26,20 @@ namespace PeachPDF.Html.Core.Dom
         /// <param name="length">Length as specified in the Style Sheet or style fragment</param>
         public CssLength(string length)
         {
-            _length = length;
+            Length = length;
             _number = 0f;
-            _unit = CssUnit.None;
-            _isPercentage = false;
+            Unit = CssUnit.None;
+            IsPercentage = false;
 
             //Return zero if no length specified, zero specified
             if (string.IsNullOrEmpty(length) || length == "0")
                 return;
 
             //If percentage, use ParseNumber
-            if (length.EndsWith("%"))
+            if (length.EndsWith('%'))
             {
                 _number = CssValueParser.ParseNumber(length, 1);
-                _isPercentage = true;
+                IsPercentage = true;
                 return;
             }
 
@@ -52,7 +47,7 @@ namespace PeachPDF.Html.Core.Dom
             if (length.Length < 3)
             {
                 _ = double.TryParse(length, out _number);
-                _hasError = true;
+                HasError = true;
                 return;
             }
 
@@ -60,46 +55,46 @@ namespace PeachPDF.Html.Core.Dom
             string u = length.Substring(length.Length - 2, 2);
 
             //Number of the length
-            string number = length.Substring(0, length.Length - 2);
+            string number = length[..^2];
 
             //TODO: Units behave different in paper and in screen!
             switch (u)
             {
                 case CssConstants.Em:
-                    _unit = CssUnit.Ems;
-                    _isRelative = true;
+                    Unit = CssUnit.Ems;
+                    IsRelative = true;
                     break;
                 case CssConstants.Ex:
-                    _unit = CssUnit.Ex;
-                    _isRelative = true;
+                    Unit = CssUnit.Ex;
+                    IsRelative = true;
                     break;
                 case CssConstants.Px:
-                    _unit = CssUnit.Pixels;
-                    _isRelative = true;
+                    Unit = CssUnit.Pixels;
+                    IsRelative = true;
                     break;
                 case CssConstants.Mm:
-                    _unit = CssUnit.Milimeters;
+                    Unit = CssUnit.Milimeters;
                     break;
                 case CssConstants.Cm:
-                    _unit = CssUnit.Centimeters;
+                    Unit = CssUnit.Centimeters;
                     break;
                 case CssConstants.In:
-                    _unit = CssUnit.Inches;
+                    Unit = CssUnit.Inches;
                     break;
                 case CssConstants.Pt:
-                    _unit = CssUnit.Points;
+                    Unit = CssUnit.Points;
                     break;
                 case CssConstants.Pc:
-                    _unit = CssUnit.Picas;
+                    Unit = CssUnit.Picas;
                     break;
                 default:
-                    _hasError = true;
+                    HasError = true;
                     return;
             }
 
             if (!double.TryParse(number, NumberStyles.Number, NumberFormatInfo.InvariantInfo, out _number))
             {
-                _hasError = true;
+                HasError = true;
             }
         }
 
@@ -109,52 +104,34 @@ namespace PeachPDF.Html.Core.Dom
         /// <summary>
         /// Gets the number in the length
         /// </summary>
-        public double Number
-        {
-            get { return _number; }
-        }
+        public double Number => _number;
 
         /// <summary>
         /// Gets if the length has some parsing error
         /// </summary>
-        public bool HasError
-        {
-            get { return _hasError; }
-        }
+        public bool HasError { get; }
 
 
         /// <summary>
         /// Gets if the length represents a precentage (not actually a length)
         /// </summary>
-        public bool IsPercentage
-        {
-            get { return _isPercentage; }
-        }
+        public bool IsPercentage { get; }
 
 
         /// <summary>
         /// Gets if the length is specified in relative units
         /// </summary>
-        public bool IsRelative
-        {
-            get { return _isRelative; }
-        }
+        public bool IsRelative { get; }
 
         /// <summary>
         /// Gets the unit of the length
         /// </summary>
-        public CssUnit Unit
-        {
-            get { return _unit; }
-        }
+        public CssUnit Unit { get; }
 
         /// <summary>
         /// Gets the length as specified in the string
         /// </summary>
-        public string Length
-        {
-            get { return _length; }
-        }
+        public string Length { get; }
 
         #endregion
 
@@ -174,7 +151,8 @@ namespace PeachPDF.Html.Core.Dom
             if (Unit != CssUnit.Ems)
                 throw new InvalidOperationException("Length is not in ems");
 
-            return new CssLength(string.Format("{0}pt", Convert.ToSingle(Number * emSize).ToString("0.0", NumberFormatInfo.InvariantInfo)));
+            return new CssLength(
+                $"{Convert.ToSingle(Number * emSize).ToString("0.0", NumberFormatInfo.InvariantInfo)}pt");
         }
 
         /// <summary>
@@ -190,7 +168,8 @@ namespace PeachPDF.Html.Core.Dom
             if (Unit != CssUnit.Ems)
                 throw new InvalidOperationException("Length is not in ems");
 
-            return new CssLength(string.Format("{0}px", Convert.ToSingle(Number * pixelFactor).ToString("0.0", NumberFormatInfo.InvariantInfo)));
+            return new CssLength(
+                $"{Convert.ToSingle(Number * pixelFactor).ToString("0.0", NumberFormatInfo.InvariantInfo)}px");
         }
 
         /// <summary>
@@ -209,7 +188,7 @@ namespace PeachPDF.Html.Core.Dom
             }
             else
             {
-                string u = string.Empty;
+                var u = string.Empty;
 
                 switch (Unit)
                 {
@@ -239,6 +218,8 @@ namespace PeachPDF.Html.Core.Dom
                     case CssUnit.Picas:
                         u = "pc";
                         break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
                 }
 
                 return string.Format(NumberFormatInfo.InvariantInfo, "{0}{1}", Number, u);

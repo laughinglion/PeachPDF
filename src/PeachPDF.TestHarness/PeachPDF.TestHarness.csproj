@@ -16,6 +16,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="acid2.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="rfc2324.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -28,11 +28,6 @@ namespace PeachPDF.Html.Core.Dom
     {
         #region Fields and Consts
 
-        private readonly List<CssRect> _words;
-        private readonly CssBox _ownerBox;
-        private readonly Dictionary<CssBox, RRect> _rects;
-        private readonly List<CssBox> _relatedBoxes;
-
         #endregion
 
 
@@ -41,45 +36,33 @@ namespace PeachPDF.Html.Core.Dom
         /// </summary>
         public CssLineBox(CssBox ownerBox)
         {
-            _rects = new Dictionary<CssBox, RRect>();
-            _relatedBoxes = new List<CssBox>();
-            _words = new List<CssRect>();
-            _ownerBox = ownerBox;
-            _ownerBox.LineBoxes.Add(this);
+            Rectangles = new Dictionary<CssBox, RRect>();
+            RelatedBoxes = [];
+            Words = [];
+            OwnerBox = ownerBox;
+            OwnerBox.LineBoxes.Add(this);
         }
 
         /// <summary>
         /// Gets a list of boxes related with the linebox. 
         /// To know the words of the box inside this linebox, use the <see cref="WordsOf"/> method.
         /// </summary>
-        public List<CssBox> RelatedBoxes
-        {
-            get { return _relatedBoxes; }
-        }
+        public List<CssBox> RelatedBoxes { get; }
 
         /// <summary>
         /// Gets the words inside the linebox
         /// </summary>
-        public List<CssRect> Words
-        {
-            get { return _words; }
-        }
+        public List<CssRect> Words { get; }
 
         /// <summary>
         /// Gets the owner box
         /// </summary>
-        public CssBox OwnerBox
-        {
-            get { return _ownerBox; }
-        }
+        public CssBox OwnerBox { get; }
 
         /// <summary>
         /// Gets a List of rectangles that are to be painted on this linebox
         /// </summary>
-        public Dictionary<CssBox, RRect> Rectangles
-        {
-            get { return _rects; }
-        }
+        public Dictionary<CssBox, RRect> Rectangles { get; }
 
         /// <summary>
         /// Get the height of this box line (the max height of all the words)
@@ -89,7 +72,7 @@ namespace PeachPDF.Html.Core.Dom
             get
             {
                 double height = 0;
-                foreach (var rect in _rects)
+                foreach (var rect in Rectangles)
                 {
                     height = Math.Max(height, rect.Value.Height);
                 }
@@ -105,7 +88,7 @@ namespace PeachPDF.Html.Core.Dom
             get
             {
                 double bottom = 0;
-                foreach (var rect in _rects)
+                foreach (var rect in Rectangles)
                 {
                     bottom = Math.Max(bottom, rect.Value.Bottom);
                 }
@@ -137,7 +120,7 @@ namespace PeachPDF.Html.Core.Dom
         /// <returns></returns>
         internal List<CssRect> WordsOf(CssBox box)
         {
-            List<CssRect> r = new();
+            List<CssRect> r = [];
 
             foreach (CssRect word in Words)
                 if (word.OwnerBox.Equals(box))
@@ -213,10 +196,8 @@ namespace PeachPDF.Html.Core.Dom
             //TODO: Aqui me quede, checar poniendo "by the" con un font-size de 3em
             List<CssRect> ws = WordsOf(b);
 
-            if (!Rectangles.ContainsKey(b))
+            if (!Rectangles.TryGetValue(b, out RRect r))
                 return;
-
-            RRect r = Rectangles[b];
 
             //Save top of words related to the top of rectangle
             double gap = 0f;

@@ -24,11 +24,6 @@ namespace PeachPDF.Html.Core.Utils
     internal static class CssUtils
     {
         /// <summary>
-        /// Brush for selection background
-        /// </summary>
-        public static RColor DefaultSelectionBackcolor { get; } = RColor.FromArgb(0xa9, 0x33, 0x99, 0xFF);
-
-        /// <summary>
         /// Gets the white space width of the specified box
         /// </summary>
         /// <param name="g"></param>

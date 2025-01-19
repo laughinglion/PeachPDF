@@ -140,24 +140,12 @@ namespace PeachPDF.Html.Core
         public event EventHandler LoadComplete;
 
         /// <summary>
-        /// Raised when the user clicks on a link in the html.<br/>
-        /// Allows canceling the execution of the link.
-        /// </summary>
-        public event EventHandler<HtmlLinkClickedEventArgs> LinkClicked;
-
-        /// <summary>
         /// Raised when html renderer requires refresh of the control hosting (invalidation and re-layout).
         /// </summary>
         /// <remarks>
         /// There is no guarantee that the event will be raised on the main thread, it can be raised on thread-pool thread.
         /// </remarks>
         public event EventHandler<HtmlRefreshEventArgs> Refresh;
-
-        /// <summary>
-        /// Raised when Html Renderer request scroll to specific location.<br/>
-        /// This can occur on document anchor click.
-        /// </summary>
-        public event EventHandler<HtmlScrollEventArgs> ScrollChange;
 
         /// <summary>
         /// Raised when an error occurred during html rendering.<br/>
@@ -216,17 +204,6 @@ namespace PeachPDF.Html.Core
         /// will push the html elements down.
         /// </remarks>
         public bool AvoidImagesLateLoading { get; set; }
-
-        /// <summary>
-        /// Is content selection is enabled for the rendered html (default - true).<br/>
-        /// If set to 'false' the rendered html will be static only with ability to click on links.
-        /// </summary>
-        public bool IsSelectionEnabled { get; set; } = true;
-
-        /// <summary>
-        /// Is the build-in context menu enabled and will be shown on mouse right click (default - true)
-        /// </summary>
-        public bool IsContextMenuEnabled { get; set; } = true;
 
         /// <summary>
         /// The scroll offset of the html.<br/>
@@ -326,16 +303,6 @@ namespace PeachPDF.Html.Core
         /// the root css box of the parsed html
         /// </summary>
         internal CssBox Root { get; private set; }
-
-        /// <summary>
-        /// the text fore color use for selected text
-        /// </summary>
-        internal RColor SelectionForeColor { get; set; }
-
-        /// <summary>
-        /// the back-color to use for selected text
-        /// </summary>
-        internal RColor SelectionBackColor { get; set; }
 
         /// <summary>
         /// Init with optional document and stylesheet.
@@ -600,15 +567,6 @@ namespace PeachPDF.Html.Core
         }
 
         /// <summary>
-        /// Check if the mouse is currently on the html container.<br/>
-        /// Relevant if the html container is not filled in the hosted control (location is not zero and the size is not the full size of the control).
-        /// </summary>
-        private bool IsMouseInContainer(RPoint location)
-        {
-            return location.X >= Location.X && location.X <= Location.X + ActualSize.Width && location.Y >= Location.Y + ScrollOffset.Y && location.Y <= Location.Y + ScrollOffset.Y + ActualSize.Height;
-        }
-
-        /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         private void Dispose(bool all)
@@ -617,7 +575,6 @@ namespace PeachPDF.Html.Core
             {
                 if (all)
                 {
-                    LinkClicked = null;
                     Refresh = null;
                     RenderError = null;
                     StylesheetLoad = null;

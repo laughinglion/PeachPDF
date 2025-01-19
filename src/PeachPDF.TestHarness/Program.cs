@@ -2,7 +2,7 @@
 using PeachPDF;
 using PeachPDF.PdfSharpCore;
 
-var html = File.ReadAllText("rfc2324.html");
+var html = File.ReadAllText("acid2.html");
 
 PdfGenerateConfig pdfConfig = new()
 {
@@ -15,5 +15,5 @@ var stream = new MemoryStream();
 var document = PdfGenerator.GeneratePdf(html, pdfConfig);
 document.Save(stream);
 
-File.Delete("rfc2324.pdf");
-File.WriteAllBytes("rfc2324.pdf", stream.ToArray());
+File.Delete("acid2.pdf");
+File.WriteAllBytes("acid2.pdf", stream.ToArray());

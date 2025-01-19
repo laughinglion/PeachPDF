@@ -18,26 +18,6 @@ namespace PeachPDF.Html.Core.Dom
 {
     internal sealed class HtmlTag
     {
-        #region Fields and Consts
-
-        /// <summary>
-        /// the name of the html tag
-        /// </summary>
-        private readonly string _name;
-
-        /// <summary>
-        /// if the tag is single placed; in other words it doesn't have a separate closing tag;
-        /// </summary>
-        private readonly bool _isSingle;
-
-        /// <summary>
-        /// collection of attributes and their value the html tag has
-        /// </summary>
-        private readonly Dictionary<string, string> _attributes;
-
-        #endregion
-
-
         /// <summary>
         /// Init.
         /// </summary>
@@ -48,35 +28,26 @@ namespace PeachPDF.Html.Core.Dom
         {
             ArgChecker.AssertArgNotNullOrEmpty(name, "name");
 
-            _name = name;
-            _isSingle = isSingle;
-            _attributes = attributes;
+            Name = name;
+            IsSingle = isSingle;
+            Attributes = attributes;
         }
 
         /// <summary>
         /// Gets the name of this tag
         /// </summary>
-        public string Name
-        {
-            get { return _name; }
-        }
+        public string Name { get; }
 
         /// <summary>
         /// Gets collection of attributes and their value the html tag has
         /// </summary>
-        public Dictionary<string, string> Attributes
-        {
-            get { return _attributes; }
-        }
+        public Dictionary<string, string> Attributes { get; }
 
         /// <summary>
         /// Gets if the tag is single placed; in other words it doesn't have a separate closing tag; <br/>
         /// e.g. &lt;br&gt;
         /// </summary>
-        public bool IsSingle
-        {
-            get { return _isSingle; }
-        }
+        public bool IsSingle { get; }
 
         /// <summary>
         /// is the html tag has attributes.
@@ -84,7 +55,7 @@ namespace PeachPDF.Html.Core.Dom
         /// <returns>true - has attributes, false - otherwise</returns>
         public bool HasAttributes()
         {
-            return _attributes is not null && _attributes.Count > 0;
+            return Attributes is not null && Attributes.Count > 0;
         }
 
         /// <summary>
@@ -94,7 +65,7 @@ namespace PeachPDF.Html.Core.Dom
         /// <returns>true - attribute exists, false - otherwise</returns>
         public bool HasAttribute(string attribute)
         {
-            return _attributes is not null && _attributes.ContainsKey(attribute);
+            return Attributes is not null && Attributes.ContainsKey(attribute);
         }
 
         /// <summary>
@@ -105,7 +76,7 @@ namespace PeachPDF.Html.Core.Dom
         /// <returns>attribute value or null if not found</returns>
         public string TryGetAttribute(string attribute, string defaultValue = null)
         {
-            if(_attributes is not null && _attributes.TryGetValue(attribute, out string value))
+            if(Attributes is not null && Attributes.TryGetValue(attribute, out string value))
             {
                 return value;
             }
@@ -117,13 +88,13 @@ namespace PeachPDF.Html.Core.Dom
         {
             if (Attributes is null)
             {
-                return $"<{_name}>";
+                return $"<{Name}>";
             }
 
             else
             {
                 var sb = new StringBuilder();
-                sb.Append('<').Append(_name);
+                sb.Append('<').Append(Name);
 
                 foreach(var attribute in Attributes)
                 {

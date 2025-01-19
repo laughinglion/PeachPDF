@@ -62,7 +62,6 @@ namespace PeachPDF.Html.Core.Dom
 
         protected bool _wordsSizeMeasured;
         private CssBox _listItemBox;
-        private CssLineBox _lastHostingLineBox;
 
         /// <summary>
         /// handler for loading background image
@@ -283,11 +282,7 @@ namespace PeachPDF.Html.Core.Dom
         /// <summary>
         /// Gets or sets the last linebox where content of this box appear
         /// </summary>
-        internal CssLineBox LastHostingLineBox
-        {
-            get { return _lastHostingLineBox; }
-            set { _lastHostingLineBox = value; }
-        }
+        internal CssLineBox LastHostingLineBox { get; set; }
 
         /// <summary>
         /// Create new css box for the given parent with the given html tag.<br/>
@@ -553,16 +548,20 @@ namespace PeachPDF.Html.Core.Dom
             {
                 var previousSibling = DomUtils.GetPreviousSibling(this);
 
-                var bottomRelativeToCurrentPage = previousSibling.ActualBottom;
-                var pageHeight = HtmlContainer.PageSize.Height;
-
-                while (bottomRelativeToCurrentPage > pageHeight)
+                if (previousSibling is not null)
                 {
-                    bottomRelativeToCurrentPage -= pageHeight;
-                }
 
-                var pixelsToNextPage = pageHeight - bottomRelativeToCurrentPage;
-                previousSibling.ActualBottom += pixelsToNextPage + HtmlContainer.MarginTop;
+                    var bottomRelativeToCurrentPage = previousSibling.ActualBottom;
+                    var pageHeight = HtmlContainer.PageSize.Height;
+
+                    while (bottomRelativeToCurrentPage > pageHeight)
+                    {
+                        bottomRelativeToCurrentPage -= pageHeight;
+                    }
+
+                    var pixelsToNextPage = pageHeight - bottomRelativeToCurrentPage;
+                    previousSibling.ActualBottom += pixelsToNextPage + HtmlContainer.MarginTop;
+                }
             }
 
             if (IsBlock || Display == CssConstants.ListItem || Display == CssConstants.Table || Display == CssConstants.InlineTable || Display == CssConstants.TableCell)
