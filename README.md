@@ -15,7 +15,7 @@ Install the PeachPDF package from nuget.org
 
 Simple example to render PDF 
 
-`
+```csharp
 PdfGenerateConfig pdfConfig = new(){
   PageSize = PageSize.Letter,
   PageOrientation = PageOrientation.Portrait
@@ -25,4 +25,4 @@ var stream = new MemoryStream();
 
 var document = PdfGenerator.GeneratePdf(html, pdfConfig);
 document.Save(stream);
-`
+```
