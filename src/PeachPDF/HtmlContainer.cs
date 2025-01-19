@@ -273,11 +273,11 @@ namespace PeachPDF
                 baseUrl = baseElement.HtmlTag.TryGetAttribute("href", "");
             }
 
+            Uri baseUri = new Uri(baseUrl);
+
             foreach (var link in HtmlContainerInt.GetLinks())
             {
-                var linkHref = link.Href;
-                var href = linkHref.StartsWith('#') ? linkHref : baseUrl + linkHref;
-
+                var href = link.Href.StartsWith('#') ? link.Href : new Uri(baseUri, link.Href).AbsoluteUri;
                 linkElements.Add(new LinkElementData<XRect>(link.Id, href, Utils.Convert(link.Rectangle)));
             }
 
