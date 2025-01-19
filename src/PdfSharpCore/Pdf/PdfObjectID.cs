@@ -31,7 +31,7 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 
-namespace PdfSharpCore.Pdf
+namespace PeachPDF.PdfSharpCore.Pdf
 {
     /// <summary>
     /// Represents a PDF object identifier, a pair of object and generation number.

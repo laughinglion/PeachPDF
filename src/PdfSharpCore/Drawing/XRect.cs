@@ -31,9 +31,9 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
-using PdfSharpCore.Internal;
+using PeachPDF.PdfSharpCore.Internal;
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     /// <summary>
     /// Stores a set of four floating-point numbers that represent the location and size of a rectangle.

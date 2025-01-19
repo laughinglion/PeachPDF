@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -27,13 +27,13 @@
 // DEALINGS IN THE SOFTWARE.
 #endregion
 
-using PdfSharpCore.Drawing;
-using PdfSharpCore.Fonts;
-using PdfSharpCore.Pdf.Advanced;
-using PdfSharpCore.Pdf.Annotations;
-using PdfSharpCore.Pdf.Internal;
+using PeachPDF.PdfSharpCore.Drawing;
+using PeachPDF.PdfSharpCore.Fonts;
+using PeachPDF.PdfSharpCore.Pdf.Advanced;
+using PeachPDF.PdfSharpCore.Pdf.Annotations;
+using PeachPDF.PdfSharpCore.Pdf.Internal;
 
-namespace PdfSharpCore.Pdf.AcroForms
+namespace PeachPDF.PdfSharpCore.Pdf.AcroForms
 {
     /// <summary>
     /// Represents the text field.
@@ -191,7 +191,7 @@ namespace PdfSharpCore.Pdf.AcroForms
             //"   <rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"> " + '\n' +
             //"      <rdf:Description rdf:about=\"\" " + '\n' +
             //"            xmlns:pdf=\"http://ns.adobe.com/pdf/1.3/\"> " + '\n' +
-            //"         <pdf:Producer>PDFsharp 1.40.2150-g (www.PdfSharpCore.com) (Original: Powered By Crystal)</pdf:Producer> " + '\n' +
+            //"         <pdf:Producer>PDFsharp 1.40.2150-g (www.PeachPDF.PdfSharpCore.com) (Original: Powered By Crystal)</pdf:Producer> " + '\n' +
             //"      </rdf:Description> " + '\n' +
             //"      <rdf:Description rdf:about=\"\" " + '\n' +
             //"            xmlns:xap=\"http://ns.adobe.com/xap/1.0/\"> " + '\n' +

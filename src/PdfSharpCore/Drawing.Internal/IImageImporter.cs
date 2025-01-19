@@ -30,9 +30,9 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using PdfSharpCore.Pdf;
+using PeachPDF.PdfSharpCore.Pdf;
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     /// <summary>
     /// This interface will be implemented by specialized classes, one for JPEG, one for BMP, one for PNG, one for GIF. Maybe more.

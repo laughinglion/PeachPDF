@@ -33,11 +33,11 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.ComponentModel;
-using PdfSharpCore.Fonts;
-using PdfSharpCore.Fonts.OpenType;
-using PdfSharpCore.Pdf;
+using PeachPDF.PdfSharpCore.Fonts;
+using PeachPDF.PdfSharpCore.Fonts.OpenType;
+using PeachPDF.PdfSharpCore.Pdf;
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     /// <summary>
     /// Defines an object used to draw text.

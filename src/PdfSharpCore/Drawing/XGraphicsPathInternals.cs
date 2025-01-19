@@ -39,7 +39,7 @@ using System.Windows.Media;
 using Windows.UI.Xaml.Media;
 #endif
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     /// <summary>
     /// Provides access to the internal data structures of XGraphicsPath.

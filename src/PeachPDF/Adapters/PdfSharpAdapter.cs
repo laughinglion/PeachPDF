@@ -10,16 +10,17 @@
 // - Sun Tsu,
 // "The Art of War"
 
-using PdfSharpCore.Drawing;
-using PdfSharpCore.Pdf;
-using PdfSharpCore.Utils;
-using SixLabors.Fonts;
-using System.Drawing;
-using System.IO;
-using System.Reflection;
 using PeachPDF.Html.Adapters;
 using PeachPDF.Html.Adapters.Entities;
+using PeachPDF.PdfSharpCore.Drawing;
+using PeachPDF.PdfSharpCore.Pdf;
+using PeachPDF.PdfSharpCore.Utils;
 using PeachPDF.Utilities;
+using SixLabors.Fonts;
+using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
+using System.Linq;
 
 namespace PeachPDF.Adapters
 {
@@ -28,16 +29,6 @@ namespace PeachPDF.Adapters
     /// </summary>
     internal sealed class PdfSharpAdapter : RAdapter
     {
-        #region Fields and Consts
-
-        /// <summary>
-        /// Singleton instance of global adapter.
-        /// </summary>
-        private static readonly PdfSharpAdapter _instance = new();
-
-        #endregion
-
-
         /// <summary>
         /// Init color resolve.
         /// </summary>
@@ -46,9 +37,8 @@ namespace PeachPDF.Adapters
             AddFontFamilyMapping("monospace", "Courier New");
             AddFontFamilyMapping("Helvetica", "Arial");
 
-            var fontResolverType = typeof(FontResolver);
-            string[] fonts = (string[])fontResolverType.GetField("SSupportedFonts", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null);
-
+            var fonts = FontResolver.SupportedFonts;
+            
             var fontCollection = new FontCollection();
             fontCollection.AddSystemFonts();
 
@@ -62,20 +52,18 @@ namespace PeachPDF.Adapters
         /// <summary>
         /// Singleton instance of global adapter.
         /// </summary>
-        public static PdfSharpAdapter Instance
+        public static PdfSharpAdapter Instance { get; } = new();
+
+        public override string GetCssMediaType(IEnumerable<string> mediaTypesAvailable)
         {
-            get { return _instance; }
+            return mediaTypesAvailable.Contains("print") ? "print" : "all";
         }
 
         protected override RColor GetColorInt(string colorName)
         {
-            if(System.Enum.TryParse(typeof(KnownColor), colorName, true, out object knownColor))
-            {
-                return Utils.Convert(Color.FromKnownColor((KnownColor)knownColor));
-            } else
-            {
-                return RColor.Empty;
-            }
+            return System.Enum.TryParse(typeof(KnownColor), colorName, true, out var knownColor)
+                ? Utils.Convert(Color.FromKnownColor((KnownColor)knownColor))
+                : RColor.Empty;
         }
 
         protected override RPen CreatePen(RColor color)
@@ -100,15 +88,14 @@ namespace PeachPDF.Adapters
 
         protected override RBrush CreateLinearGradientBrush(RRect rect, RColor color1, RColor color2, double angle)
         {
-            XLinearGradientMode mode;
-            if (angle < 45)
-                mode = XLinearGradientMode.ForwardDiagonal;
-            else if (angle < 90)
-                mode = XLinearGradientMode.Vertical;
-            else if (angle < 135)
-                mode = XLinearGradientMode.BackwardDiagonal;
-            else
-                mode = XLinearGradientMode.Horizontal;
+            var mode = angle switch
+            {
+                < 45 => XLinearGradientMode.ForwardDiagonal,
+                < 90 => XLinearGradientMode.Vertical,
+                < 135 => XLinearGradientMode.BackwardDiagonal,
+                _ => XLinearGradientMode.Horizontal
+            };
+
             return new BrushAdapter(new XLinearGradientBrush(Utils.Convert(rect), Utils.Convert(color1), Utils.Convert(color2), mode));
         }
 

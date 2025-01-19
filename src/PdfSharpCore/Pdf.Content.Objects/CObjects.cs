@@ -6,7 +6,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -37,7 +37,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 
-namespace PdfSharpCore.Pdf.Content.Objects // TODO: split into single files
+namespace PeachPDF.PdfSharpCore.Pdf.Content.Objects // TODO: split into single files
 {
     /// <summary>
     /// Base class for all PDF content stream objects.

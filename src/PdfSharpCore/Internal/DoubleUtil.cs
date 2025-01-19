@@ -29,8 +29,8 @@
 
 using System;
 using System.Runtime.InteropServices;
-using PdfSharpCore.Drawing;
-namespace PdfSharpCore.Internal
+using PeachPDF.PdfSharpCore.Drawing;
+namespace PeachPDF.PdfSharpCore.Internal
 {
     /// <summary>
     /// Some floating point utilities. Partially reflected from WPF, later equalized with original source code.

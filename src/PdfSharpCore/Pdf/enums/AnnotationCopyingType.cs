@@ -1,4 +1,4 @@
-﻿namespace PdfSharpCore.Pdf
+﻿namespace PeachPDF.PdfSharpCore.Pdf
 {
     /// <summary>
     /// Defines how annotations should be copied.

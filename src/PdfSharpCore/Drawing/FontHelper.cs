@@ -31,10 +31,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
-using PdfSharpCore.Fonts;
-using PdfSharpCore.Fonts.OpenType;
+using PeachPDF.PdfSharpCore.Fonts;
+using PeachPDF.PdfSharpCore.Fonts.OpenType;
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     /// <summary>
     /// Bunch of functions that do not have a better place.
@@ -99,7 +99,7 @@ namespace PdfSharpCore.Drawing
                     {
                         // Remap ch for symbol fonts.
                         ch = (char)(ch | (descriptor.FontFace.os2.usFirstCharIndex & 0xFF00));  // @@@ refactor
-                        // Used | instead of + because of: http://PdfSharpCore.codeplex.com/workitem/15954
+                        // Used | instead of + because of: http://PeachPDF.PdfSharpCore.codeplex.com/workitem/15954
                     }
                     int glyphIndex = descriptor.CharCodeToGlyphIndex(ch);
                     width += descriptor.GlyphIndexToWidth(glyphIndex);

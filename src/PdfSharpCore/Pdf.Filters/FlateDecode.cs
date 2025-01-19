@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -29,11 +29,11 @@
 
 using System;
 using System.IO;
-using PdfSharpCore.Internal;
+using PeachPDF.PdfSharpCore.Internal;
 using ICSharpCode.SharpZipLib.Zip.Compression;
 using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 
-namespace PdfSharpCore.Pdf.Filters
+namespace PeachPDF.PdfSharpCore.Pdf.Filters
 {
     /// <summary>
     /// Implements the FlateDecode filter by wrapping SharpZipLib.

@@ -30,10 +30,10 @@
 using System;
 using System.Diagnostics;
 using System.Text;
-using PdfSharpCore.Pdf.IO;
-using PdfSharpCore.Pdf.Internal;
+using PeachPDF.PdfSharpCore.Pdf.IO;
+using PeachPDF.PdfSharpCore.Pdf.Internal;
 
-namespace PdfSharpCore.Pdf
+namespace PeachPDF.PdfSharpCore.Pdf
 {
     /// <summary>
     /// Determines the encoding of a PdfString or PdfStringObject.
@@ -48,7 +48,7 @@ namespace PdfSharpCore.Pdf
         RawEncoding = PdfStringFlags.RawEncoding,
 
         /// <summary>
-        /// Not yet used by PdfSharpCore.
+        /// Not yet used by PeachPDF.PdfSharpCore.
         /// </summary>
         StandardEncoding = PdfStringFlags.StandardEncoding,
 
@@ -67,12 +67,12 @@ namespace PdfSharpCore.Pdf
         WinAnsiEncoding = PdfStringFlags.WinAnsiEncoding,
 
         /// <summary>
-        /// Not yet used by PdfSharpCore.
+        /// Not yet used by PeachPDF.PdfSharpCore.
         /// </summary>
         MacRomanEncoding = PdfStringFlags.MacExpertEncoding,
 
         /// <summary>
-        /// Not yet used by PdfSharpCore.
+        /// Not yet used by PeachPDF.PdfSharpCore.
         /// </summary>
         MacExpertEncoding = PdfStringFlags.MacExpertEncoding,
 

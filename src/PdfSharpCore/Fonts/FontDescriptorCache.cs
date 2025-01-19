@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -29,11 +29,11 @@
 
 using System;
 using System.Collections.Generic;
-using PdfSharpCore.Drawing;
-using PdfSharpCore.Fonts.OpenType;
-using PdfSharpCore.Internal;
+using PeachPDF.PdfSharpCore.Drawing;
+using PeachPDF.PdfSharpCore.Fonts.OpenType;
+using PeachPDF.PdfSharpCore.Internal;
 
-namespace PdfSharpCore.Fonts
+namespace PeachPDF.PdfSharpCore.Fonts
 {
     /// <summary>
     /// Global table of OpenType font descriptor objects.

@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -27,9 +27,9 @@
 // DEALINGS IN THE SOFTWARE.
 #endregion
 
-using PdfSharpCore.Drawing;
+using PeachPDF.PdfSharpCore.Drawing;
 
-namespace PdfSharpCore.Fonts
+namespace PeachPDF.PdfSharpCore.Fonts
 {
     /// <summary>
     /// Parameters that affect font selection.

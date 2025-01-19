@@ -31,11 +31,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Collections;
-using PdfSharpCore.Pdf.IO;
-using PdfSharpCore.Pdf.Advanced;
-using PdfSharpCore.Pdf.Annotations;
+using PeachPDF.PdfSharpCore.Pdf.IO;
+using PeachPDF.PdfSharpCore.Pdf.Advanced;
+using PeachPDF.PdfSharpCore.Pdf.Annotations;
 
-namespace PdfSharpCore.Pdf
+namespace PeachPDF.PdfSharpCore.Pdf
 {
     /// <summary>
     /// Represents the pages of the document.

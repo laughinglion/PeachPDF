@@ -12,7 +12,7 @@
 
 using PeachPDF.Html.Adapters;
 using PeachPDF.Html.Adapters.Entities;
-using PdfSharpCore.Drawing;
+using PeachPDF.PdfSharpCore.Drawing;
 
 namespace PeachPDF.Adapters
 {

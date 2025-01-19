@@ -34,16 +34,16 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Collections.Generic;
 using System.Text;
-using PdfSharpCore.Fonts.OpenType;
-using PdfSharpCore.Internal;
-using PdfSharpCore.Pdf;
-using PdfSharpCore.Pdf.Internal;
-using PdfSharpCore.Pdf.Advanced;
+using PeachPDF.PdfSharpCore.Fonts.OpenType;
+using PeachPDF.PdfSharpCore.Internal;
+using PeachPDF.PdfSharpCore.Pdf;
+using PeachPDF.PdfSharpCore.Pdf.Internal;
+using PeachPDF.PdfSharpCore.Pdf.Advanced;
 
 // ReSharper disable RedundantNameQualifier
 // ReSharper disable CompareOfFloatsByEqualityOperator
 
-namespace PdfSharpCore.Drawing.Pdf
+namespace PeachPDF.PdfSharpCore.Drawing.Pdf
 {
     /// <summary>
     /// Represents a drawing surface for PdfPages.
@@ -1335,7 +1335,7 @@ namespace PdfSharpCore.Drawing.Pdf
                 // and then mirrored text to compensate the effect that the fipping turns text upside down.
                 // I found this technique during analysis of PDF documents generated with PDFlib. Unfortunately
                 // this technique leads to several problems with programms that compose or view PDF documents
-                // generated with PdfSharpCore.
+                // generated with PeachPDF.PdfSharpCore.
                 // In PDFsharp 1.4 I implement a revised technique that does not need text mirroring any more.
 
                 DefaultViewMatrix = new XMatrix();

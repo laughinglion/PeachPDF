@@ -1,7 +1,7 @@
-﻿using PdfSharpCore.Pdf.IO;
+﻿using PeachPDF.PdfSharpCore.Pdf.IO;
 using System;
 
-namespace PdfSharpCore.Pdf.Filters
+namespace PeachPDF.PdfSharpCore.Pdf.Filters
 {
     internal static class PngFilter
     {

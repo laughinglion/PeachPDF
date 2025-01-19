@@ -29,7 +29,7 @@
 
 // ReSharper disable InconsistentNaming
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     /// <summary>
     /// Indicates how to handle the first point of a path.

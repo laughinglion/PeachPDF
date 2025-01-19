@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -31,7 +31,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace PdfSharpCore.Pdf.IO
+namespace PeachPDF.PdfSharpCore.Pdf.IO
 {
     /// <summary>
     /// Represents the stack for the shift-reduce parser. It seems that it is only needed for

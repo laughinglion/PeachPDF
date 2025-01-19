@@ -29,10 +29,10 @@
 
 using System;
 using System.Diagnostics;
-using PdfSharpCore.Pdf.Advanced;
-using PdfSharpCore.Pdf.IO;
+using PeachPDF.PdfSharpCore.Pdf.Advanced;
+using PeachPDF.PdfSharpCore.Pdf.IO;
 
-namespace PdfSharpCore.Pdf
+namespace PeachPDF.PdfSharpCore.Pdf
 {
     /// <summary>
     /// Base class of all composite PDF objects.

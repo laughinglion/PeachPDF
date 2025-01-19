@@ -11,7 +11,7 @@
 // "The Art of War"
 
 using PeachPDF.Html.Adapters;
-using PdfSharpCore.Drawing;
+using PeachPDF.PdfSharpCore.Drawing;
 
 namespace PeachPDF.Adapters
 {
@@ -21,11 +21,6 @@ namespace PeachPDF.Adapters
     internal sealed class FontAdapter : RFont
     {
         #region Fields and Consts
-
-        /// <summary>
-        /// the underline win-forms font.
-        /// </summary>
-        private readonly XFont _font;
 
         /// <summary>
         /// the vertical offset of the font underline location from the top of the font.
@@ -50,36 +45,21 @@ namespace PeachPDF.Adapters
         /// </summary>
         public FontAdapter(XFont font)
         {
-            _font = font;
+            Font = font;
         }
 
         /// <summary>
         /// the underline win-forms font.
         /// </summary>
-        public XFont Font
-        {
-            get { return _font; }
-        }
+        public XFont Font { get; }
 
-        public override double Size
-        {
-            get { return _font.Size; }
-        }
+        public override double Size => Font.Size;
 
-        public override double UnderlineOffset
-        {
-            get { return _underlineOffset; }
-        }
+        public override double UnderlineOffset => _underlineOffset;
 
-        public override double Height
-        {
-            get { return _height; }
-        }
+        public override double Height => _height;
 
-        public override double LeftPadding
-        {
-            get { return _height / 6f; }
-        }
+        public override double LeftPadding => _height / 6f;
 
 
         public override double GetWhitespaceWidth(RGraphics graphics)

@@ -28,16 +28,16 @@
 #endregion
 
 using System;
-using PdfSharpCore.Pdf;
-using PdfSharpCore.Drawing.Pdf;
-using PdfSharpCore.Pdf.Advanced;
+using PeachPDF.PdfSharpCore.Pdf;
+using PeachPDF.PdfSharpCore.Drawing.Pdf;
+using PeachPDF.PdfSharpCore.Pdf.Advanced;
 
 #pragma warning disable 1587
 // ReSharper disable UseNullPropagation
 // ReSharper disable RedundantNameQualifier
 // ReSharper disable UseNameofExpression
 
-namespace PdfSharpCore.Drawing  // #??? aufräumen
+namespace PeachPDF.PdfSharpCore.Drawing  // #??? aufräumen
 {
     /// <summary>
     /// Holds information about the current state of the XGraphics object.
@@ -227,7 +227,7 @@ namespace PdfSharpCore.Drawing  // #??? aufräumen
         }
 
         /// <summary>
-        /// Creates a new instance of the XGraphics class from a PdfSharpCore.Pdf.PdfPage object.
+        /// Creates a new instance of the XGraphics class from a PeachPDF.PdfSharpCore.Pdf.PdfPage object.
         /// </summary>
         public static XGraphics FromPdfPage(PdfPage page)
         {
@@ -235,7 +235,7 @@ namespace PdfSharpCore.Drawing  // #??? aufräumen
         }
 
         /// <summary>
-        /// Creates a new instance of the XGraphics class from a PdfSharpCore.Pdf.PdfPage object.
+        /// Creates a new instance of the XGraphics class from a PeachPDF.PdfSharpCore.Pdf.PdfPage object.
         /// </summary>
         public static XGraphics FromPdfPage(PdfPage page, XGraphicsUnit unit)
         {
@@ -243,7 +243,7 @@ namespace PdfSharpCore.Drawing  // #??? aufräumen
         }
 
         /// <summary>
-        /// Creates a new instance of the XGraphics class from a PdfSharpCore.Pdf.PdfPage object.
+        /// Creates a new instance of the XGraphics class from a PeachPDF.PdfSharpCore.Pdf.PdfPage object.
         /// </summary>
         public static XGraphics FromPdfPage(PdfPage page, XPageDirection pageDirection)
         {
@@ -251,7 +251,7 @@ namespace PdfSharpCore.Drawing  // #??? aufräumen
         }
 
         /// <summary>
-        /// Creates a new instance of the XGraphics class from a PdfSharpCore.Pdf.PdfPage object.
+        /// Creates a new instance of the XGraphics class from a PeachPDF.PdfSharpCore.Pdf.PdfPage object.
         /// </summary>
         public static XGraphics FromPdfPage(PdfPage page, XGraphicsPdfPageOptions options)
         {
@@ -259,7 +259,7 @@ namespace PdfSharpCore.Drawing  // #??? aufräumen
         }
 
         /// <summary>
-        /// Creates a new instance of the XGraphics class from a PdfSharpCore.Pdf.PdfPage object.
+        /// Creates a new instance of the XGraphics class from a PeachPDF.PdfSharpCore.Pdf.PdfPage object.
         /// </summary>
         public static XGraphics FromPdfPage(PdfPage page, XGraphicsPdfPageOptions options, XPageDirection pageDirection)
         {
@@ -267,7 +267,7 @@ namespace PdfSharpCore.Drawing  // #??? aufräumen
         }
 
         /// <summary>
-        /// Creates a new instance of the XGraphics class from a PdfSharpCore.Pdf.PdfPage object.
+        /// Creates a new instance of the XGraphics class from a PeachPDF.PdfSharpCore.Pdf.PdfPage object.
         /// </summary>
         public static XGraphics FromPdfPage(PdfPage page, XGraphicsPdfPageOptions options, XGraphicsUnit unit)
         {
@@ -275,7 +275,7 @@ namespace PdfSharpCore.Drawing  // #??? aufräumen
         }
 
         /// <summary>
-        /// Creates a new instance of the XGraphics class from a PdfSharpCore.Pdf.PdfPage object.
+        /// Creates a new instance of the XGraphics class from a PeachPDF.PdfSharpCore.Pdf.PdfPage object.
         /// </summary>
         public static XGraphics FromPdfPage(PdfPage page, XGraphicsPdfPageOptions options, XGraphicsUnit unit, XPageDirection pageDirection)
         {
@@ -283,7 +283,7 @@ namespace PdfSharpCore.Drawing  // #??? aufräumen
         }
 
         /// <summary>
-        /// Creates a new instance of the XGraphics class from a PdfSharpCore.Drawing.XPdfForm object.
+        /// Creates a new instance of the XGraphics class from a PeachPDF.PdfSharpCore.Drawing.XPdfForm object.
         /// </summary>
         public static XGraphics FromPdfForm(XPdfForm form)
         {
@@ -294,7 +294,7 @@ namespace PdfSharpCore.Drawing  // #??? aufräumen
         }
 
         /// <summary>
-        /// Creates a new instance of the XGraphics class from a PdfSharpCore.Drawing.XForm object.
+        /// Creates a new instance of the XGraphics class from a PeachPDF.PdfSharpCore.Drawing.XForm object.
         /// </summary>
         public static XGraphics FromForm(XForm form)
         {
@@ -305,7 +305,7 @@ namespace PdfSharpCore.Drawing  // #??? aufräumen
         }
 
         /// <summary>
-        /// Creates a new instance of the XGraphics class from a PdfSharpCore.Drawing.XForm object.
+        /// Creates a new instance of the XGraphics class from a PeachPDF.PdfSharpCore.Drawing.XForm object.
         /// </summary>
         public static XGraphics FromImage(XImage image)
         {
@@ -313,7 +313,7 @@ namespace PdfSharpCore.Drawing  // #??? aufräumen
         }
 
         /// <summary>
-        /// Creates a new instance of the XGraphics class from a PdfSharpCore.Drawing.XImage object.
+        /// Creates a new instance of the XGraphics class from a PeachPDF.PdfSharpCore.Drawing.XImage object.
         /// </summary>
         public static XGraphics FromImage(XImage image, XGraphicsUnit unit)
         {

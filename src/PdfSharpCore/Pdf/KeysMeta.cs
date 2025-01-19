@@ -33,7 +33,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Diagnostics.CodeAnalysis;
 
-namespace PdfSharpCore.Pdf
+namespace PeachPDF.PdfSharpCore.Pdf
 {
     /// <summary>
     /// Holds information about the value of a key in a dictionary. This information is used to create

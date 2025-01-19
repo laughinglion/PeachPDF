@@ -28,9 +28,9 @@
 #endregion
 
 using System;
-using PdfSharpCore.Pdf;
+using PeachPDF.PdfSharpCore.Pdf;
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     /// <summary>
     /// Specifies details about how the font is used in PDF creation.

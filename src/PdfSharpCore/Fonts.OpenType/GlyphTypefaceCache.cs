@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -27,14 +27,14 @@
 // DEALINGS IN THE SOFTWARE.
 #endregion
 
-using PdfSharpCore.Drawing;
-using PdfSharpCore.Internal;
+using PeachPDF.PdfSharpCore.Drawing;
+using PeachPDF.PdfSharpCore.Internal;
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text;
 
-namespace PdfSharpCore.Fonts.OpenType
+namespace PeachPDF.PdfSharpCore.Fonts.OpenType
 {
     /// <summary>
     /// Global table of all glyph typefaces.

@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -32,9 +32,9 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
-using PdfSharpCore.Internal;
+using PeachPDF.PdfSharpCore.Internal;
 
-namespace PdfSharpCore.Fonts.OpenType
+namespace PeachPDF.PdfSharpCore.Fonts.OpenType
 {
     /// <summary>
     /// Global table of all OpenType fontfaces chached by their face name and check sum.

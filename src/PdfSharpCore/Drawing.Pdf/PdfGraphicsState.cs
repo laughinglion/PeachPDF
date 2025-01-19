@@ -31,13 +31,13 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Text;
-using PdfSharpCore.Pdf;
-using PdfSharpCore.Pdf.Advanced;
-using PdfSharpCore.Pdf.Internal;
+using PeachPDF.PdfSharpCore.Pdf;
+using PeachPDF.PdfSharpCore.Pdf.Advanced;
+using PeachPDF.PdfSharpCore.Pdf.Internal;
 
 // ReSharper disable CompareOfFloatsByEqualityOperator
 
-namespace PdfSharpCore.Drawing.Pdf
+namespace PeachPDF.PdfSharpCore.Drawing.Pdf
 {
     /// <summary>
     /// Represents the current PDF graphics state.

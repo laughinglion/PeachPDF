@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -28,9 +28,9 @@
 #endregion
 
 using System;
-using PdfSharpCore.Fonts.OpenType;
+using PeachPDF.PdfSharpCore.Fonts.OpenType;
 
-namespace PdfSharpCore.Pdf.Advanced
+namespace PeachPDF.PdfSharpCore.Pdf.Advanced
 {
     /// <summary>
     /// The PDF font descriptor flags.

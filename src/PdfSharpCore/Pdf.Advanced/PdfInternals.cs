@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -32,9 +32,9 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 using System.IO;
-using PdfSharpCore.Pdf.IO;
+using PeachPDF.PdfSharpCore.Pdf.IO;
 
-namespace PdfSharpCore.Pdf.Advanced
+namespace PeachPDF.PdfSharpCore.Pdf.Advanced
 {
     /// <summary>
     /// Provides access to the internal document data structures. This class prevents the public
@@ -274,6 +274,6 @@ namespace PdfSharpCore.Pdf.Advanced
         /// <summary>
         /// The name of the custom value key.
         /// </summary>
-        public string CustomValueKey = "/PdfSharpCore.CustomValue";
+        public string CustomValueKey = "/PeachPDF.PdfSharpCore.CustomValue";
     }
 }

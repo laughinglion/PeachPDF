@@ -29,7 +29,7 @@
 
 // ReSharper disable InconsistentNaming because we use PDF names.
 
-namespace PdfSharpCore.Pdf
+namespace PeachPDF.PdfSharpCore.Pdf
 {
     /// <summary>
     /// Specifies the type of a page destination in outline items, annotations, or actions..

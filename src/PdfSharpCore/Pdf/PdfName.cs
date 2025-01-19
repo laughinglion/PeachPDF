@@ -30,9 +30,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using PdfSharpCore.Pdf.IO;
+using PeachPDF.PdfSharpCore.Pdf.IO;
 
-namespace PdfSharpCore.Pdf
+namespace PeachPDF.PdfSharpCore.Pdf
 {
     /// <summary>
     /// Represents a PDF name value.

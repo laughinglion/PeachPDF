@@ -1,4 +1,4 @@
-namespace PdfSharpCore.Drawing.Layout.enums
+namespace PeachPDF.PdfSharpCore.Drawing.Layout.enums
 {
     public enum XVerticalAlignment
     {

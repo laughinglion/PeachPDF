@@ -27,7 +27,7 @@
 // DEALINGS IN THE SOFTWARE.
 #endregion
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
 #if PDFSHARP20
     enum FontStretchValues
@@ -44,7 +44,7 @@ namespace PdfSharpCore.Drawing
     }
 
     /// <summary>
-    /// NYI. Reserved for future extensions of PdfSharpCore.
+    /// NYI. Reserved for future extensions of PeachPDF.PdfSharpCore.
     /// </summary>
     // [DebuggerDisplay("'{Name}', {Size}")]
     public class XFontStretch

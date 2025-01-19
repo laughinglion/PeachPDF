@@ -10,12 +10,12 @@
 // - Sun Tsu,
 // "The Art of War"
 
-using PdfSharpCore.Drawing;
-using System;
 using PeachPDF.Html.Adapters;
 using PeachPDF.Html.Adapters.Entities;
 using PeachPDF.Html.Core.Utils;
+using PeachPDF.PdfSharpCore.Drawing;
 using PeachPDF.Utilities;
+using System;
 
 namespace PeachPDF.Adapters
 {
@@ -46,9 +46,11 @@ namespace PeachPDF.Adapters
 
         static GraphicsAdapter()
         {
-            _stringFormat = new XStringFormat();
-            _stringFormat.Alignment = XStringAlignment.Near;
-            _stringFormat.LineAlignment = XLineAlignment.Near;
+            _stringFormat = new XStringFormat
+            {
+                Alignment = XStringAlignment.Near,
+                LineAlignment = XLineAlignment.Near
+            };
         }
 
         /// <summary>
@@ -121,7 +123,7 @@ namespace PeachPDF.Adapters
         public override void DrawString(string str, RFont font, RColor color, RPoint point, RSize size, bool rtl)
         {
             var xBrush = ((BrushAdapter)_adapter.GetSolidBrush(color)).Brush;
-            _g.DrawString(str, ((FontAdapter)font).Font, (XBrush)xBrush, point.X, point.Y, _stringFormat);
+            _g.DrawString(str, ((FontAdapter)font).Font, xBrush, point.X, point.Y, _stringFormat);
         }
 
         public override RBrush GetTextureBrush(RImage image, RRect dstRect, RPoint translateTransformLocation)

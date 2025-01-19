@@ -30,7 +30,7 @@
 using System;
 using System.ComponentModel;
 
-namespace PdfSharpCore.Drawing.BarCodes
+namespace PeachPDF.PdfSharpCore.Drawing.BarCodes
 {
     /// <summary>
     /// Represents the base class of all bar codes.

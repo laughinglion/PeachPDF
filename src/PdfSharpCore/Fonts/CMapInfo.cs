@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -30,10 +30,10 @@
 using System;
 using System.Diagnostics;
 using System.Collections.Generic;
-using PdfSharpCore.Fonts.OpenType;
-using PdfSharpCore.Pdf.Internal;
+using PeachPDF.PdfSharpCore.Fonts.OpenType;
+using PeachPDF.PdfSharpCore.Pdf.Internal;
 
-namespace PdfSharpCore.Fonts
+namespace PeachPDF.PdfSharpCore.Fonts
 {
     /// <summary>
     /// Helper class that determines the characters used in a particular font.

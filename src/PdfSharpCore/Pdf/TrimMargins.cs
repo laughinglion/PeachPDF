@@ -28,9 +28,9 @@
 #endregion
 
 using System.Diagnostics;
-using PdfSharpCore.Drawing;
+using PeachPDF.PdfSharpCore.Drawing;
 
-namespace PdfSharpCore.Pdf
+namespace PeachPDF.PdfSharpCore.Pdf
 {
     /// <summary>
     /// Represents trim margins added to the page.

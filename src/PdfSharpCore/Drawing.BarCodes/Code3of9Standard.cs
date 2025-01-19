@@ -29,7 +29,7 @@
 
 using System;
 
-namespace PdfSharpCore.Drawing.BarCodes
+namespace PeachPDF.PdfSharpCore.Drawing.BarCodes
 {
     /// <summary>
     /// Imlpementation of the Code 3 of 9 bar code.

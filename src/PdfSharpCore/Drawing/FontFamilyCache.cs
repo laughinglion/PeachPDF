@@ -33,12 +33,12 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text;
-using PdfSharpCore.Fonts;
-using PdfSharpCore.Fonts.OpenType;
-using PdfSharpCore.Internal;
-using PdfSharpCore.Pdf;
+using PeachPDF.PdfSharpCore.Fonts;
+using PeachPDF.PdfSharpCore.Fonts.OpenType;
+using PeachPDF.PdfSharpCore.Internal;
+using PeachPDF.PdfSharpCore.Pdf;
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     /// <summary>
     /// Global cache of all internal font family objects.

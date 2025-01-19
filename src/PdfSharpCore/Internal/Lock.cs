@@ -30,9 +30,9 @@
 using System;
 using System.ComponentModel;
 using System.Threading;
-using PdfSharpCore.Pdf.Internal;
+using PeachPDF.PdfSharpCore.Pdf.Internal;
 
-namespace PdfSharpCore.Internal
+namespace PeachPDF.PdfSharpCore.Internal
 {
     /// <summary>
     /// Static locking functions to make PDFsharp thread save.

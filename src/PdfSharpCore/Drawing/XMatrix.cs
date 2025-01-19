@@ -31,11 +31,11 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
-using PdfSharpCore.Internal;
+using PeachPDF.PdfSharpCore.Internal;
 
 
 // ReSharper disable RedundantNameQualifier
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     /// <summary>
     /// Represents a 3-by-3 matrix that represents an affine 2D transformation.

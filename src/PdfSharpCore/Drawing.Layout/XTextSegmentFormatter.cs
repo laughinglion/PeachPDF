@@ -1,10 +1,10 @@
-﻿using PdfSharpCore.Drawing.Layout.enums;
-using PdfSharpCore.Pdf.IO;
+﻿using PeachPDF.PdfSharpCore.Drawing.Layout.enums;
+using PeachPDF.PdfSharpCore.Pdf.IO;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace PdfSharpCore.Drawing.Layout
+namespace PeachPDF.PdfSharpCore.Drawing.Layout
 {
 	public class XTextSegmentFormatter
 	{

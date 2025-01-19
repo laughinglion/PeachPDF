@@ -29,12 +29,12 @@
 
 using System;
 using System.Diagnostics;
-using PdfSharpCore.Drawing.Pdf;
-using PdfSharpCore.Pdf;
-using PdfSharpCore.Pdf.Advanced;
-using PdfSharpCore.Pdf.Filters;
+using PeachPDF.PdfSharpCore.Drawing.Pdf;
+using PeachPDF.PdfSharpCore.Pdf;
+using PeachPDF.PdfSharpCore.Pdf.Advanced;
+using PeachPDF.PdfSharpCore.Pdf.Filters;
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     /// <summary>
     /// Represents a graphical object that can be used to render retained graphics on it.

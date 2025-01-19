@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -29,7 +29,7 @@
 
 using System;
 
-namespace PdfSharpCore
+namespace PeachPDF.PdfSharpCore
 {
     /// <summary>
     /// Version info base for all PDFsharp related assemblies.
@@ -70,7 +70,7 @@ namespace PdfSharpCore
         /// <summary>
         /// The home page of this product.
         /// </summary>
-        public const string Url = "https://github.com/ststeiger/PdfSharpCore";
+        public const string Url = "https://github.com/ststeiger/PeachPDF.PdfSharpCore";
 
         /// <summary>
         /// Unused.
@@ -197,10 +197,10 @@ namespace PdfSharpCore
         /// Nuspec Doc: A URL for the home page of the package.
         /// </summary>
         /// <remarks>
-        /// http://www.PdfSharpCore.net/NuGetPackage_PDFsharp-GDI.ashx
-        /// http://www.PdfSharpCore.net/NuGetPackage_PDFsharp-WPF.ashx
+        /// http://www.PeachPDF.PdfSharpCore.net/NuGetPackage_PDFsharp-GDI.ashx
+        /// http://www.PeachPDF.PdfSharpCore.net/NuGetPackage_PDFsharp-WPF.ashx
         /// </remarks>
-        public const string NuGetProjectUrl = "https://www.nuget.org/packages/PdfSharpCore/";
+        public const string NuGetProjectUrl = "https://www.nuget.org/packages/PeachPDF.PdfSharpCore/";
 
         /// <summary>
         /// Nuspec Doc: A URL for the image to use as the icon for the package in the Manage NuGet Packages
@@ -211,7 +211,7 @@ namespace PdfSharpCore
         /// <summary>
         /// Nuspec Doc: A link to the license that the package is under.
         /// </summary>                  
-        public const string NuGetLicenseUrl = "http://www.PdfSharpCore.net/PDFsharp_License.ashx";
+        public const string NuGetLicenseUrl = "http://www.PeachPDF.PdfSharpCore.net/PDFsharp_License.ashx";
 
         /// <summary>
         /// Nuspec Doc: A Boolean value that specifies whether the client needs to ensure that the package license (described by licenseUrl) is accepted before the package is installed.

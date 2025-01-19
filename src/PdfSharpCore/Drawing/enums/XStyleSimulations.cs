@@ -29,7 +29,7 @@
 
 using System;
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     /// <summary>
     /// Describes the simulation style of a font.

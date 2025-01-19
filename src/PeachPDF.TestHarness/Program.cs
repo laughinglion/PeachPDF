@@ -1,6 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
-using PdfSharpCore;
 using PeachPDF;
+using PeachPDF.PdfSharpCore;
 
 var html = File.ReadAllText("rfc2324.html");
 

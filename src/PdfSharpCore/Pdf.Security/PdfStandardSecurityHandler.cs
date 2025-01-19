@@ -31,14 +31,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Security.Cryptography;
-using PdfSharpCore.Pdf.IO;
-using PdfSharpCore.Pdf.Advanced;
-using PdfSharpCore.Pdf.Internal;
+using PeachPDF.PdfSharpCore.Pdf.IO;
+using PeachPDF.PdfSharpCore.Pdf.Advanced;
+using PeachPDF.PdfSharpCore.Pdf.Internal;
 
 #pragma warning disable 0169
 #pragma warning disable 0649
 
-namespace PdfSharpCore.Pdf.Security
+namespace PeachPDF.PdfSharpCore.Pdf.Security
 {
     /// <summary>
     /// Represents the standard PDF security handler.

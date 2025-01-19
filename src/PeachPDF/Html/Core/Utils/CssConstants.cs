@@ -19,6 +19,7 @@ namespace PeachPDF.Html.Core.Utils
     {
         public const string Absolute = "absolute";
         public const string Auto = "auto";
+        public const string Always = "always";
         public const string Avoid = "avoid";
         public const string Baseline = "baseline";
         public const string Blink = "blink";

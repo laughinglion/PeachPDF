@@ -1,4 +1,4 @@
-﻿namespace PdfSharpCore.Drawing.Layout
+﻿namespace PeachPDF.PdfSharpCore.Drawing.Layout
 {
 	public class TextSegment
 	{

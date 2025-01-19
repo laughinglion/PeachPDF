@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -31,9 +31,9 @@ using System;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Globalization;
-using PdfSharpCore.Drawing;
+using PeachPDF.PdfSharpCore.Drawing;
 
-namespace PdfSharpCore.Pdf.Advanced
+namespace PeachPDF.PdfSharpCore.Pdf.Advanced
 {
     /// <summary>
     /// Contains all used images of a document.
@@ -84,7 +84,7 @@ namespace PdfSharpCore.Pdf.Advanced
             public ImageSelector(XImage image)
             {
                 // HACK: implement a way to identify images when they are reused
-                // TODO 4STLA Implementation that calculates MD5 hashes for images generated for the images can be found here: http://forum.PdfSharpCore.net/viewtopic.php?p=6959#p6959
+                // TODO 4STLA Implementation that calculates MD5 hashes for images generated for the images can be found here: http://forum.PeachPDF.PdfSharpCore.net/viewtopic.php?p=6959#p6959
                 if (image._path == null)
                     image._path = "*" + Guid.NewGuid().ToString("B");
 

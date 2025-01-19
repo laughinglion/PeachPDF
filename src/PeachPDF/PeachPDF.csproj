@@ -17,6 +17,14 @@
 		<RunCodeAnalysis>false</RunCodeAnalysis>
 	</PropertyGroup>
 	<ItemGroup>
+	  <None Remove="Html\Core\Utils\ImageError.png" />
+	  <None Remove="Html\Core\Utils\ImageLoad.png" />
+	</ItemGroup>
+	<ItemGroup>
+	  <EmbeddedResource Include="Html\Core\Utils\ImageError.png" />
+	  <EmbeddedResource Include="Html\Core\Utils\ImageLoad.png" />
+	</ItemGroup>
+	<ItemGroup>
 	  <ProjectReference Include="..\PdfSharpCore\PeachPDF.PdfSharpCore.csproj" />
 	</ItemGroup>
 

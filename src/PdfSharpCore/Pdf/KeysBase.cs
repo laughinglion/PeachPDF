@@ -30,7 +30,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 
-namespace PdfSharpCore.Pdf
+namespace PeachPDF.PdfSharpCore.Pdf
 {
     /// <summary>
     /// Base class for all dictionary Keys classes.

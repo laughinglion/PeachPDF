@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using PdfSharpCore.Drawing;
+using PeachPDF.PdfSharpCore.Drawing;
 
-namespace PdfSharpCore.Internal
+namespace PeachPDF.PdfSharpCore.Internal
 {
     public class FontFamilyModel
     {

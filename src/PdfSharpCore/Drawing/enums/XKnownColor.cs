@@ -27,7 +27,7 @@
 // DEALINGS IN THE SOFTWARE.
 #endregion
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     ///<summary>
     /// Specifies all pre-defined colors. Used to identify the pre-defined colors and to 

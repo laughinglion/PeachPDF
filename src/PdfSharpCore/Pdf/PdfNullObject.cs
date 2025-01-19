@@ -27,9 +27,9 @@
 // DEALINGS IN THE SOFTWARE.
 #endregion
 
-using PdfSharpCore.Pdf.IO;
+using PeachPDF.PdfSharpCore.Pdf.IO;
 
-namespace PdfSharpCore.Pdf
+namespace PeachPDF.PdfSharpCore.Pdf
 {
     /// <summary>
     /// Represents an indirect null value. This type is not used by PDFsharp, but at least

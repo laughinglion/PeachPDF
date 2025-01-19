@@ -30,12 +30,12 @@
 using System;
 using System.Diagnostics;
 using System.Collections.Generic;
-using PdfSharpCore.Internal;
+using PeachPDF.PdfSharpCore.Internal;
 
 // ReSharper disable RedundantNameQualifier
 // ReSharper disable CompareOfFloatsByEqualityOperator
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     /// <summary>
     /// Helper class for Geometry paths.

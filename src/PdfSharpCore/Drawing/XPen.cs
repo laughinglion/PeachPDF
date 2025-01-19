@@ -28,9 +28,9 @@
 #endregion
 
 using System;
-using PdfSharpCore.Internal;
+using PeachPDF.PdfSharpCore.Internal;
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     // TODO Free GDI objects (pens, brushes, ...) automatically without IDisposable.
     /// <summary>

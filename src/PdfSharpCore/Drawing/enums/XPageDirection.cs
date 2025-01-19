@@ -29,7 +29,7 @@
 
 using System;
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     /// <summary>
     /// Specifies the direction of the y-axis.

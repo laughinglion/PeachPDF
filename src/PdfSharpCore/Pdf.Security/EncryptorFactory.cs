@@ -1,6 +1,6 @@
-﻿using PdfSharpCore.Pdf.IO;
+﻿using PeachPDF.PdfSharpCore.Pdf.IO;
 
-namespace PdfSharpCore.Pdf.Security
+namespace PeachPDF.PdfSharpCore.Pdf.Security
 {
     internal class EncryptorFactory
     {

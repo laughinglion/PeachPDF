@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -30,12 +30,12 @@
 using System;
 using System.Diagnostics;
 
-namespace PdfSharpCore.Fonts.OpenType
+namespace PeachPDF.PdfSharpCore.Fonts.OpenType
 {
     // TODO: Create a font driver for reading and writing OpenType font files.
 
     /// <summary>
-    /// Base class for all OpenType tables used in PdfSharpCore.
+    /// Base class for all OpenType tables used in PeachPDF.PdfSharpCore.
     /// </summary>
     internal class OpenTypeFontTable : ICloneable
     {

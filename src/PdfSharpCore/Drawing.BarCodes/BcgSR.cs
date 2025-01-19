@@ -27,7 +27,7 @@
 // DEALINGS IN THE SOFTWARE.
 #endregion
 
-namespace PdfSharpCore.Drawing.BarCodes
+namespace PeachPDF.PdfSharpCore.Drawing.BarCodes
 {
     // TODO: Mere with PDFsharp strings table
     /// <summary>

@@ -1,6 +1,6 @@
-﻿using PdfSharpCore.Drawing.Layout.enums;
+﻿using PeachPDF.PdfSharpCore.Drawing.Layout.enums;
 
-namespace PdfSharpCore.Drawing.Layout
+namespace PeachPDF.PdfSharpCore.Drawing.Layout
 {
 	/// <summary>
 	/// Represents a single word.

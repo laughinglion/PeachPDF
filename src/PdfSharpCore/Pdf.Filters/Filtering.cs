@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -30,7 +30,7 @@
 using System;
 using System.Diagnostics;
 
-namespace PdfSharpCore.Pdf.Filters
+namespace PeachPDF.PdfSharpCore.Pdf.Filters
 {
     /// <summary>
     /// Applies standard filters to streams.

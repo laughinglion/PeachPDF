@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -30,9 +30,9 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using PdfSharpCore.Pdf.Internal;
+using PeachPDF.PdfSharpCore.Pdf.Internal;
 
-namespace PdfSharpCore.Pdf.Content
+namespace PeachPDF.PdfSharpCore.Pdf.Content
 {
     /// <summary>
     /// Represents a writer for generation of PDF streams. 

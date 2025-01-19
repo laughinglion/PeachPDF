@@ -27,10 +27,10 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using PdfSharpCore.Fonts;
+using PeachPDF.PdfSharpCore.Fonts;
 using System;
 
-namespace PdfSharpCore.Drawing.BarCodes
+namespace PeachPDF.PdfSharpCore.Drawing.BarCodes
 {
     /// <summary>
     /// Internal base class for several bar code types.

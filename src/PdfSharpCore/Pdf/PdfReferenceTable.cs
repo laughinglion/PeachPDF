@@ -31,12 +31,12 @@ using System;
 using System.Diagnostics;
 using System.Collections;
 using System.Collections.Generic;
-using PdfSharpCore.Pdf.Advanced;
-using PdfSharpCore.Pdf.IO;
+using PeachPDF.PdfSharpCore.Pdf.Advanced;
+using PeachPDF.PdfSharpCore.Pdf.IO;
 
-namespace PdfSharpCore.Pdf
+namespace PeachPDF.PdfSharpCore.Pdf
 {
-    // NOT YET IN USE ANYMORE. REPLACEED PdfSharpCore.Pdf.Advanced.PdfCrossReferenceTable.
+    // NOT YET IN USE ANYMORE. REPLACEED PeachPDF.PdfSharpCore.Pdf.Advanced.PdfCrossReferenceTable.
 
     /// <summary>
     /// Represents the cross-reference table of a PDF document. 

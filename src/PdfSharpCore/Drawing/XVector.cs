@@ -31,8 +31,8 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
-using PdfSharpCore.Internal;
-namespace PdfSharpCore.Drawing
+using PeachPDF.PdfSharpCore.Internal;
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     /// <summary>
     /// Represents a two-dimensional vector specified by x- and y-coordinates.

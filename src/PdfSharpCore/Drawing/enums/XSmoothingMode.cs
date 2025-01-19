@@ -29,7 +29,7 @@
 
 using System;
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     /// <summary>
     /// Specifies whether smoothing (or antialiasing) is applied to lines and curves

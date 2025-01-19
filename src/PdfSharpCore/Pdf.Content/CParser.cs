@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -29,13 +29,13 @@
 
 using System.Diagnostics;
 using System.IO;
-using PdfSharpCore.Internal;
-using PdfSharpCore.Pdf.Advanced;
-using PdfSharpCore.Pdf.Content.Objects;
+using PeachPDF.PdfSharpCore.Internal;
+using PeachPDF.PdfSharpCore.Pdf.Advanced;
+using PeachPDF.PdfSharpCore.Pdf.Content.Objects;
 
 #pragma warning disable 1591
 
-namespace PdfSharpCore.Pdf.Content
+namespace PeachPDF.PdfSharpCore.Pdf.Content
 {
     /// <summary>
     /// Provides the functionality to parse PDF content streams.

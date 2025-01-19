@@ -14,12 +14,10 @@ using PeachPDF.Html.Adapters;
 using PeachPDF.Html.Adapters.Entities;
 using PeachPDF.Html.Core.Dom;
 using PeachPDF.Html.Core.Entities;
-using PeachPDF.Html.Core.Handlers;
 using PeachPDF.Html.Core.Parse;
 using PeachPDF.Html.Core.Utils;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace PeachPDF.Html.Core
 {
@@ -483,6 +481,16 @@ namespace PeachPDF.Html.Core
             Root?.Paint(g);
 
             g.PopClip();
+        }
+
+        /// <summary>
+        /// Given the list of available media types, returns the "best" one
+        /// </summary>
+        /// <param name="mediaTypesAvailable"></param>
+        /// <returns></returns>
+        internal string GetCssMediaType(IEnumerable<string> mediaTypesAvailable)
+        {
+            return Adapter.GetCssMediaType(mediaTypesAvailable);
         }
 
         /// <summary>

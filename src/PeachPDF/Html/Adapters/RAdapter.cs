@@ -326,6 +326,8 @@ namespace PeachPDF.Html.Adapters
             return CreateFontInt(family, size, style);
         }
 
+        public abstract string GetCssMediaType(IEnumerable<string> mediaTypesAvailable);
+
 
         #region Private/Protected methods
 

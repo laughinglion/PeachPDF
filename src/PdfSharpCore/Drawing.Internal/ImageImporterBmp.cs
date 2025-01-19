@@ -28,10 +28,10 @@
 #endregion
 
 using System;
-using PdfSharpCore.Pdf;
-using PdfSharpCore.Pdf.Advanced;
+using PeachPDF.PdfSharpCore.Pdf;
+using PeachPDF.PdfSharpCore.Pdf.Advanced;
 
-namespace PdfSharpCore.Drawing.Internal
+namespace PeachPDF.PdfSharpCore.Drawing.Internal
 {
     // $THHO THHO4THHO add support for PdfDocument.Options.
     internal class ImageImporterBmp : ImageImporterRoot, IImageImporter

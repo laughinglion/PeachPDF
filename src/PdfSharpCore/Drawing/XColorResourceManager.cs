@@ -32,7 +32,7 @@ using System.Globalization;
 using System.ComponentModel;
 using System.Threading;
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     /// <summary>
     /// Manages the localization of the color class.

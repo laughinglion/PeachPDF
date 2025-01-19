@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -28,9 +28,9 @@
 #endregion
 
 using System;
-using PdfSharpCore.Drawing;
+using PeachPDF.PdfSharpCore.Drawing;
 
-namespace PdfSharpCore.Pdf.Annotations
+namespace PeachPDF.PdfSharpCore.Pdf.Annotations
 {
     /// <summary>
     /// Represents a rubber stamp annotation.

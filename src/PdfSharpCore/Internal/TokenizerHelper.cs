@@ -30,7 +30,7 @@
 using System;
 using System.Globalization;
 
-namespace PdfSharpCore.Internal
+namespace PeachPDF.PdfSharpCore.Internal
 {
     // Reflected from WPF to ensure compatibility
     // Use netmassdownloader -d "C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\v3.0" -output g:\cachetest -v

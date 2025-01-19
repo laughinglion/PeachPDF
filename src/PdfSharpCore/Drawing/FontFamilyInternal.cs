@@ -29,9 +29,9 @@
 
 using System.Diagnostics;
 using System.Globalization;
-using PdfSharpCore.Internal;
+using PeachPDF.PdfSharpCore.Internal;
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     /// <summary>
     /// Internal implementation class of XFontFamily.

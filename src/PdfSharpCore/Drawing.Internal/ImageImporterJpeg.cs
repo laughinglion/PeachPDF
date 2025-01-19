@@ -28,9 +28,9 @@
 #endregion
 
 using System;
-using PdfSharpCore.Pdf;
+using PeachPDF.PdfSharpCore.Pdf;
 
-namespace PdfSharpCore.Drawing.Internal
+namespace PeachPDF.PdfSharpCore.Drawing.Internal
 {
     // ReSharper disable once InconsistentNaming
     internal class ImageImporterJpeg : ImageImporterRoot, IImageImporter

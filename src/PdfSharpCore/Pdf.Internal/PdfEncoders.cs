@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -31,10 +31,10 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Text;
-using PdfSharpCore.Drawing;
-using PdfSharpCore.Pdf.Security;
+using PeachPDF.PdfSharpCore.Drawing;
+using PeachPDF.PdfSharpCore.Pdf.Security;
 
-namespace PdfSharpCore.Pdf.Internal
+namespace PeachPDF.PdfSharpCore.Pdf.Internal
 {
     /// <summary>
     /// Groups a set of static encoding helper functions.

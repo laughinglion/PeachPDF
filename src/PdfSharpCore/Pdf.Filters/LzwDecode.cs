@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -30,7 +30,7 @@
 using System;
 using System.IO;
 
-namespace PdfSharpCore.Pdf.Filters
+namespace PeachPDF.PdfSharpCore.Pdf.Filters
 {
     /// <summary>
     /// Implements the LzwDecode filter.
@@ -40,7 +40,7 @@ namespace PdfSharpCore.Pdf.Filters
         // Reference: 3.3.3  LZWDecode and FlateDecode Filters / Page 71
 
         /// <summary>
-        /// Throws a NotImplementedException because the obsolete LZW encoding is not supported by PdfSharpCore.
+        /// Throws a NotImplementedException because the obsolete LZW encoding is not supported by PeachPDF.PdfSharpCore.
         /// </summary>
         public override byte[] Encode(byte[] data)
         {

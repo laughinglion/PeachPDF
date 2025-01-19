@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -32,7 +32,7 @@ using Fixed = System.Int32;
 using FWord = System.Int16;
 using UFWord = System.UInt16;
 
-namespace PdfSharpCore.Fonts.OpenType
+namespace PeachPDF.PdfSharpCore.Fonts.OpenType
 {
     /// <summary>
     /// Represents an indirect reference to an existing font table in a font image.

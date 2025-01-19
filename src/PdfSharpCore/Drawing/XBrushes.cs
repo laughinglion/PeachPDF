@@ -31,7 +31,7 @@
 
 #define USE_CACHE_is_not_thread_safe
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     /// <summary>
     /// Brushes for all the pre-defined colors.

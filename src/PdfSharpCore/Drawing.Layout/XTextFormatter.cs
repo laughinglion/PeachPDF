@@ -30,10 +30,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using PdfSharpCore.Drawing.Layout.enums;
-using PdfSharpCore.Pdf.IO;
+using PeachPDF.PdfSharpCore.Drawing.Layout.enums;
+using PeachPDF.PdfSharpCore.Pdf.IO;
 
-namespace PdfSharpCore.Drawing.Layout
+namespace PeachPDF.PdfSharpCore.Drawing.Layout
 {
     /// <summary>
     /// Represents a very simple text formatter.

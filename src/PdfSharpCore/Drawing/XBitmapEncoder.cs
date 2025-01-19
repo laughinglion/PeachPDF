@@ -30,7 +30,7 @@
 using System;
 using System.IO;
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     /// <summary>
     /// Provides functionality to save a bitmap image in a specific format.

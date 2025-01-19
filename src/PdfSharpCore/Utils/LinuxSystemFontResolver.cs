@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
 
-namespace PdfSharpCore.Utils
+namespace PeachPDF.PdfSharpCore.Utils
 {
     public static class LinuxSystemFontResolver
     {

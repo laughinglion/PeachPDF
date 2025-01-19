@@ -30,7 +30,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 
-namespace PdfSharpCore.Pdf
+namespace PeachPDF.PdfSharpCore.Pdf
 {
     /// <summary>
     /// Specifies the type of a key's value in a dictionary.

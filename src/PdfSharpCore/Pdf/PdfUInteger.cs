@@ -30,9 +30,9 @@
 using System;
 using System.Diagnostics;
 using System.Globalization;
-using PdfSharpCore.Pdf.IO;
+using PeachPDF.PdfSharpCore.Pdf.IO;
 
-namespace PdfSharpCore.Pdf
+namespace PeachPDF.PdfSharpCore.Pdf
 {
     /// <summary>
     /// Represents a direct unsigned integer value.

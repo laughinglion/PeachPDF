@@ -33,12 +33,12 @@ namespace PeachPDF.Html.Core
         /// <summary>
         /// used to return empty array
         /// </summary>
-        private static readonly List<CssBlock> _emptyArray = new List<CssBlock>();
+        private static readonly List<CssBlock> _emptyArray = [];
 
         /// <summary>
         /// dictionary of media type to dictionary of css class name to the cssBlocks collection with all the data.
         /// </summary>
-        private readonly Dictionary<string, Dictionary<string, List<CssBlock>>> _mediaBlocks = new Dictionary<string, Dictionary<string, List<CssBlock>>>(StringComparer.InvariantCultureIgnoreCase);
+        private readonly Dictionary<string, Dictionary<string, List<CssBlock>>> _mediaBlocks = new(StringComparer.InvariantCultureIgnoreCase);
 
         #endregion
 
@@ -63,7 +63,7 @@ namespace PeachPDF.Html.Core
         /// <returns>the parsed css data</returns>
         public static CssData Parse(RAdapter adapter, string stylesheet, bool combineWithDefault = true)
         {
-            CssParser parser = new CssParser(adapter);
+            var parser = new CssParser(adapter);
             return parser.ParseStyleSheet(stylesheet, combineWithDefault);
         }
 
@@ -125,34 +125,34 @@ namespace PeachPDF.Html.Core
                 _mediaBlocks.Add(media, mid);
             }
 
-            if (!mid.ContainsKey(cssBlock.Class))
+            if (!mid.TryGetValue(cssBlock.Class, out var list))
             {
-                var list = new List<CssBlock>();
-                list.Add(cssBlock);
+                list =
+                [
+                    cssBlock
+                ];
+
                 mid[cssBlock.Class] = list;
             }
             else
             {
-                bool merged = false;
-                var list = mid[cssBlock.Class];
+                var merged = false;
                 foreach (var block in list)
                 {
-                    if (block.EqualsSelector(cssBlock))
-                    {
-                        merged = true;
-                        block.Merge(cssBlock);
-                        break;
-                    }
+                    if (!block.EqualsSelector(cssBlock)) continue;
+
+                    merged = true;
+                    block.Merge(cssBlock);
+                    break;
                 }
 
-                if (!merged)
-                {
-                    // general block must be first
-                    if (cssBlock.Selectors == null)
-                        list.Insert(0, cssBlock);
-                    else
-                        list.Add(cssBlock);
-                }
+                if (merged) return;
+
+                // general block must be first
+                if (cssBlock.Selectors == null)
+                    list.Insert(0, cssBlock);
+                else
+                    list.Add(cssBlock);
             }
         }
 

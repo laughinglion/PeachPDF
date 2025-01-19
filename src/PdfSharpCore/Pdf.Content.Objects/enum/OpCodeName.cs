@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -31,7 +31,7 @@
 
 // ReSharper disable InconsistentNaming
 
-namespace PdfSharpCore.Pdf.Content.Objects
+namespace PeachPDF.PdfSharpCore.Pdf.Content.Objects
 {
     /// <summary>
     /// The names of the op-codes. 

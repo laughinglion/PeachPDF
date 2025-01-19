@@ -29,7 +29,7 @@
 
 using System;
 
-namespace PdfSharpCore
+namespace PeachPDF.PdfSharpCore
 {
     /// <summary>
     /// Floating point formatting.

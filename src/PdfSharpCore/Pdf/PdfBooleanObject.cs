@@ -28,12 +28,12 @@
 #endregion
 
 using System.Diagnostics;
-using PdfSharpCore.Pdf.IO;
+using PeachPDF.PdfSharpCore.Pdf.IO;
 
-namespace PdfSharpCore.Pdf
+namespace PeachPDF.PdfSharpCore.Pdf
 {
     /// <summary>
-    /// Represents an indirect boolean value. This type is not used by PdfSharpCore. If it is imported from
+    /// Represents an indirect boolean value. This type is not used by PeachPDF.PdfSharpCore. If it is imported from
     /// an external PDF file, the value is converted into a direct object.
     /// </summary>
     [DebuggerDisplay("({Value})")]

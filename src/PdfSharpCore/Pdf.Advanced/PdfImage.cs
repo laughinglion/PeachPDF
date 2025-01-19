@@ -6,7 +6,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -31,11 +31,11 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using PdfSharpCore.Drawing;
-using PdfSharpCore.Drawing.Internal;
-using PdfSharpCore.Pdf.Filters;
+using PeachPDF.PdfSharpCore.Drawing;
+using PeachPDF.PdfSharpCore.Drawing.Internal;
+using PeachPDF.PdfSharpCore.Pdf.Filters;
 
-namespace PdfSharpCore.Pdf.Advanced
+namespace PeachPDF.PdfSharpCore.Pdf.Advanced
 {
     /// <summary>
     /// Represents an image.

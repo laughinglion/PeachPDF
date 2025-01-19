@@ -32,12 +32,12 @@ using System.Collections;
 using System.Globalization;
 using System.Text;
 using System.IO;
-using PdfSharpCore.Drawing;
-using PdfSharpCore.Internal;
-using PdfSharpCore.Pdf.IO;
-using PdfSharpCore.Pdf.Internal;
+using PeachPDF.PdfSharpCore.Drawing;
+using PeachPDF.PdfSharpCore.Internal;
+using PeachPDF.PdfSharpCore.Pdf.IO;
+using PeachPDF.PdfSharpCore.Pdf.Internal;
 
-namespace PdfSharpCore.Pdf
+namespace PeachPDF.PdfSharpCore.Pdf
 {
     /// <summary>
     /// Represents text that is written 'as it is' into the PDF stream. This class can lead to invalid PDF files.

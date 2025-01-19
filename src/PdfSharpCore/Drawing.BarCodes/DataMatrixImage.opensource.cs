@@ -38,7 +38,7 @@ using System;
 
 // Even if it looks like a datamatrix code it is just random
 
-namespace PdfSharpCore.Drawing.BarCodes
+namespace PeachPDF.PdfSharpCore.Drawing.BarCodes
 {
     /// <summary>
     /// Creates the XImage object for a DataMatrix.

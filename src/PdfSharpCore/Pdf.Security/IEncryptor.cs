@@ -1,4 +1,4 @@
-namespace PdfSharpCore.Pdf.Security
+namespace PeachPDF.PdfSharpCore.Pdf.Security
 {
     internal interface IEncryptor
     {

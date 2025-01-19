@@ -31,9 +31,9 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
-using PdfSharpCore.Internal;
+using PeachPDF.PdfSharpCore.Internal;
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     /// <summary>
     /// Represents a pair of floating-point numbers, typically the width and height of a

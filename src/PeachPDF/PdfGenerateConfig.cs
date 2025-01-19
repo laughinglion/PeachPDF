@@ -10,8 +10,8 @@
 // - Sun Tsu,
 // "The Art of War"
 
-using PdfSharpCore;
-using PdfSharpCore.Drawing;
+using PeachPDF.PdfSharpCore;
+using PeachPDF.PdfSharpCore.Drawing;
 
 namespace PeachPDF
 {
@@ -21,21 +21,6 @@ namespace PeachPDF
     public sealed class PdfGenerateConfig
     {
         #region Fields/Consts
-
-        /// <summary>
-        /// the page size to use for each page in the generated pdf
-        /// </summary>
-        private PageSize _pageSize;
-
-        /// <summary>
-        /// if the page size is undefined this allow you to set manually the page size
-        /// </summary>
-        private XSize _xsize;
-
-        /// <summary>
-        /// the orientation of each page of the generated pdf
-        /// </summary>
-        private PageOrientation _pageOrientation;
 
         /// <summary>
         /// the top margin between the page start and the text
@@ -63,35 +48,24 @@ namespace PeachPDF
         /// <summary>
         /// the page size to use for each page in the generated pdf
         /// </summary>
-        public PageSize PageSize
-        {
-            get { return _pageSize; }
-            set { _pageSize = value; }
-        }
+        public PageSize PageSize { get; set; }
 
         /// <summary>
         /// if the page size is undefined this allow you to set manually the page size
         /// </summary>
-        public XSize ManualPageSize {
-            get { return _xsize; }
-            set { _xsize = value; }
-        }
+        public XSize ManualPageSize { get; set; }
 
         /// <summary>
         /// the orientation of each page of the generated pdf
         /// </summary>
-        public PageOrientation PageOrientation
-        {
-            get { return _pageOrientation; }
-            set { _pageOrientation = value; }
-        }
+        public PageOrientation PageOrientation { get; set; }
 
         /// <summary>
         /// the top margin between the page start and the text
         /// </summary>
         public int MarginTop
         {
-            get { return _marginTop; }
+            get => _marginTop;
             set
             {
                 if (value > -1)
@@ -104,7 +78,7 @@ namespace PeachPDF
         /// </summary>
         public int MarginBottom
         {
-            get { return _marginBottom; }
+            get => _marginBottom;
             set
             {
                 if (value > -1)
@@ -117,7 +91,7 @@ namespace PeachPDF
         /// </summary>
         public int MarginLeft
         {
-            get { return _marginLeft; }
+            get => _marginLeft;
             set
             {
                 if (value > -1)
@@ -130,7 +104,7 @@ namespace PeachPDF
         /// </summary>
         public int MarginRight
         {
-            get { return _marginRight; }
+            get => _marginRight;
             set
             {
                 if (value > -1)
@@ -153,12 +127,12 @@ namespace PeachPDF
         //   1 inch == 72 point
 
         /// <summary>
-        /// Convert the units passed in milimiters to the units used in PdfSharp
+        /// Convert the units passed in millimeters to the units used in PdfSharp
         /// </summary>
         /// <param name="width"></param>
         /// <param name="height"></param>
         /// <returns></returns>
-        public static XSize MilimitersToUnits(double width, double height) {
+        public static XSize MillimetersToUnits(double width, double height) {
             return new XSize(width / 25.4 * 72, height / 25.4 * 72);
         }
 

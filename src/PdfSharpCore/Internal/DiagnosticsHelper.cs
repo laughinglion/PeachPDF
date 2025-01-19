@@ -29,10 +29,10 @@
 
 using System;
 using System.Diagnostics;
-using PdfSharpCore.Drawing;
-using PdfSharpCore.Fonts;
+using PeachPDF.PdfSharpCore.Drawing;
+using PeachPDF.PdfSharpCore.Fonts;
 
-namespace PdfSharpCore.Internal
+namespace PeachPDF.PdfSharpCore.Internal
 {
     /// <summary>
     /// A bunch of internal helper functions.
@@ -116,7 +116,7 @@ namespace PdfSharpCore.Internal
     }
 
     /// <summary>
-    /// Internal stuff for development of PdfSharpCore.
+    /// Internal stuff for development of PeachPDF.PdfSharpCore.
     /// </summary>
     public static class FontsDevHelper
     {

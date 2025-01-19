@@ -34,15 +34,15 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using PdfSharpCore.Pdf.Advanced;
-using PdfSharpCore.Pdf.Internal;
-using PdfSharpCore.Pdf.IO;
-using PdfSharpCore.Pdf.AcroForms;
-using PdfSharpCore.Pdf.Security;
+using PeachPDF.PdfSharpCore.Pdf.Advanced;
+using PeachPDF.PdfSharpCore.Pdf.Internal;
+using PeachPDF.PdfSharpCore.Pdf.IO;
+using PeachPDF.PdfSharpCore.Pdf.AcroForms;
+using PeachPDF.PdfSharpCore.Pdf.Security;
 
 // ReSharper disable ConvertPropertyToExpressionBody
 
-namespace PdfSharpCore.Pdf
+namespace PeachPDF.PdfSharpCore.Pdf
 {
     /// <summary>
     /// Represents a PDF document.
@@ -174,7 +174,7 @@ namespace PdfSharpCore.Pdf
 
         /// <summary>
         /// Gets or sets a user defined object that contains arbitrary information associated with this document.
-        /// The tag is not used by PdfSharpCore.
+        /// The tag is not used by PeachPDF.PdfSharpCore.
         /// </summary>
         public object Tag
         {
@@ -185,7 +185,7 @@ namespace PdfSharpCore.Pdf
 
         /// <summary>
         /// Gets or sets a value used to distinguish PdfDocument objects.
-        /// The name is not used by PdfSharpCore.
+        /// The name is not used by PeachPDF.PdfSharpCore.
         /// </summary>
         string Name
         {

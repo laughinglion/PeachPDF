@@ -27,7 +27,7 @@
 // DEALINGS IN THE SOFTWARE.
 #endregion
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     ///<summary>
     /// Represents a set of 141 pre-defined RGB colors. Incidentally the values are the same

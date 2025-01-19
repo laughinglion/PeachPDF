@@ -29,10 +29,10 @@
 
 using System;
 using System.Globalization;
-using PdfSharpCore.Pdf.Content;
-using PdfSharpCore.Pdf.IO;
+using PeachPDF.PdfSharpCore.Pdf.Content;
+using PeachPDF.PdfSharpCore.Pdf.IO;
 
-namespace PdfSharpCore.Internal
+namespace PeachPDF.PdfSharpCore.Internal
 {
     enum NotImplementedBehaviour
     {

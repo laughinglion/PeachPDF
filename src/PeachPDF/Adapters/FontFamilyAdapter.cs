@@ -11,7 +11,7 @@
 // "The Art of War"
 
 using PeachPDF.Html.Adapters;
-using PdfSharpCore.Drawing;
+using PeachPDF.PdfSharpCore.Drawing;
 
 namespace PeachPDF.Adapters
 {
@@ -36,14 +36,8 @@ namespace PeachPDF.Adapters
         /// <summary>
         /// the underline win-forms font family.
         /// </summary>
-        public XFontFamily FontFamily
-        {
-            get { return _fontFamily; }
-        }
+        public XFontFamily FontFamily => _fontFamily;
 
-        public override string Name
-        {
-            get { return _fontFamily.Name; }
-        }
+        public override string Name => _fontFamily.Name;
     }
 }

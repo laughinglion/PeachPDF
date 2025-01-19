@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -30,9 +30,9 @@
 using System;
 using System.Diagnostics;
 using System.Globalization;
-using PdfSharpCore.Drawing;
+using PeachPDF.PdfSharpCore.Drawing;
 
-namespace PdfSharpCore.Fonts
+namespace PeachPDF.PdfSharpCore.Fonts
 {
     // The English terms font, font family, typeface, glyph etc. are sometimes confusingly used.
     // Here a short clarification by Wikipedia.
@@ -151,7 +151,7 @@ namespace PdfSharpCore.Fonts
         readonly string _faceName;
 
         /// <summary>
-        /// Indicates whether bold must be simulated. Bold simulation is not implemented in PdfSharpCore.
+        /// Indicates whether bold must be simulated. Bold simulation is not implemented in PeachPDF.PdfSharpCore.
         /// </summary>
         public bool MustSimulateBold
         {

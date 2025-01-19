@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -28,9 +28,9 @@
 #endregion
 
 using System.IO;
-using PdfSharpCore.Pdf.Content.Objects;
+using PeachPDF.PdfSharpCore.Pdf.Content.Objects;
 
-namespace PdfSharpCore.Pdf.Content
+namespace PeachPDF.PdfSharpCore.Pdf.Content
 {
     /// <summary>
     /// Represents the functionality for reading PDF content streams.

@@ -27,7 +27,7 @@
 // DEALINGS IN THE SOFTWARE.
 #endregion
 
-namespace PdfSharpCore.Drawing.Internal
+namespace PeachPDF.PdfSharpCore.Drawing.Internal
 {
     internal abstract class ImageImporterRoot
     {

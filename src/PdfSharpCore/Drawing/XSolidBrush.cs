@@ -29,7 +29,7 @@
 
 using System;
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     /// <summary>
     /// Defines a single color object used to fill shapes and draw text.

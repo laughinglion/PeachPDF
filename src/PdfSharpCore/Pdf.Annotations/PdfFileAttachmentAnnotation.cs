@@ -1,7 +1,7 @@
-﻿using PdfSharpCore.Pdf.Advanced;
+﻿using PeachPDF.PdfSharpCore.Pdf.Advanced;
 using System;
 
-namespace PdfSharpCore.Pdf.Annotations
+namespace PeachPDF.PdfSharpCore.Pdf.Annotations
 {
     /// <summary>
     /// Represent a file that is attached to the PDF

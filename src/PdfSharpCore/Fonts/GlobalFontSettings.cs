@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -28,11 +28,11 @@
 #endregion
 
 using System;
-using PdfSharpCore.Internal;
-using PdfSharpCore.Pdf;
-using PdfSharpCore.Utils;
+using PeachPDF.PdfSharpCore.Internal;
+using PeachPDF.PdfSharpCore.Pdf;
+using PeachPDF.PdfSharpCore.Utils;
 
-namespace PdfSharpCore.Fonts
+namespace PeachPDF.PdfSharpCore.Fonts
 {
     /// <summary>
     /// Provides functionality to specify information about the handling of fonts in the current application domain.
@@ -46,12 +46,12 @@ namespace PdfSharpCore.Fonts
 
         /// <summary>
         /// Gets or sets the global font resolver for the current application domain.
-        /// This static property should be set only once and before any font operation was executed by PdfSharpCore.
+        /// This static property should be set only once and before any font operation was executed by PeachPDF.PdfSharpCore.
         /// If this is not easily to obtain, e.g. because your code is running on a web server, you must provide the
         /// same instance of your font resolver in every subsequent setting of this property.
         /// In a web application set the font resolver in Global.asax.
         /// For .NetCore Apps, if a resolver is not set before the first get operation to this property,
-        /// the default Font resolver implementation: <see cref="T:PdfSharpCore.Utils.PdfSharpCore.Utils"/> is set and returned
+        /// the default Font resolver implementation: <see cref="T:PeachPDF.PdfSharpCore.Utils.PeachPDF.PdfSharpCore.Utils"/> is set and returned
         /// </summary>
         public static IFontResolver FontResolver
         {

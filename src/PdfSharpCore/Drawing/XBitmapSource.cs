@@ -28,7 +28,7 @@
 #endregion
 
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     /// <summary>
     /// Defines an abstract base class for pixel based images.

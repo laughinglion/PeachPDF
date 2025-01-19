@@ -4,14 +4,14 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Collections.Generic;
 
-using PdfSharpCore.Internal;
-using PdfSharpCore.Drawing;
-using PdfSharpCore.Fonts;
+using PeachPDF.PdfSharpCore.Internal;
+using PeachPDF.PdfSharpCore.Drawing;
+using PeachPDF.PdfSharpCore.Fonts;
 
 using SixLabors.Fonts;
 
 
-namespace PdfSharpCore.Utils
+namespace PeachPDF.PdfSharpCore.Utils
 {
 
 
@@ -24,9 +24,7 @@ namespace PdfSharpCore.Utils
 
         private static readonly string[] SSupportedFonts;
 
-        public FontResolver()
-        {
-        }
+        public static string[] SupportedFonts => SSupportedFonts;
 
         static FontResolver()
         {
@@ -70,7 +68,7 @@ namespace PdfSharpCore.Utils
                 return;
             }
 
-            throw new System.NotImplementedException("FontResolver not implemented for this platform (PdfSharpCore.Utils.FontResolver.cs).");
+            throw new System.NotImplementedException("FontResolver not implemented for this platform (PeachPDF.PdfSharpCore.Utils.FontResolver.cs).");
         }
 
 

@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -32,11 +32,11 @@ using System.Diagnostics;
 using System.Collections;
 using System.Text;
 using System.IO;
-using PdfSharpCore.Pdf.Advanced;
-using PdfSharpCore.Pdf.IO;
+using PeachPDF.PdfSharpCore.Pdf.Advanced;
+using PeachPDF.PdfSharpCore.Pdf.IO;
 using System.Collections.Generic;
 
-namespace PdfSharpCore.Pdf.Annotations
+namespace PeachPDF.PdfSharpCore.Pdf.Annotations
 {
     /// <summary>
     /// Represents the annotations array of a page.
@@ -98,7 +98,7 @@ namespace PdfSharpCore.Pdf.Annotations
         }
 
         /// <summary>
-        /// Gets the <see cref="PdfSharpCore.Pdf.Annotations.PdfAnnotation"/> at the specified index.
+        /// Gets the <see cref="PeachPDF.PdfSharpCore.Pdf.Annotations.PdfAnnotation"/> at the specified index.
         /// </summary>
         public PdfAnnotation this[int index]
         {
@@ -179,7 +179,7 @@ namespace PdfSharpCore.Pdf.Annotations
         {
             return (IEnumerator<PdfItem>)new AnnotationsIterator(this);
         }
-        // THHO4STLA: AnnotationsIterator: Implementation does not work http://forum.PdfSharpCore.net/viewtopic.php?p=3285#p3285
+        // THHO4STLA: AnnotationsIterator: Implementation does not work http://forum.PeachPDF.PdfSharpCore.net/viewtopic.php?p=3285#p3285
         // Code using the enumerator like this will crash:
             //foreach (var annotation in page.Annotations)
             //{

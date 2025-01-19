@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -31,13 +31,13 @@ using System;
 using System.Diagnostics;
 using System.Resources;
 using System.Reflection;
-using PdfSharpCore.Drawing;
-using PdfSharpCore.Internal;
-using PdfSharpCore.Pdf;
+using PeachPDF.PdfSharpCore.Drawing;
+using PeachPDF.PdfSharpCore.Internal;
+using PeachPDF.PdfSharpCore.Pdf;
 
 #pragma warning disable 1591
 
-namespace PdfSharpCore
+namespace PeachPDF.PdfSharpCore
 {
     /// <summary>
     /// The Pdf-Sharp-String-Resources.
@@ -331,7 +331,7 @@ namespace PdfSharpCore
         public static string UnknownEncryption
         {
             get { return GetString(PSMsgID.UnknownEncryption); }
-            //get { return "The PDF document is protected with an encryption not supported by PdfSharpCore."; }
+            //get { return "The PDF document is protected with an encryption not supported by PeachPDF.PdfSharpCore."; }
         }
 
         #endregion
@@ -357,10 +357,10 @@ namespace PdfSharpCore
                             System.Threading.Thread.CurrentThread.CurrentUICulture = System.Globalization.CultureInfo.InvariantCulture;
 #endif
 #if !NETFX_CORE && !UWP && !PORTABLE
-                            _resmngr = new ResourceManager("PdfSharpCore.Resources.Messages",
+                            _resmngr = new ResourceManager("PeachPDF.PdfSharpCore.Resources.Messages",
                                 Assembly.GetExecutingAssembly());
 #else
-                            _resmngr = new ResourceManager("PdfSharpCore.Resources.Messages",
+                            _resmngr = new ResourceManager("PeachPDF.PdfSharpCore.Resources.Messages",
                                 typeof(PSSR).GetTypeInfo().Assembly);
 #endif
                         }

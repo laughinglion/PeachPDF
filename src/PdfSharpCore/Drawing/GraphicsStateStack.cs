@@ -30,7 +30,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     /// <summary>
     /// Represents a stack of XGraphicsState and XGraphicsContainer objects.

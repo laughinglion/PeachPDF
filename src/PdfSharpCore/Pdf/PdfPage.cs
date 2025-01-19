@@ -31,12 +31,12 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.ComponentModel;
-using PdfSharpCore.Pdf.IO;
-using PdfSharpCore.Drawing;
-using PdfSharpCore.Pdf.Advanced;
-using PdfSharpCore.Pdf.Annotations;
+using PeachPDF.PdfSharpCore.Pdf.IO;
+using PeachPDF.PdfSharpCore.Drawing;
+using PeachPDF.PdfSharpCore.Pdf.Advanced;
+using PeachPDF.PdfSharpCore.Pdf.Annotations;
 
-namespace PdfSharpCore.Pdf
+namespace PeachPDF.PdfSharpCore.Pdf
 {
     /// <summary>
     /// Represents a page in a PDF document.
@@ -85,7 +85,7 @@ namespace PdfSharpCore.Pdf
             }
             catch (System.NotImplementedException)
             {
-                // https://github.com/ststeiger/PdfSharpCore/issues/46
+                // https://github.com/ststeiger/PeachPDF.PdfSharpCore/issues/46
                 // { System.NotImplementedException: Neutral region info
                 // at System.Globalization.RegionInfo..ctor
                 Size = PageSize.A4;
@@ -99,7 +99,7 @@ namespace PdfSharpCore.Pdf
 
         /// <summary>
         /// Gets or sets a user defined object that contains arbitrary information associated with this PDF page.
-        /// The tag is not used by PdfSharpCore.
+        /// The tag is not used by PeachPDF.PdfSharpCore.
         /// </summary>
         public object Tag
         {

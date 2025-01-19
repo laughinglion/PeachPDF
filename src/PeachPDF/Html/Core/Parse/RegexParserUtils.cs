@@ -18,7 +18,7 @@ namespace PeachPDF.Html.Core.Parse
     /// <summary>
     /// Collection of regular expressions used when parsing
     /// </summary>
-    internal static class RegexParserUtils
+    internal static partial class RegexParserUtils
     {
         #region Fields and Consts
 
@@ -46,7 +46,10 @@ namespace PeachPDF.Html.Core.Parse
         /// <summary>
         /// Extracts CSS lengths; e.g. 9px 3pt .89em
         /// </summary>
-        public const string CssLength = @"([0-9]+|[0-9]*\.[0-9]+)(em|ex|px|in|cm|mm|pt|pc)";
+        private const string CssLength = @"([0-9]+|[0-9]*\.[0-9]+)(em|ex|px|in|cm|mm|pt|pc)";
+
+        [GeneratedRegex(CssLength)]
+        public static partial Regex CssLengthRegex();
 
         /// <summary>
         /// Extracts line-height values (normal, numbers, lengths, percentages)
@@ -158,21 +161,45 @@ namespace PeachPDF.Html.Core.Parse
         /// </summary>
         /// <param name="regex"></param>
         /// <param name="source"></param>
+        /// <returns></returns>
+        public static string Search(Regex regex, string source)
+        {
+            return Search(regex, source, out _);
+        }
+
+        /// <summary>
+        /// Searches the specified regex on the source
+        /// </summary>
+        /// <param name="regex"></param>
+        /// <param name="source"></param>
         /// <param name="position"> </param>
         /// <returns></returns>
         public static string Search(string regex, string source, out int position)
         {
-            MatchCollection matches = Match(regex, source);
+            var matches = Match(regex, source);
 
             if (matches.Count > 0)
             {
                 position = matches[0].Index;
                 return matches[0].Value;
             }
-            else
+
+            position = -1;
+
+            return null;
+        }
+
+        public static string Search(Regex regex, string source, out int position)
+        {
+            var matches = regex.Matches(source);
+
+            if (matches.Count > 0)
             {
-                position = -1;
+                position = matches[0].Index;
+                return matches[0].Value;
             }
+
+            position = -1;
 
             return null;
         }

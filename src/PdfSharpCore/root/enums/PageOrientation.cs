@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -27,12 +27,12 @@
 // DEALINGS IN THE SOFTWARE.
 #endregion
 
-namespace PdfSharpCore
+namespace PeachPDF.PdfSharpCore
 {
     /// <summary>
-    /// Base namespace of PdfSharpCore. Most classes are implemented in nested namespaces like e. g. PdfSharpCore.Pdf.
+    /// Base namespace of PeachPDF.PdfSharpCore. Most classes are implemented in nested namespaces like e. g. PeachPDF.PdfSharpCore.Pdf.
     /// </summary>
-    /// <seealso cref="PdfSharpCore.Pdf"></seealso>
+    /// <seealso cref="PeachPDF.PdfSharpCore.Pdf"></seealso>
     [System.Runtime.CompilerServices.CompilerGenerated]
     internal class NamespaceDoc { }
 

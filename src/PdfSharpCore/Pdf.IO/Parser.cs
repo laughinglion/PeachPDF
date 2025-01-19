@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -32,13 +32,13 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using PdfSharpCore.Exceptions;
-using PdfSharpCore.Internal;
-using PdfSharpCore.Pdf.Advanced;
-using PdfSharpCore.Pdf.Internal;
-using PdfSharpCore.Pdf.IO.enums;
+using PeachPDF.PdfSharpCore.Exceptions;
+using PeachPDF.PdfSharpCore.Internal;
+using PeachPDF.PdfSharpCore.Pdf.Advanced;
+using PeachPDF.PdfSharpCore.Pdf.Internal;
+using PeachPDF.PdfSharpCore.Pdf.IO.enums;
 
-namespace PdfSharpCore.Pdf.IO
+namespace PeachPDF.PdfSharpCore.Pdf.IO
 {
     /*
        Direct and indirect objects

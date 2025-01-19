@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -27,10 +27,10 @@
 // DEALINGS IN THE SOFTWARE.
 #endregion
 
-using PdfSharpCore.Pdf.Annotations;
-using PdfSharpCore.Pdf.Advanced;
+using PeachPDF.PdfSharpCore.Pdf.Annotations;
+using PeachPDF.PdfSharpCore.Pdf.Advanced;
 
-namespace PdfSharpCore.Pdf.AcroForms
+namespace PeachPDF.PdfSharpCore.Pdf.AcroForms
 {
     /// <summary>
     /// Represents the check box field.

@@ -27,7 +27,7 @@
 // DEALINGS IN THE SOFTWARE.
 #endregion
 
-namespace PdfSharpCore.Drawing.Layout
+namespace PeachPDF.PdfSharpCore.Drawing.Layout
 {
     /// <summary>
     /// Specifies the alignment of a paragraph.

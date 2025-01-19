@@ -645,8 +645,7 @@ namespace PeachPDF.Html.Core.Dom
                     cell.PerformLayout(g); //That will automatically set the bottom of the cell
 
                     //Alter max bottom only if row is cell's row + cell's rowspan - 1
-                    CssSpacingBox sb = cell as CssSpacingBox;
-                    if (sb != null)
+                    if (cell is CssSpacingBox sb)
                     {
                         if (sb.EndRow == currentrow)
                         {
@@ -678,15 +677,13 @@ namespace PeachPDF.Html.Core.Dom
                     }
 
                     // If one cell crosses page borders then don't need to check other cells in the row
-                    if (_tableBox.PageBreakInside == CssConstants.Avoid)
-                    {
-                        breakPage = cell.BreakPage();
-                        if (breakPage)
-                        {
-                            cury = cell.Location.Y;
-                            break;
-                        }
-                    }
+                    if (_tableBox.PageBreakInside != CssConstants.Avoid) continue;
+
+                    breakPage = cell.BreakPage();
+                    if (!breakPage) continue;
+
+                    cury = cell.Location.Y;
+                    break;
                 }
 
                 if (breakPage) // go back to move the whole row to the next page

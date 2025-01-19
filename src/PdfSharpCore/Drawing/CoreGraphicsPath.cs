@@ -29,9 +29,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using PdfSharpCore.Internal;
+using PeachPDF.PdfSharpCore.Internal;
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     /// <summary>
     /// Represents a graphics path that uses the same notation as GDI+.

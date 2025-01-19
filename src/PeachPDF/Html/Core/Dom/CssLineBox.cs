@@ -227,7 +227,7 @@ namespace PeachPDF.Html.Core.Dom
             }
             else
             {
-                CssRect firstw = b.FirstWordOccourence(b, this);
+                CssRect firstw = b.FirstWordOccurence(b, this);
 
                 if (firstw != null)
                 {

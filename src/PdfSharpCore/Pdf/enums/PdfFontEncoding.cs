@@ -29,7 +29,7 @@
 
 using System;
 
-namespace PdfSharpCore.Pdf
+namespace PeachPDF.PdfSharpCore.Pdf
 {
     /// <summary>
     /// Specifies the encoding schema used for an XFont when converted into PDF.

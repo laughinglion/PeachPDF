@@ -29,7 +29,7 @@
 
 using System.Collections.Generic;
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     ///<summary>
     /// Makes fonts that are not installed on the system available within the current application domain.<br/>

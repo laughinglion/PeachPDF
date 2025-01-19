@@ -1,7 +1,7 @@
-﻿using PdfSharpCore.Pdf.Internal;
+﻿using PeachPDF.PdfSharpCore.Pdf.Internal;
 using System;
 
-namespace PdfSharpCore.Pdf.Security
+namespace PeachPDF.PdfSharpCore.Pdf.Security
 {
     class RC4Encryptor : EncryptorBase, IEncryptor
     {

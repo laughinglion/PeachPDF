@@ -30,7 +30,7 @@
 using System;
 #pragma warning disable 649
 
-namespace PdfSharpCore.Internal
+namespace PeachPDF.PdfSharpCore.Internal
 {
     struct SColor
     {

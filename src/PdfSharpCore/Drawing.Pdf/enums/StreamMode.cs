@@ -27,7 +27,7 @@
 // DEALINGS IN THE SOFTWARE.
 #endregion
 
-namespace PdfSharpCore.Drawing.Pdf
+namespace PeachPDF.PdfSharpCore.Drawing.Pdf
 {
     /// <summary>
     /// Indicates whether we are within a BT/ET block.

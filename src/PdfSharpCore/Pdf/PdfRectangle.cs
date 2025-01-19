@@ -30,12 +30,12 @@
 using System;
 using System.Diagnostics;
 using System.Globalization;
-using PdfSharpCore.Drawing;
-using PdfSharpCore.Pdf.Advanced;
-using PdfSharpCore.Pdf.IO;
-using PdfSharpCore.Pdf.Internal;
+using PeachPDF.PdfSharpCore.Drawing;
+using PeachPDF.PdfSharpCore.Pdf.Advanced;
+using PeachPDF.PdfSharpCore.Pdf.IO;
+using PeachPDF.PdfSharpCore.Pdf.Internal;
 
-namespace PdfSharpCore.Pdf
+namespace PeachPDF.PdfSharpCore.Pdf
 {
     /// <summary>
     /// Represents a PDF rectangle value, that is internally an array with 4 real values.

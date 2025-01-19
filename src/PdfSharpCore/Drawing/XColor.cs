@@ -33,7 +33,7 @@ using System.Globalization;
 using System.ComponentModel;
 // ReSharper disable RedundantNameQualifier
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     ///<summary>
     /// Represents a RGB, CMYK, or gray scale color.

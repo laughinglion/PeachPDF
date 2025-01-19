@@ -1,6 +1,6 @@
-﻿using PdfSharpCore.Pdf;
+﻿using PeachPDF.PdfSharpCore.Pdf;
 
-namespace PdfSharpCore.Exceptions
+namespace PeachPDF.PdfSharpCore.Exceptions
 {
     public class PositionNotFoundException : System.Exception
     {

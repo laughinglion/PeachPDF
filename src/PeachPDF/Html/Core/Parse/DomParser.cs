@@ -11,7 +11,9 @@
 // "The Art of War"
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 using PeachPDF.Html.Adapters.Entities;
 using PeachPDF.Html.Core.Dom;
@@ -56,30 +58,29 @@ namespace PeachPDF.Html.Core.Parse
         public (CssBox cssBox, CssData cssData) GenerateCssTree(string html, HtmlContainerInt htmlContainer, CssData cssData)
         {
             var root = HtmlParser.ParseDocument(html);
-            if (root != null)
-            {
-                root.HtmlContainer = htmlContainer;
+            if (root is null) return (null, cssData);
 
-                bool cssDataChanged = false;
-                (cssData, _) = CascadeParseStyles(root, htmlContainer, cssData, cssDataChanged);
+            root.HtmlContainer = htmlContainer;
+            const bool cssDataChanged = false;
 
-                CascadeApplyStyles(root, cssData);
+            (cssData, _) = CascadeParseStyles(root, htmlContainer, cssData, cssDataChanged);
 
-                SetTextSelectionStyle(htmlContainer, cssData);
+            var media = htmlContainer.GetCssMediaType(cssData.MediaBlocks.Keys);
 
-                CorrectTextBoxes(root);
+            CascadeApplyStyles(root, cssData, media);
 
-                CorrectImgBoxes(root);
+            CorrectTextBoxes(root);
 
-                bool followingBlock = true;
-                CorrectLineBreaksBlocks(root, ref followingBlock);
+            CorrectImgBoxes(root);
 
-                CorrectInlineBoxesParent(root);
+            var followingBlock = true;
+            CorrectLineBreaksBlocks(root, ref followingBlock);
 
-                CorrectBlockInsideInline(root);
+            CorrectInlineBoxesParent(root);
 
-                CorrectInlineBoxesParent(root);
-            }
+            CorrectBlockInsideInline(root);
+
+            CorrectInlineBoxesParent(root);
             return (root,cssData);
         }
 
@@ -104,9 +105,7 @@ namespace PeachPDF.Html.Core.Parse
                     box.GetAttribute("rel", string.Empty).Equals("stylesheet", StringComparison.CurrentCultureIgnoreCase))
                 {
                     CloneCssData(ref cssData, ref cssDataChanged);
-                    string stylesheet;
-                    CssData stylesheetData;
-                    (stylesheet,stylesheetData) = StylesheetLoadHandler.LoadStylesheet(htmlContainer, box.GetAttribute("href", string.Empty), box.HtmlTag.Attributes);
+                    var (stylesheet, stylesheetData) = StylesheetLoadHandler.LoadStylesheet(htmlContainer, box.GetAttribute("href", string.Empty), box.HtmlTag.Attributes);
                     if (stylesheet != null)
                         _cssParser.ParseStyleSheet(cssData, stylesheet);
                     else if (stylesheetData != null)
@@ -139,29 +138,30 @@ namespace PeachPDF.Html.Core.Parse
         /// </summary>
         /// <param name="box">the box to apply the style to</param>
         /// <param name="cssData">the style data for the html</param>
-        private void CascadeApplyStyles(CssBox box, CssData cssData)
+        /// <param name="media">The media type to apply styles to</param>
+        private void CascadeApplyStyles(CssBox box, CssData cssData, string media)
         {
             box.InheritStyle();
 
             if (box.HtmlTag != null)
             {
                 // try assign style using all wildcard
-                AssignCssBlocks(box, cssData, "*");
+                AssignCssBlocks(box, cssData, "*", media);
 
                 // try assign style using the html element tag
-                AssignCssBlocks(box, cssData, box.HtmlTag.Name);
+                AssignCssBlocks(box, cssData, box.HtmlTag.Name, media);
 
                 // try assign style using the "class" attribute of the html element
                 if (box.HtmlTag.HasAttribute("class"))
                 {
-                    AssignClassCssBlocks(box, cssData);
+                    AssignClassCssBlocks(box, cssData, media);
                 }
 
                 // try assign style using the "id" attribute of the html element
                 if (box.HtmlTag.HasAttribute("id"))
                 {
                     var id = box.HtmlTag.TryGetAttribute("id");
-                    AssignCssBlocks(box, cssData, "#" + id);
+                    AssignCssBlocks(box, cssData, "#" + id, media);
                 }
 
                 TranslateAttributes(box.HtmlTag, box);
@@ -176,7 +176,7 @@ namespace PeachPDF.Html.Core.Parse
             }
 
             // cascade text decoration only to boxes that actually have text so it will be handled correctly.
-            if (box.TextDecoration != String.Empty && box.Text == null)
+            if (box.TextDecoration != string.Empty && box.Text == null)
             {
                 foreach (var childBox in box.Boxes)
                     childBox.TextDecoration = box.TextDecoration;
@@ -185,30 +185,7 @@ namespace PeachPDF.Html.Core.Parse
 
             foreach (var childBox in box.Boxes)
             {
-                CascadeApplyStyles(childBox, cssData);
-            }
-        }
-
-        /// <summary>
-        /// Set the selected text style (selection text color and background color).
-        /// </summary>
-        /// <param name="htmlContainer"> </param>
-        /// <param name="cssData">the style data</param>
-        private void SetTextSelectionStyle(HtmlContainerInt htmlContainer, CssData cssData)
-        {
-            htmlContainer.SelectionForeColor = RColor.Empty;
-            htmlContainer.SelectionBackColor = RColor.Empty;
-
-            if (cssData.ContainsCssBlock("::selection"))
-            {
-                var blocks = cssData.GetCssBlock("::selection");
-                foreach (var block in blocks)
-                {
-                    if (block.Properties.ContainsKey("color"))
-                        htmlContainer.SelectionForeColor = _cssParser.ParseColor(block.Properties["color"]);
-                    if (block.Properties.ContainsKey("background-color"))
-                        htmlContainer.SelectionBackColor = _cssParser.ParseColor(block.Properties["background-color"]);
-                }
+                CascadeApplyStyles(childBox, cssData, media);
             }
         }
 
@@ -218,7 +195,8 @@ namespace PeachPDF.Html.Core.Parse
         /// </summary>
         /// <param name="box">the css box to assign css to</param>
         /// <param name="cssData">the css data to use to get the matching css blocks</param>
-        private static void AssignClassCssBlocks(CssBox box, CssData cssData)
+        /// <param name="media">CSS media to use (in addition to all)</param>
+        private static void AssignClassCssBlocks(CssBox box, CssData cssData, string media)
         {
             var classes = box.HtmlTag.TryGetAttribute("class");
 
@@ -228,19 +206,18 @@ namespace PeachPDF.Html.Core.Parse
                 while (startIdx < classes.Length && classes[startIdx] == ' ')
                     startIdx++;
 
-                if (startIdx < classes.Length)
-                {
-                    var endIdx = classes.IndexOf(' ', startIdx);
+                if (startIdx >= classes.Length) continue;
 
-                    if (endIdx < 0)
-                        endIdx = classes.Length;
+                var endIdx = classes.IndexOf(' ', startIdx);
 
-                    var cls = string.Concat(".", classes.AsSpan(startIdx, endIdx - startIdx));
-                    AssignCssBlocks(box, cssData, cls);
-                    AssignCssBlocks(box, cssData, box.HtmlTag.Name + cls);
+                if (endIdx < 0)
+                    endIdx = classes.Length;
 
-                    startIdx = endIdx + 1;
-                }
+                var cls = string.Concat(".", classes.AsSpan(startIdx, endIdx - startIdx));
+                AssignCssBlocks(box, cssData, cls, media);
+                AssignCssBlocks(box, cssData, box.HtmlTag.Name + cls, media);
+
+                startIdx = endIdx + 1;
             }
         }
 
@@ -250,10 +227,21 @@ namespace PeachPDF.Html.Core.Parse
         /// <param name="box">the css box to assign css to</param>
         /// <param name="cssData">the css data to use to get the matching css blocks</param>
         /// <param name="className">the class selector to search for css blocks</param>
-        private static void AssignCssBlocks(CssBox box, CssData cssData, string className)
+        /// <param name="media">The media type to apply styles for</param>
+        private static void AssignCssBlocks(CssBox box, CssData cssData, string className, string media)
         {
+            var combinedBlocks = new List<CssBlock>();
+
             var blocks = cssData.GetCssBlock(className);
-            foreach (var block in blocks)
+            combinedBlocks.AddRange(blocks);
+
+            if (media is not "all")
+            {
+                var mediaBlocks = cssData.GetCssBlock(className, media);
+                combinedBlocks.AddRange(mediaBlocks);
+            }
+
+            foreach (var block in combinedBlocks)
             {
                 if (IsBlockAssignableToBox(box, block))
                 {
@@ -306,7 +294,7 @@ namespace PeachPDF.Html.Core.Parse
                 while (!matched)
                 {
                     box = box.ParentBox;
-                    while (box != null && box.HtmlTag == null)
+                    while (box is { HtmlTag: null })
                         box = box.ParentBox;
 
                     if (box == null)
@@ -366,42 +354,31 @@ namespace PeachPDF.Html.Core.Parse
         /// Used to prevent invalid CssBoxes creation like table with inline display style.
         /// </summary>
         /// <param name="box">the css box to assign css to</param>
-        /// <param name="key">the style key to cehck</param>
+        /// <param name="key">the style key to check</param>
         /// <param name="value">the style value to check</param>
         /// <returns>true - style allowed, false - not allowed</returns>
         private static bool IsStyleOnElementAllowed(CssBox box, string key, string value)
         {
-            if (box.HtmlTag != null && key == HtmlConstants.Display)
-            {
-                if (value is CssConstants.None)
-                {
-                    return true;
-                }
+            if (box.HtmlTag == null || key != HtmlConstants.Display) return true;
 
-                switch (box.HtmlTag.Name)
-                {
-                    case HtmlConstants.Table:
-                        return value == CssConstants.Table;
-                    case HtmlConstants.Tr:
-                        return value == CssConstants.TableRow;
-                    case HtmlConstants.Tbody:
-                        return value == CssConstants.TableRowGroup;
-                    case HtmlConstants.Thead:
-                        return value == CssConstants.TableHeaderGroup;
-                    case HtmlConstants.Tfoot:
-                        return value == CssConstants.TableFooterGroup;
-                    case HtmlConstants.Col:
-                        return value == CssConstants.TableColumn;
-                    case HtmlConstants.Colgroup:
-                        return value == CssConstants.TableColumnGroup;
-                    case HtmlConstants.Td:
-                    case HtmlConstants.Th:
-                        return value == CssConstants.TableCell;
-                    case HtmlConstants.Caption:
-                        return value == CssConstants.TableCaption;
-                }
+            if (value is CssConstants.None)
+            {
+                return true;
             }
-            return true;
+
+            return box.HtmlTag.Name switch
+            {
+                HtmlConstants.Table => value == CssConstants.Table,
+                HtmlConstants.Tr => value == CssConstants.TableRow,
+                HtmlConstants.Tbody => value == CssConstants.TableRowGroup,
+                HtmlConstants.Thead => value == CssConstants.TableHeaderGroup,
+                HtmlConstants.Tfoot => value == CssConstants.TableFooterGroup,
+                HtmlConstants.Col => value == CssConstants.TableColumn,
+                HtmlConstants.Colgroup => value == CssConstants.TableColumnGroup,
+                HtmlConstants.Td or HtmlConstants.Th => value == CssConstants.TableCell,
+                HtmlConstants.Caption => value == CssConstants.TableCaption,
+                _ => true
+            };
         }
 
         /// <summary>
@@ -410,11 +387,10 @@ namespace PeachPDF.Html.Core.Parse
         /// </summary>
         private static void CloneCssData(ref CssData cssData, ref bool cssDataChanged)
         {
-            if (!cssDataChanged)
-            {
-                cssDataChanged = true;
-                cssData = cssData.Clone();
-            }
+            if (cssDataChanged) return;
+
+            cssDataChanged = true;
+            cssData = cssData.Clone();
         }
 
         /// <summary>
@@ -424,84 +400,83 @@ namespace PeachPDF.Html.Core.Parse
         /// <param name="box"></param>
         private void TranslateAttributes(HtmlTag tag, CssBox box)
         {
-            if (tag.HasAttributes())
+            if (!tag.HasAttributes()) return;
+
+            foreach (var att in tag.Attributes.Keys)
             {
-                foreach (string att in tag.Attributes.Keys)
+                var value = tag.Attributes[att];
+
+                switch (att)
                 {
-                    string value = tag.Attributes[att];
-
-                    switch (att)
-                    {
-                        case HtmlConstants.Align:
-                            if (value == HtmlConstants.Left || value == HtmlConstants.Center || value == HtmlConstants.Right || value == HtmlConstants.Justify)
-                                box.TextAlign = value.ToLower();
-                            else
-                                box.VerticalAlign = value.ToLower();
-                            break;
-                        case HtmlConstants.Background:
-                            box.BackgroundImage = value.ToLower();
-                            break;
-                        case HtmlConstants.Bgcolor:
-                            box.BackgroundColor = value.ToLower();
-                            break;
-                        case HtmlConstants.Border:
-                            if (!string.IsNullOrEmpty(value) && value != "0")
-                                box.BorderLeftStyle = box.BorderTopStyle = box.BorderRightStyle = box.BorderBottomStyle = CssConstants.Solid;
-                            box.BorderLeftWidth = box.BorderTopWidth = box.BorderRightWidth = box.BorderBottomWidth = TranslateLength(value);
-
-                            if (tag.Name == HtmlConstants.Table)
-                            {
-                                if (value != "0")
-                                    ApplyTableBorder(box, "1px");
-                            }
-                            else
-                            {
-                                box.BorderTopStyle = box.BorderLeftStyle = box.BorderRightStyle = box.BorderBottomStyle = CssConstants.Solid;
-                            }
-                            break;
-                        case HtmlConstants.Bordercolor:
-                            box.BorderLeftColor = box.BorderTopColor = box.BorderRightColor = box.BorderBottomColor = value.ToLower();
-                            break;
-                        case HtmlConstants.Cellspacing:
-                            box.BorderSpacing = TranslateLength(value);
-                            break;
-                        case HtmlConstants.Cellpadding:
-                            ApplyTablePadding(box, value);
-                            break;
-                        case HtmlConstants.Color:
-                            box.Color = value.ToLower();
-                            break;
-                        case HtmlConstants.Dir:
-                            box.Direction = value.ToLower();
-                            break;
-                        case HtmlConstants.Face:
-                            box.FontFamily = _cssParser.ParseFontFamily(value);
-                            break;
-                        case HtmlConstants.Height:
-                            box.Height = TranslateLength(value);
-                            break;
-                        case HtmlConstants.Hspace:
-                            box.MarginRight = box.MarginLeft = TranslateLength(value);
-                            break;
-                        case HtmlConstants.Nowrap:
-                            box.WhiteSpace = CssConstants.NoWrap;
-                            break;
-                        case HtmlConstants.Size:
-                            if (tag.Name.Equals(HtmlConstants.Hr, StringComparison.OrdinalIgnoreCase))
-                                box.Height = TranslateLength(value);
-                            else if (tag.Name.Equals(HtmlConstants.Font, StringComparison.OrdinalIgnoreCase))
-                                box.FontSize = value;
-                            break;
-                        case HtmlConstants.Valign:
+                    case HtmlConstants.Align:
+                        if (value is HtmlConstants.Left or HtmlConstants.Center or HtmlConstants.Right or HtmlConstants.Justify)
+                            box.TextAlign = value.ToLower();
+                        else
                             box.VerticalAlign = value.ToLower();
-                            break;
-                        case HtmlConstants.Vspace:
-                            box.MarginTop = box.MarginBottom = TranslateLength(value);
-                            break;
-                        case HtmlConstants.Width:
-                            box.Width = TranslateLength(value);
-                            break;
-                    }
+                        break;
+                    case HtmlConstants.Background:
+                        box.BackgroundImage = value.ToLower();
+                        break;
+                    case HtmlConstants.Bgcolor:
+                        box.BackgroundColor = value.ToLower();
+                        break;
+                    case HtmlConstants.Border:
+                        if (!string.IsNullOrEmpty(value) && value != "0")
+                            box.BorderLeftStyle = box.BorderTopStyle = box.BorderRightStyle = box.BorderBottomStyle = CssConstants.Solid;
+                        box.BorderLeftWidth = box.BorderTopWidth = box.BorderRightWidth = box.BorderBottomWidth = TranslateLength(value);
+
+                        if (tag.Name == HtmlConstants.Table)
+                        {
+                            if (value != "0")
+                                ApplyTableBorder(box, "1px");
+                        }
+                        else
+                        {
+                            box.BorderTopStyle = box.BorderLeftStyle = box.BorderRightStyle = box.BorderBottomStyle = CssConstants.Solid;
+                        }
+                        break;
+                    case HtmlConstants.Bordercolor:
+                        box.BorderLeftColor = box.BorderTopColor = box.BorderRightColor = box.BorderBottomColor = value.ToLower();
+                        break;
+                    case HtmlConstants.Cellspacing:
+                        box.BorderSpacing = TranslateLength(value);
+                        break;
+                    case HtmlConstants.Cellpadding:
+                        ApplyTablePadding(box, value);
+                        break;
+                    case HtmlConstants.Color:
+                        box.Color = value.ToLower();
+                        break;
+                    case HtmlConstants.Dir:
+                        box.Direction = value.ToLower();
+                        break;
+                    case HtmlConstants.Face:
+                        box.FontFamily = _cssParser.ParseFontFamily(value);
+                        break;
+                    case HtmlConstants.Height:
+                        box.Height = TranslateLength(value);
+                        break;
+                    case HtmlConstants.Hspace:
+                        box.MarginRight = box.MarginLeft = TranslateLength(value);
+                        break;
+                    case HtmlConstants.Nowrap:
+                        box.WhiteSpace = CssConstants.NoWrap;
+                        break;
+                    case HtmlConstants.Size:
+                        if (tag.Name.Equals(HtmlConstants.Hr, StringComparison.OrdinalIgnoreCase))
+                            box.Height = TranslateLength(value);
+                        else if (tag.Name.Equals(HtmlConstants.Font, StringComparison.OrdinalIgnoreCase))
+                            box.FontSize = value;
+                        break;
+                    case HtmlConstants.Valign:
+                        box.VerticalAlign = value.ToLower();
+                        break;
+                    case HtmlConstants.Vspace:
+                        box.MarginTop = box.MarginBottom = TranslateLength(value);
+                        break;
+                    case HtmlConstants.Width:
+                        box.Width = TranslateLength(value);
+                        break;
                 }
             }
         }
@@ -513,18 +488,13 @@ namespace PeachPDF.Html.Core.Parse
         /// <returns></returns>
         private static string TranslateLength(string htmlLength)
         {
-            CssLength len = new CssLength(htmlLength);
+            var len = new CssLength(htmlLength);
 
-            if (len.HasError)
-            {
-                return string.Format(NumberFormatInfo.InvariantInfo, "{0}px", htmlLength);
-            }
-
-            return htmlLength;
+            return len.HasError ? string.Format(NumberFormatInfo.InvariantInfo, "{0}px", htmlLength) : htmlLength;
         }
 
         /// <summary>
-        /// Cascades to the TD's the border spacified in the TABLE tag.
+        /// Cascades to the TD's the border specified in the TABLE tag.
         /// </summary>
         /// <param name="table"></param>
         /// <param name="border"></param>
@@ -538,7 +508,7 @@ namespace PeachPDF.Html.Core.Parse
         }
 
         /// <summary>
-        /// Cascades to the TD's the border spacified in the TABLE tag.
+        /// Cascades to the TD's the border specified in the TABLE tag.
         /// </summary>
         /// <param name="table"></param>
         /// <param name="padding"></param>
@@ -560,7 +530,7 @@ namespace PeachPDF.Html.Core.Parse
             {
                 foreach (var l2 in l1.Boxes)
                 {
-                    if (l2.HtmlTag != null && l2.HtmlTag.Name == "td")
+                    if (l2.HtmlTag is { Name: "td" })
                     {
                         action(l2);
                     }
@@ -583,7 +553,7 @@ namespace PeachPDF.Html.Core.Parse
         /// <param name="box">the current box to correct its sub-tree</param>
         private static void CorrectTextBoxes(CssBox box)
         {
-            for (int i = box.Boxes.Count - 1; i >= 0; i--)
+            for (var i = box.Boxes.Count - 1; i >= 0; i--)
             {
                 var childBox = box.Boxes[i];
                 if (childBox.Text != null)
@@ -718,12 +688,11 @@ namespace PeachPDF.Html.Core.Parse
                     }
                 }
 
-                if (!DomUtils.ContainsInlinesOnly(box))
+                if (DomUtils.ContainsInlinesOnly(box)) return;
+
+                foreach (var childBox in box.Boxes)
                 {
-                    foreach (var childBox in box.Boxes)
-                    {
-                        CorrectBlockInsideInline(childBox);
-                    }
+                    CorrectBlockInsideInline(childBox);
                 }
             }
             catch (Exception ex)
@@ -759,15 +728,13 @@ namespace PeachPDF.Html.Core.Parse
                     leftBlock.ParentBox = null;
 
                 int minBoxes = leftBlock.ParentBox != null ? 2 : 1;
-                if (box.Boxes.Count > minBoxes)
-                {
-                    // create temp box to handle the tail elements and then get them back so no deep hierarchy is created
-                    var tempRightBox = CssBox.CreateBox(box, null, box.Boxes[minBoxes]);
-                    while (box.Boxes.Count > minBoxes + 1)
-                        box.Boxes[minBoxes + 1].ParentBox = tempRightBox;
+                if (box.Boxes.Count <= minBoxes) return null;
+                // create temp box to handle the tail elements and then get them back so no deep hierarchy is created
+                var tempRightBox = CssBox.CreateBox(box, null, box.Boxes[minBoxes]);
+                while (box.Boxes.Count > minBoxes + 1)
+                    box.Boxes[minBoxes + 1].ParentBox = tempRightBox;
 
-                    return tempRightBox;
-                }
+                return tempRightBox;
             }
             else if (box.Boxes[0].Display == CssConstants.Inline)
             {
@@ -833,7 +800,7 @@ namespace PeachPDF.Html.Core.Parse
             else if (splitBox.ParentBox != null && parentBox.Boxes.Count > 1)
             {
                 splitBox.SetBeforeBox(parentBox.Boxes[1]);
-                if (splitBox.HtmlTag != null && splitBox.HtmlTag.Name == "br" && (leftbox != null || leftBlock.Boxes.Count > 1))
+                if (splitBox.HtmlTag is { Name: "br" } && (leftbox != null || leftBlock.Boxes.Count > 1))
                     splitBox.Display = CssConstants.Inline;
             }
         }

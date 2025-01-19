@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.PdfSharpCore.com
+// http://www.PeachPDF.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -32,11 +32,11 @@ using System.Globalization;
 using System.Diagnostics;
 using System.Text;
 using System.IO;
-using PdfSharpCore.Internal;
+using PeachPDF.PdfSharpCore.Internal;
 
 #pragma warning disable 1591
 
-namespace PdfSharpCore.Pdf.Content
+namespace PeachPDF.PdfSharpCore.Pdf.Content
 {
     /// <summary>
     /// Lexical analyzer for PDF content files. Adobe specifies no grammar, but it seems that it

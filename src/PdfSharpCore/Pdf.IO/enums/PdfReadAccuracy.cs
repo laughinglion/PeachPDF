@@ -1,4 +1,4 @@
-﻿namespace PdfSharpCore.Pdf.IO.enums
+﻿namespace PeachPDF.PdfSharpCore.Pdf.IO.enums
 {
     public enum PdfReadAccuracy
     {

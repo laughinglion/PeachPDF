@@ -27,7 +27,7 @@
 // DEALINGS IN THE SOFTWARE.
 #endregion
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     /// <summary>
     /// Specifies how different clipping regions can be combined.
@@ -45,22 +45,22 @@ namespace PdfSharpCore.Drawing
         Intersect = 1,
 
         /// <summary>
-        /// Not yet implemented in PdfSharpCore.
+        /// Not yet implemented in PeachPDF.PdfSharpCore.
         /// </summary>
         Union = 2,
 
         /// <summary>
-        /// Not yet implemented in PdfSharpCore.
+        /// Not yet implemented in PeachPDF.PdfSharpCore.
         /// </summary>
         Xor = 3,
 
         /// <summary>
-        /// Not yet implemented in PdfSharpCore.
+        /// Not yet implemented in PeachPDF.PdfSharpCore.
         /// </summary>
         Exclude = 4,
 
         /// <summary>
-        /// Not yet implemented in PdfSharpCore.
+        /// Not yet implemented in PeachPDF.PdfSharpCore.
         /// </summary>
         Complement = 5,
     }

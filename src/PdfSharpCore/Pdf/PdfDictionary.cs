@@ -34,14 +34,14 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using System.Text;
-using PdfSharpCore.Drawing;
-using PdfSharpCore.Pdf.IO;
-using PdfSharpCore.Pdf.Filters;
-using PdfSharpCore.Pdf.Advanced;
-using PdfSharpCore.Pdf.Internal;
+using PeachPDF.PdfSharpCore.Drawing;
+using PeachPDF.PdfSharpCore.Pdf.IO;
+using PeachPDF.PdfSharpCore.Pdf.Filters;
+using PeachPDF.PdfSharpCore.Pdf.Advanced;
+using PeachPDF.PdfSharpCore.Pdf.Internal;
 using System.Diagnostics.CodeAnalysis;
 
-namespace PdfSharpCore.Pdf
+namespace PeachPDF.PdfSharpCore.Pdf
 {
     /// <summary>
     /// Value creation flags. Specifies whether and how a value that does not exist is created.
@@ -891,12 +891,12 @@ namespace PdfSharpCore.Pdf
                             {
                                 if (typeof(PdfDictionary).GetTypeInfo().IsAssignableFrom(typeInfo))
                                 {
-                                    Debug.Assert(value is PdfDictionary, "Bug in PdfSharpCore. Please send this file to PDFsharp support.");
+                                    Debug.Assert(value is PdfDictionary, "Bug in PeachPDF.PdfSharpCore. Please send this file to PDFsharp support.");
                                     value = CreateDictionary(type, (PdfDictionary)value);
                                 }
                                 else if (typeof(PdfArray).GetTypeInfo().IsAssignableFrom(typeInfo))
                                 {
-                                    Debug.Assert(value is PdfArray, "Bug in PdfSharpCore. Please send this file to PDFsharp support.");
+                                    Debug.Assert(value is PdfArray, "Bug in PeachPDF.PdfSharpCore. Please send this file to PDFsharp support.");
                                     value = CreateArray(type, (PdfArray)value);
                                 }
                                 else

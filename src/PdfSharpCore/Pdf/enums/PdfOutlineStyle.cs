@@ -31,7 +31,7 @@
 
 using System;
 
-namespace PdfSharpCore.Pdf
+namespace PeachPDF.PdfSharpCore.Pdf
 {
     /// <summary>
     /// Specifies the font style for the outline (bookmark) text.

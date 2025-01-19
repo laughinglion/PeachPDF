@@ -28,9 +28,9 @@
 #endregion
 
 using System;
-using PdfSharpCore.Drawing;
+using PeachPDF.PdfSharpCore.Drawing;
 
-namespace PdfSharpCore.Internal
+namespace PeachPDF.PdfSharpCore.Internal
 {
     /// <summary>
     /// Some static helper functions for calculations.

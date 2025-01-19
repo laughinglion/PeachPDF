@@ -10,14 +10,14 @@
 // - Sun Tsu,
 // "The Art of War"
 
-using PdfSharpCore.Drawing;
+using PeachPDF.PdfSharpCore.Drawing;
 
 namespace PeachPDF.Adapters
 {
     /// <summary>
     /// Because PdfSharp doesn't support texture brush we need to implement it ourselves.
     /// </summary>
-    internal sealed class XTextureBrush
+    internal sealed class XTextureBrush : XBrush
     {
         #region Fields/Consts
 

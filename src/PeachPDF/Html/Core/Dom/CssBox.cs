@@ -19,6 +19,7 @@ using PeachPDF.Html.Core.Entities;
 using PeachPDF.Html.Core.Handlers;
 using PeachPDF.Html.Core.Parse;
 using PeachPDF.Html.Core.Utils;
+using PeachPDF.PdfSharpCore;
 
 namespace PeachPDF.Html.Core.Dom
 {
@@ -47,17 +48,6 @@ namespace PeachPDF.Html.Core.Dom
         protected HtmlContainerInt _htmlContainer;
 
         /// <summary>
-        /// the html tag that is associated with this css box, null if anonymous box
-        /// </summary>
-        private readonly HtmlTag _htmltag;
-
-        private readonly List<CssRect> _boxWords = new();
-        private readonly List<CssBox> _boxes = new();
-        private readonly List<CssLineBox> _lineBoxes = new();
-        private readonly List<CssLineBox> _parentLineBoxes = new();
-        private readonly Dictionary<CssLineBox, RRect> _rectangles = new();
-
-        /// <summary>
         /// the inner text of the box
         /// </summary>
         private SubString _text;
@@ -72,7 +62,6 @@ namespace PeachPDF.Html.Core.Dom
 
         protected bool _wordsSizeMeasured;
         private CssBox _listItemBox;
-        private CssLineBox _firstHostingLineBox;
         private CssLineBox _lastHostingLineBox;
 
         /// <summary>
@@ -95,7 +84,7 @@ namespace PeachPDF.Html.Core.Dom
                 _parentBox = parentBox;
                 _parentBox.Boxes.Add(this);
             }
-            _htmltag = tag;
+            HtmlTag = tag;
         }
 
         /// <summary>
@@ -105,7 +94,7 @@ namespace PeachPDF.Html.Core.Dom
         public HtmlContainerInt HtmlContainer
         {
             get { return _htmlContainer ??= _parentBox?.HtmlContainer; }
-            set { _htmlContainer = value; }
+            set => _htmlContainer = value;
         }
 
         /// <summary>
@@ -113,12 +102,11 @@ namespace PeachPDF.Html.Core.Dom
         /// </summary>
         public CssBox ParentBox
         {
-            get { return _parentBox; }
+            get => _parentBox;
             set
             {
                 //Remove from last parent
-                if (_parentBox != null)
-                    _parentBox.Boxes.Remove(this);
+                _parentBox?.Boxes.Remove(this);
 
                 _parentBox = value;
 
@@ -131,44 +119,27 @@ namespace PeachPDF.Html.Core.Dom
         /// <summary>
         /// Gets the children boxes of this box
         /// </summary>
-        public List<CssBox> Boxes
-        {
-            get { return _boxes; }
-        }
+        public List<CssBox> Boxes { get; } = [];
 
         /// <summary>
         /// Is the box is of "br" element.
         /// </summary>
-        public bool IsBrElement
-        {
-            get {
-                return _htmltag != null && _htmltag.Name.Equals("br", StringComparison.InvariantCultureIgnoreCase);
-            }
-        }
+        public bool IsBrElement => HtmlTag != null && HtmlTag.Name.Equals("br", StringComparison.InvariantCultureIgnoreCase);
 
         /// <summary>
         /// is the box "Display" is "Inline", is this is an inline box and not block.
         /// </summary>
-        public bool IsInline
-        {
-            get { return (Display == CssConstants.Inline || Display == CssConstants.InlineBlock) && !IsBrElement; }
-        }
+        public bool IsInline => Display is CssConstants.Inline or CssConstants.InlineBlock && !IsBrElement;
 
         /// <summary>
-        /// is the box "Display" is "Block", is this is an block box and not inline.
+        /// is the box "Display" is "Block", is this is a block box and not inline.
         /// </summary>
-        public bool IsBlock
-        {
-            get { return Display == CssConstants.Block; }
-        }
+        public bool IsBlock => Display == CssConstants.Block;
 
         /// <summary>
         /// Is the css box clickable (by default only "a" element is clickable)
         /// </summary>
-        public virtual bool IsClickable
-        {
-            get { return HtmlTag != null && HtmlTag.Name == HtmlConstants.A && !HtmlTag.HasAttribute("id"); }
-        }
+        public virtual bool IsClickable => HtmlTag is { Name: HtmlConstants.A } && !HtmlTag.HasAttribute("id");
 
         /// <summary>
         /// Gets a value indicating whether this instance or one of its parents has Position = fixed.
@@ -203,10 +174,7 @@ namespace PeachPDF.Html.Core.Dom
         /// <summary>
         /// Get the href link of the box (by default get "href" attribute)
         /// </summary>
-        public virtual string HrefLink
-        {
-            get { return GetAttribute(HtmlConstants.Href); }
-        }
+        public virtual string HrefLink => GetAttribute(HtmlConstants.Href);
 
         /// <summary>
         /// Gets the containing block-box of this box. (The nearest parent box with display=block)
@@ -241,18 +209,12 @@ namespace PeachPDF.Html.Core.Dom
         /// <summary>
         /// Gets the HTMLTag that hosts this box
         /// </summary>
-        public HtmlTag HtmlTag
-        {
-            get { return _htmltag; }
-        }
+        public HtmlTag HtmlTag { get; }
 
         /// <summary>
         /// Gets if this box represents an image
         /// </summary>
-        public bool IsImage
-        {
-            get { return Words.Count == 1 && Words[0].IsImage; }
-        }
+        public bool IsImage => Words.Count == 1 && Words[0].IsImage;
 
         /// <summary>
         /// Tells if the box is empty or contains just blank spaces
@@ -280,62 +242,43 @@ namespace PeachPDF.Html.Core.Dom
         /// </summary>
         public SubString Text
         {
-            get { return _text; }
+            get => _text;
             set
             {
                 _text = value;
-                _boxWords.Clear();
+                Words.Clear();
             }
         }
 
         /// <summary>
         /// Gets the line-boxes of this box (if block box)
         /// </summary>
-        internal List<CssLineBox> LineBoxes
-        {
-            get { return _lineBoxes; }
-        }
+        internal List<CssLineBox> LineBoxes { get; } = [];
 
         /// <summary>
         /// Gets the linebox(es) that contains words of this box (if inline)
         /// </summary>
-        internal List<CssLineBox> ParentLineBoxes
-        {
-            get { return _parentLineBoxes; }
-        }
+        internal List<CssLineBox> ParentLineBoxes { get; } = [];
 
         /// <summary>
         /// Gets the rectangles where this box should be painted
         /// </summary>
-        internal Dictionary<CssLineBox, RRect> Rectangles
-        {
-            get { return _rectangles; }
-        }
+        internal Dictionary<CssLineBox, RRect> Rectangles { get; } = new();
 
         /// <summary>
         /// Gets the BoxWords of text in the box
         /// </summary>
-        internal List<CssRect> Words
-        {
-            get { return _boxWords; }
-        }
+        internal List<CssRect> Words { get; } = [];
 
         /// <summary>
         /// Gets the first word of the box
         /// </summary>
-        internal CssRect FirstWord
-        {
-            get { return Words[0]; }
-        }
+        internal CssRect FirstWord => Words[0];
 
         /// <summary>
         /// Gets or sets the first linebox where content of this box appear
         /// </summary>
-        internal CssLineBox FirstHostingLineBox
-        {
-            get { return _firstHostingLineBox; }
-            set { _firstHostingLineBox = value; }
-        }
+        internal CssLineBox FirstHostingLineBox { get; set; }
 
         /// <summary>
         /// Gets or sets the last linebox where content of this box appear
@@ -356,27 +299,13 @@ namespace PeachPDF.Html.Core.Dom
         {
             ArgChecker.AssertArgNotNull(tag, "tag");
 
-            if (tag.Attributes != null && tag.Attributes.ContainsKey("class") && tag.Attributes["class"].StartsWith("mobile"))
+            return tag.Name switch
             {
-                
-            }
-
-            if (tag.Name == HtmlConstants.Img)
-            {
-                return new CssBoxImage(parent, tag);
-            }
-            else if (tag.Name == HtmlConstants.Iframe)
-            {
-                return new CssBoxFrame(parent, tag);
-            }
-            else if (tag.Name == HtmlConstants.Hr)
-            {
-                return new CssBoxHr(parent, tag);
-            }
-            else
-            {
-                return new CssBox(parent, tag);
-            }
+                HtmlConstants.Img => new CssBoxImage(parent, tag),
+                HtmlConstants.Iframe => new CssBoxFrame(parent, tag),
+                HtmlConstants.Hr => new CssBoxHr(parent, tag),
+                _ => new CssBox(parent, tag)
+            };
         }
 
         /// <summary>
@@ -466,42 +395,40 @@ namespace PeachPDF.Html.Core.Dom
         {
             try
             {
-                if (Display != CssConstants.None && Visibility == CssConstants.Visible)
+                if (Display == CssConstants.None || Visibility != CssConstants.Visible) return;
+
+                // use initial clip to draw blocks with Position = fixed. I.e. ignrore page margins
+                if (this.Position == CssConstants.Fixed)
                 {
-                    // use initial clip to draw blocks with Position = fixed. I.e. ignrore page margins
-                    if (this.Position == CssConstants.Fixed)
+                    g.SuspendClipping();
+                }
+
+                // don't call paint if the rectangle of the box is not in visible rectangle
+                bool visible = Rectangles.Count == 0;
+                if (!visible)
+                {
+                    var clip = g.GetClip();
+                    var rect = ContainingBlock.ClientRectangle;
+                    rect.X -= 2;
+                    rect.Width += 2;
+                    if (!IsFixed)
                     {
-                        g.SuspendClipping();
+                        //rect.Offset(new RPoint(-HtmlContainer.Location.X, -HtmlContainer.Location.Y));
+                        rect.Offset(HtmlContainer.ScrollOffset);
                     }
+                    clip.Intersect(rect);
 
-                    // don't call paint if the rectangle of the box is not in visible rectangle
-                    bool visible = Rectangles.Count == 0;
-                    if (!visible)
-                    {
-                        var clip = g.GetClip();
-                        var rect = ContainingBlock.ClientRectangle;
-                        rect.X -= 2;
-                        rect.Width += 2;
-                        if (!IsFixed)
-                        {
-                            //rect.Offset(new RPoint(-HtmlContainer.Location.X, -HtmlContainer.Location.Y));
-                            rect.Offset(HtmlContainer.ScrollOffset);
-                        }
-                        clip.Intersect(rect);
+                    if (clip != RRect.Empty)
+                        visible = true;
+                }
 
-                        if (clip != RRect.Empty)
-                            visible = true;
-                    }
+                if (visible)
+                    PaintImp(g);
 
-                    if (visible)
-                        PaintImp(g);
-
-                    // Restore clips
-                    if (this.Position == CssConstants.Fixed)
-                    {
-                        g.ResumeClipping();
-                    }
-
+                // Restore clips
+                if (this.Position == CssConstants.Fixed)
+                {
+                    g.ResumeClipping();
                 }
             }
             catch (Exception ex)
@@ -530,11 +457,11 @@ namespace PeachPDF.Html.Core.Dom
         /// <param name="fromBox">the box to move all its child boxes from</param>
         public void SetAllBoxes(CssBox fromBox)
         {
-            foreach (var childBox in fromBox._boxes)
+            foreach (var childBox in fromBox.Boxes)
                 childBox._parentBox = this;
 
-            _boxes.AddRange(fromBox._boxes);
-            fromBox._boxes.Clear();
+            Boxes.AddRange(fromBox.Boxes);
+            fromBox.Boxes.Clear();
         }
 
         /// <summary>
@@ -542,7 +469,7 @@ namespace PeachPDF.Html.Core.Dom
         /// </summary>
         public void ParseToWords()
         {
-            _boxWords.Clear();
+            Words.Clear();
 
             int startIdx = 0;
             bool preserveSpaces = WhiteSpace == CssConstants.Pre || WhiteSpace == CssConstants.PreWrap;
@@ -561,7 +488,7 @@ namespace PeachPDF.Html.Core.Dom
                     if (endIdx > startIdx)
                     {
                         if (preserveSpaces)
-                            _boxWords.Add(new CssRectWord(this, HtmlUtils.DecodeHtml(_text.Substring(startIdx, endIdx - startIdx)), false, false));
+                            Words.Add(new CssRectWord(this, HtmlUtils.DecodeHtml(_text.Substring(startIdx, endIdx - startIdx)), false, false));
                     }
                     else
                     {
@@ -574,9 +501,9 @@ namespace PeachPDF.Html.Core.Dom
 
                         if (endIdx > startIdx)
                         {
-                            var hasSpaceBefore = !preserveSpaces && (startIdx > 0 && _boxWords.Count == 0 && char.IsWhiteSpace(_text[startIdx - 1]));
+                            var hasSpaceBefore = !preserveSpaces && (startIdx > 0 && Words.Count == 0 && char.IsWhiteSpace(_text[startIdx - 1]));
                             var hasSpaceAfter = !preserveSpaces && (endIdx < _text.Length && char.IsWhiteSpace(_text[endIdx]));
-                            _boxWords.Add(new CssRectWord(this, HtmlUtils.DecodeHtml(_text.Substring(startIdx, endIdx - startIdx)), hasSpaceBefore, hasSpaceAfter));
+                            Words.Add(new CssRectWord(this, HtmlUtils.DecodeHtml(_text.Substring(startIdx, endIdx - startIdx)), hasSpaceBefore, hasSpaceAfter));
                         }
                     }
 
@@ -585,7 +512,7 @@ namespace PeachPDF.Html.Core.Dom
                     {
                         endIdx++;
                         if (respoctNewline)
-                            _boxWords.Add(new CssRectWord(this, "\n", false, false));
+                            Words.Add(new CssRectWord(this, "\n", false, false));
                     }
 
                     startIdx = endIdx;
@@ -598,8 +525,7 @@ namespace PeachPDF.Html.Core.Dom
         /// </summary>
         public virtual void Dispose()
         {
-            if (_imageLoadHandler != null)
-                _imageLoadHandler.Dispose();
+            _imageLoadHandler?.Dispose();
 
             foreach (var childBox in Boxes)
             {
@@ -617,12 +543,26 @@ namespace PeachPDF.Html.Core.Dom
         /// <param name="g">Device context to use</param>
         protected virtual void PerformLayoutImp(RGraphics g)
         {
-            Console.WriteLine("performing layout: " + HtmlTag?.ToString());
-
             if (Display != CssConstants.None)
             {
                 RectanglesReset();
                 MeasureWordsSize(g);
+            }
+
+            if (PageBreakBefore is CssConstants.Always)
+            {
+                var previousSibling = DomUtils.GetPreviousSibling(this);
+
+                var bottomRelativeToCurrentPage = previousSibling.ActualBottom;
+                var pageHeight = HtmlContainer.PageSize.Height;
+
+                while (bottomRelativeToCurrentPage > pageHeight)
+                {
+                    bottomRelativeToCurrentPage -= pageHeight;
+                }
+
+                var pixelsToNextPage = pageHeight - bottomRelativeToCurrentPage;
+                previousSibling.ActualBottom += pixelsToNextPage + HtmlContainer.MarginTop;
             }
 
             if (IsBlock || Display == CssConstants.ListItem || Display == CssConstants.Table || Display == CssConstants.InlineTable || Display == CssConstants.TableCell)
@@ -651,21 +591,19 @@ namespace PeachPDF.Html.Core.Dom
                 if (Display != CssConstants.TableCell)
                 {
                     var prevSibling = DomUtils.GetPreviousSibling(this);
-                    double left;
-                    double top;
 
-                    
+
                     if (Position != CssConstants.Fixed)
                     {
-                        left = ContainingBlock.Location.X + ContainingBlock.ActualPaddingLeft + ActualMarginLeft + ContainingBlock.ActualBorderLeftWidth;
-                        top = (prevSibling == null && ParentBox != null ? ParentBox.ClientTop : ParentBox == null ? Location.Y : 0) + MarginTopCollapse(prevSibling) + (prevSibling != null ? prevSibling.ActualBottom + prevSibling.ActualBorderBottomWidth : 0);
+                        var left = ContainingBlock.Location.X + ContainingBlock.ActualPaddingLeft + ActualMarginLeft + ContainingBlock.ActualBorderLeftWidth;
+                        var top = (prevSibling == null && ParentBox != null ? ParentBox.ClientTop : ParentBox == null ? Location.Y : 0) + MarginTopCollapse(prevSibling) + (prevSibling != null ? prevSibling.ActualBottom + prevSibling.ActualBorderBottomWidth : 0);
                         Location = new RPoint(left, top);
                         ActualBottom = top;
                     }
                 }
 
-                //If we're talking about a table here..
-                if (Display == CssConstants.Table || Display == CssConstants.InlineTable)
+                //If we're talking about a table here...
+                if (Display is CssConstants.Table or CssConstants.InlineTable)
                 {
                     CssLayoutEngineTable.PerformLayout(g, this);
                 }
@@ -677,7 +615,7 @@ namespace PeachPDF.Html.Core.Dom
                         ActualBottom = Location.Y;
                         CssLayoutEngine.CreateLineBoxes(g, this); //This will automatically set the bottom of this block
                     }
-                    else if (_boxes.Count > 0)
+                    else if (Boxes.Count > 0)
                     {
                         foreach (var childBox in Boxes)
                         {
@@ -698,6 +636,7 @@ namespace PeachPDF.Html.Core.Dom
                     ActualBottom = prevSibling.ActualBottom;
                 }
             }
+
             ActualBottom = Math.Max(ActualBottom, Location.Y + ActualHeight);
 
             CreateListItemBox(g);
@@ -708,7 +647,7 @@ namespace PeachPDF.Html.Core.Dom
                 HtmlContainer.ActualSize = CommonUtils.Max(HtmlContainer.ActualSize, new RSize(actualWidth, ActualBottom - HtmlContainer.Root.Location.Y));
             }
 
-            Console.WriteLine("layout performed: " + HtmlTag?.ToString() + "[w: " + Size.Width + ", h: " + Size.Height + "]");
+            Console.WriteLine("layout performed: " + HtmlTag + "[w: " + Size.Width + ", h: " + Size.Height + "]");
         }
 
         /// <summary>
@@ -717,34 +656,33 @@ namespace PeachPDF.Html.Core.Dom
         /// <param name="g"></param>
         internal virtual void MeasureWordsSize(RGraphics g)
         {
-            if (!_wordsSizeMeasured)
+            if (_wordsSizeMeasured) return;
+
+            if (BackgroundImage != CssConstants.None && _imageLoadHandler == null)
             {
-                if (BackgroundImage != CssConstants.None && _imageLoadHandler == null)
-                {
-                    _imageLoadHandler = new ImageLoadHandler(HtmlContainer, OnImageLoadComplete);
-                    _imageLoadHandler.LoadImage(BackgroundImage, HtmlTag != null ? HtmlTag.Attributes : null);
-                }
-
-                MeasureWordSpacing(g);
-
-                if (Words.Count > 0)
-                {
-                    foreach (var boxWord in Words)
-                    {
-                        boxWord.Width = boxWord.Text != "\n" ? g.MeasureString(boxWord.Text, ActualFont).Width : 0;
-                        boxWord.Height = ActualFont.Height;
-                    }
-                }
-
-                _wordsSizeMeasured = true;
+                _imageLoadHandler = new ImageLoadHandler(HtmlContainer, OnImageLoadComplete);
+                _imageLoadHandler.LoadImage(BackgroundImage, HtmlTag?.Attributes);
             }
+
+            MeasureWordSpacing(g);
+
+            if (Words.Count > 0)
+            {
+                foreach (var boxWord in Words)
+                {
+                    boxWord.Width = boxWord.Text != "\n" ? g.MeasureString(boxWord.Text, ActualFont).Width : 0;
+                    boxWord.Height = ActualFont.Height;
+                }
+            }
+
+            _wordsSizeMeasured = true;
         }
 
         /// <summary>
         /// Get the parent of this css properties instance.
         /// </summary>
         /// <returns></returns>
-        protected override sealed CssBoxProperties GetParent()
+        protected sealed override CssBoxProperties GetParent()
         {
             return _parentBox;
         }
@@ -756,8 +694,7 @@ namespace PeachPDF.Html.Core.Dom
         private int GetIndexForList()
         {
             bool reversed = !string.IsNullOrEmpty(ParentBox.GetAttribute("reversed"));
-            int index;
-            if (!int.TryParse(ParentBox.GetAttribute("start"), out index))
+            if (!int.TryParse(ParentBox.GetAttribute("start"), out var index))
             {
                 if (reversed)
                 {
@@ -792,48 +729,47 @@ namespace PeachPDF.Html.Core.Dom
         /// <param name="g"></param>
         private void CreateListItemBox(RGraphics g)
         {
-            if (Display == CssConstants.ListItem && ListStyleType != CssConstants.None)
+            if (Display != CssConstants.ListItem || ListStyleType == CssConstants.None) return;
+
+            if (_listItemBox == null)
             {
-                if (_listItemBox == null)
+                _listItemBox = new CssBox(null, null);
+                _listItemBox.InheritStyle(this);
+                _listItemBox.Display = CssConstants.Inline;
+                _listItemBox.HtmlContainer = HtmlContainer;
+
+                if (ListStyleType.Equals(CssConstants.Disc, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    _listItemBox = new CssBox(null, null);
-                    _listItemBox.InheritStyle(this);
-                    _listItemBox.Display = CssConstants.Inline;
-                    _listItemBox.HtmlContainer = HtmlContainer;
-
-                    if (ListStyleType.Equals(CssConstants.Disc, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        _listItemBox.Text = new SubString("•");
-                    }
-                    else if (ListStyleType.Equals(CssConstants.Circle, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        _listItemBox.Text = new SubString("o");
-                    }
-                    else if (ListStyleType.Equals(CssConstants.Square, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        _listItemBox.Text = new SubString("♠");
-                    }
-                    else if (ListStyleType.Equals(CssConstants.Decimal, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        _listItemBox.Text = new SubString(GetIndexForList().ToString(CultureInfo.InvariantCulture) + ".");
-                    }
-                    else if (ListStyleType.Equals(CssConstants.DecimalLeadingZero, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        _listItemBox.Text = new SubString(GetIndexForList().ToString("00", CultureInfo.InvariantCulture) + ".");
-                    }
-                    else
-                    {
-                        _listItemBox.Text = new SubString(CommonUtils.ConvertToAlphaNumber(GetIndexForList(), ListStyleType) + ".");
-                    }
-
-                    _listItemBox.ParseToWords();
-
-                    _listItemBox.PerformLayoutImp(g);
-                    _listItemBox.Size = new RSize(_listItemBox.Words[0].Width, _listItemBox.Words[0].Height);
+                    _listItemBox.Text = new SubString("•");
                 }
-                _listItemBox.Words[0].Left = Location.X - _listItemBox.Size.Width - 5;
-                _listItemBox.Words[0].Top = Location.Y + ActualPaddingTop; // +FontAscent;
+                else if (ListStyleType.Equals(CssConstants.Circle, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    _listItemBox.Text = new SubString("o");
+                }
+                else if (ListStyleType.Equals(CssConstants.Square, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    _listItemBox.Text = new SubString("♠");
+                }
+                else if (ListStyleType.Equals(CssConstants.Decimal, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    _listItemBox.Text = new SubString(GetIndexForList().ToString(CultureInfo.InvariantCulture) + ".");
+                }
+                else if (ListStyleType.Equals(CssConstants.DecimalLeadingZero, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    _listItemBox.Text = new SubString(GetIndexForList().ToString("00", CultureInfo.InvariantCulture) + ".");
+                }
+                else
+                {
+                    _listItemBox.Text = new SubString(CommonUtils.ConvertToAlphaNumber(GetIndexForList(), ListStyleType) + ".");
+                }
+
+                _listItemBox.ParseToWords();
+
+                _listItemBox.PerformLayoutImp(g);
+                _listItemBox.Size = new RSize(_listItemBox.Words[0].Width, _listItemBox.Words[0].Height);
             }
+            _listItemBox.Words[0].Left = Location.X - _listItemBox.Size.Width - 5;
+            _listItemBox.Words[0].Top = Location.Y + ActualPaddingTop; // +FontAscent;
         }
 
         /// <summary>
@@ -842,7 +778,7 @@ namespace PeachPDF.Html.Core.Dom
         /// <param name="b"></param>
         /// <param name="line"> </param>
         /// <returns></returns>
-        internal CssRect FirstWordOccourence(CssBox b, CssLineBox line)
+        internal CssRect FirstWordOccurence(CssBox b, CssLineBox line)
         {
             if (b.Words.Count == 0 && b.Boxes.Count == 0)
             {
@@ -864,7 +800,7 @@ namespace PeachPDF.Html.Core.Dom
             {
                 foreach (CssBox bb in b.Boxes)
                 {
-                    CssRect w = FirstWordOccourence(bb, line);
+                    CssRect w = FirstWordOccurence(bb, line);
 
                     if (w != null)
                     {
@@ -958,7 +894,7 @@ namespace PeachPDF.Html.Core.Dom
         private static double GetWidthMarginDeep(CssBox box)
         {
             double sum = 0f;
-            if (box.Size.Width > 90999 || (box.ParentBox != null && box.ParentBox.Size.Width > 90999))
+            if (box.Size.Width > 90999 || box.ParentBox is { Size.Width: > 90999 })
             {
                 while (box != null)
                 {
@@ -1045,8 +981,8 @@ namespace PeachPDF.Html.Core.Dom
                 }
 
                 // remove the last word padding
-                if (box.Words.Count > 0 && !box.Words[box.Words.Count - 1].HasSpaceAfter)
-                    maxSum -= box.Words[box.Words.Count - 1].ActualWordSpacing;
+                if (box.Words.Count > 0 && !box.Words[^1].HasSpaceAfter)
+                    maxSum -= box.Words[^1].ActualWordSpacing;
             }
             else
             {
@@ -1118,7 +1054,7 @@ namespace PeachPDF.Html.Core.Dom
             }
 
             // fix for hr tag
-            if (value < 0.1 && HtmlTag != null && HtmlTag.Name == "hr")
+            if (value < 0.1 && HtmlTag is { Name: "hr" })
             {
                 value = GetEmHeight() * 1.1f;
             }
@@ -1174,12 +1110,14 @@ namespace PeachPDF.Html.Core.Dom
         private double MarginBottomCollapse()
         {
             double margin = 0;
-            if (ParentBox != null && ParentBox.Boxes.IndexOf(this) == ParentBox.Boxes.Count - 1 && _parentBox.ActualMarginBottom < 0.1)
-            {
-                var lastChildBottomMargin = _boxes[_boxes.Count - 1].ActualMarginBottom;
-                margin = Height == "auto" ? Math.Max(ActualMarginBottom, lastChildBottomMargin) : lastChildBottomMargin;
-            }
-            return Math.Max(ActualBottom, _boxes[_boxes.Count - 1].ActualBottom + margin + ActualPaddingBottom + ActualBorderBottomWidth);
+            if (ParentBox == null || ParentBox.Boxes.IndexOf(this) != ParentBox.Boxes.Count - 1 ||
+                !(_parentBox.ActualMarginBottom < 0.1))
+                return Math.Max(ActualBottom,
+                    Boxes[^1].ActualBottom + margin + ActualPaddingBottom + ActualBorderBottomWidth);
+
+            var lastChildBottomMargin = Boxes[^1].ActualMarginBottom;
+            margin = Height == "auto" ? Math.Max(ActualMarginBottom, lastChildBottomMargin) : lastChildBottomMargin;
+            return Math.Max(ActualBottom, Boxes[^1].ActualBottom + margin + ActualPaddingBottom + ActualBorderBottomWidth);
         }
 
         /// <summary>
@@ -1188,7 +1126,7 @@ namespace PeachPDF.Html.Core.Dom
         /// <param name="amount"></param>
         internal void OffsetTop(double amount)
         {
-            List<CssLineBox> lines = new List<CssLineBox>();
+            List<CssLineBox> lines = [];
             foreach (CssLineBox line in Rectangles.Keys)
                 lines.Add(line);
 
@@ -1208,8 +1146,7 @@ namespace PeachPDF.Html.Core.Dom
                 b.OffsetTop(amount);
             }
 
-            if (_listItemBox != null)
-                _listItemBox.OffsetTop(amount);
+            _listItemBox?.OffsetTop(amount);
 
             Location = new RPoint(Location.X, Location.Y + amount);
         }
@@ -1220,68 +1157,68 @@ namespace PeachPDF.Html.Core.Dom
         /// <param name="g">the device to draw to</param>
         protected virtual void PaintImp(RGraphics g)
         {
-            if (Display != CssConstants.None && (Display != CssConstants.TableCell || EmptyCells != CssConstants.Hide || !IsSpaceOrEmpty))
+            if (Display == CssConstants.None ||
+                (Display == CssConstants.TableCell && EmptyCells == CssConstants.Hide && IsSpaceOrEmpty)) return;
+
+            var clipped = RenderUtils.ClipGraphicsByOverflow(g, this);
+
+            var areas = Rectangles.Count == 0 ? new List<RRect>([Bounds]) : new List<RRect>(Rectangles.Values);
+            var clip = g.GetClip();
+            RRect[] rects = areas.ToArray();
+            RPoint offset = RPoint.Empty;
+            if (!IsFixed)
             {
-                var clipped = RenderUtils.ClipGraphicsByOverflow(g, this);
+                offset = HtmlContainer.ScrollOffset;
+            }
 
-                var areas = Rectangles.Count == 0 ? new List<RRect>(new[] { Bounds }) : new List<RRect>(Rectangles.Values);
-                var clip = g.GetClip();
-                RRect[] rects = areas.ToArray();
-                RPoint offset = RPoint.Empty;
-                if (!IsFixed)
+            for (int i = 0; i < rects.Length; i++)
+            {
+                var actualRect = rects[i];
+                actualRect.Offset(offset);
+
+                if (IsRectVisible(actualRect, clip))
                 {
-                    offset = HtmlContainer.ScrollOffset;
+                    PaintBackground(g, actualRect, i == 0, i == rects.Length - 1);
+                    BordersDrawHandler.DrawBoxBorders(g, this, actualRect, i == 0, i == rects.Length - 1);
                 }
+            }
 
-                for (int i = 0; i < rects.Length; i++)
+            PaintWords(g, offset);
+
+            for (int i = 0; i < rects.Length; i++)
+            {
+                var actualRect = rects[i];
+                actualRect.Offset(offset);
+
+                if (IsRectVisible(actualRect, clip))
                 {
-                    var actualRect = rects[i];
-                    actualRect.Offset(offset);
-
-                    if (IsRectVisible(actualRect, clip))
-                    {
-                        PaintBackground(g, actualRect, i == 0, i == rects.Length - 1);
-                        BordersDrawHandler.DrawBoxBorders(g, this, actualRect, i == 0, i == rects.Length - 1);
-                    }
+                    PaintDecoration(g, actualRect, i == 0, i == rects.Length - 1);
                 }
+            }
 
-                PaintWords(g, offset);
+            // split paint to handle z-order
+            foreach (CssBox b in Boxes)
+            {
+                if (b.Position != CssConstants.Absolute && !b.IsFixed)
+                    b.Paint(g);
+            }
+            foreach (CssBox b in Boxes)
+            {
+                if (b.Position == CssConstants.Absolute)
+                    b.Paint(g);
+            }
+            foreach (CssBox b in Boxes)
+            {
+                if (b.IsFixed)
+                    b.Paint(g);
+            }
 
-                for (int i = 0; i < rects.Length; i++)
-                {
-                    var actualRect = rects[i];
-                    actualRect.Offset(offset);
+            if (clipped)
+                g.PopClip();
 
-                    if (IsRectVisible(actualRect, clip))
-                    {
-                        PaintDecoration(g, actualRect, i == 0, i == rects.Length - 1);
-                    }
-                }
-
-                // split paint to handle z-order
-                foreach (CssBox b in Boxes)
-                {
-                    if (b.Position != CssConstants.Absolute && !b.IsFixed)
-                        b.Paint(g);
-                }
-                foreach (CssBox b in Boxes)
-                {
-                    if (b.Position == CssConstants.Absolute)
-                        b.Paint(g);
-                }
-                foreach (CssBox b in Boxes)
-                {
-                    if (b.IsFixed)
-                        b.Paint(g);
-                }
-
-                if (clipped)
-                    g.PopClip();
-
-                if (_listItemBox != null)
-                {
-                    _listItemBox.Paint(g);
-                }
+            if (_listItemBox != null)
+            {
+                _listItemBox.Paint(g);
             }
         }
 
@@ -1306,7 +1243,7 @@ namespace PeachPDF.Html.Core.Dom
         /// <param name="isLast">is it the last rectangle of the element</param>
         protected void PaintBackground(RGraphics g, RRect rect, bool isFirst, bool isLast)
         {
-            if (rect.Width > 0 && rect.Height > 0)
+            if (rect is { Width: > 0, Height: > 0 })
             {
                 RBrush brush = null;
 
@@ -1332,7 +1269,7 @@ namespace PeachPDF.Html.Core.Dom
                     }
 
                     Object prevMode = null;
-                    if (HtmlContainer != null && !HtmlContainer.AvoidGeometryAntialias && IsRounded)
+                    if (HtmlContainer is { AvoidGeometryAntialias: false } && IsRounded)
                     {
                         prevMode = g.SetAntiAliasSmoothingMode();
                     }
@@ -1348,12 +1285,11 @@ namespace PeachPDF.Html.Core.Dom
 
                     g.ReturnPreviousSmoothingMode(prevMode);
 
-                    if (roundrect != null)
-                        roundrect.Dispose();
+                    roundrect?.Dispose();
                     brush.Dispose();
                 }
 
-                if (_imageLoadHandler != null && _imageLoadHandler.Image != null && isFirst)
+                if (_imageLoadHandler is { Image: not null } && isFirst)
                 {
                     BackgroundImageDrawHandler.DrawBackgroundImage(g, this, _imageLoadHandler, rect);
                 }
@@ -1367,25 +1303,20 @@ namespace PeachPDF.Html.Core.Dom
         /// <param name="offset">the current scroll offset to offset the words</param>
         private void PaintWords(RGraphics g, RPoint offset)
         {
-            if (Width.Length > 0)
-            {
-                var isRtl = Direction == CssConstants.Rtl;
-                foreach (var word in Words)
-                {
-                    if (!word.IsLineBreak)
-                    {
-                        var clip = g.GetClip();
-                        var wordRect = word.Rectangle;
-                        wordRect.Offset(offset);
-                        clip.Intersect(wordRect);
+            if (Width.Length <= 0) return;
 
-                        if (clip != RRect.Empty)
-                        {
-                            var wordPoint = new RPoint(word.Left + offset.X, word.Top + offset.Y);
-                            g.DrawString(word.Text, ActualFont, ActualColor, wordPoint, new RSize(word.Width, word.Height), isRtl);
-                        }
-                    }
-                }
+            var isRtl = Direction == CssConstants.Rtl;
+            foreach (var word in Words)
+            {
+                if (word.IsLineBreak) continue;
+                var clip = g.GetClip();
+                var wordRect = word.Rectangle;
+                wordRect.Offset(offset);
+                clip.Intersect(wordRect);
+
+                if (clip == RRect.Empty) continue;
+                var wordPoint = new RPoint(word.Left + offset.X, word.Top + offset.Y);
+                g.DrawString(word.Text, ActualFont, ActualColor, wordPoint, new RSize(word.Width, word.Height), isRtl);
             }
         }
 
@@ -1401,19 +1332,14 @@ namespace PeachPDF.Html.Core.Dom
             if (string.IsNullOrEmpty(TextDecoration) || TextDecoration == CssConstants.None)
                 return;
 
-            double y = 0f;
-            if (TextDecoration == CssConstants.Underline)
+            double y = TextDecoration switch
             {
-                y = Math.Round(rectangle.Top + ActualFont.UnderlineOffset);
-            }
-            else if (TextDecoration == CssConstants.LineThrough)
-            {
-                y = rectangle.Top + rectangle.Height / 2f;
-            }
-            else if (TextDecoration == CssConstants.Overline)
-            {
-                y = rectangle.Top;
-            }
+                CssConstants.Underline => Math.Round(rectangle.Top + ActualFont.UnderlineOffset),
+                CssConstants.LineThrough => rectangle.Top + rectangle.Height / 2f,
+                CssConstants.Overline => rectangle.Top,
+                _ => 0f
+            };
+
             y -= ActualPaddingBottom - ActualBorderBottomWidth;
 
             double x1 = rectangle.X;
@@ -1438,11 +1364,8 @@ namespace PeachPDF.Html.Core.Dom
         /// <param name="gap"></param>
         internal void OffsetRectangle(CssLineBox lineBox, double gap)
         {
-            if (Rectangles.ContainsKey(lineBox))
-            {
-                var r = Rectangles[lineBox];
-                Rectangles[lineBox] = new RRect(r.X, r.Y + gap, r.Width, r.Height);
-            }
+            if (!Rectangles.TryGetValue(lineBox, out var r)) return;
+            Rectangles[lineBox] = new RRect(r.X, r.Y + gap, r.Width, r.Height);
         }
 
         /// <summary>
@@ -1450,7 +1373,7 @@ namespace PeachPDF.Html.Core.Dom
         /// </summary>
         internal void RectanglesReset()
         {
-            _rectangles.Clear();
+            Rectangles.Clear();
         }
 
         /// <summary>
@@ -1463,35 +1386,6 @@ namespace PeachPDF.Html.Core.Dom
         {
             if (image != null && async)
                 HtmlContainer.RequestRefresh(false);
-        }
-
-        /// <summary>
-        /// Get brush for the text depending if there is selected text color set.
-        /// </summary>
-        protected RColor GetSelectionForeBrush()
-        {
-            return HtmlContainer.SelectionForeColor != RColor.Empty ? HtmlContainer.SelectionForeColor : ActualColor;
-        }
-
-        /// <summary>
-        /// Get brush for selection background depending if it has external and if alpha is required for images.
-        /// </summary>
-        /// <param name="g"></param>
-        /// <param name="forceAlpha">used for images so they will have alpha effect</param>
-        protected RBrush GetSelectionBackBrush(RGraphics g, bool forceAlpha)
-        {
-            var backColor = HtmlContainer.SelectionBackColor;
-            if (backColor != RColor.Empty)
-            {
-                if (forceAlpha && backColor.A > 180)
-                    return g.GetSolidBrush(RColor.FromArgb(180, backColor.R, backColor.G, backColor.B));
-                else
-                    return g.GetSolidBrush(backColor);
-            }
-            else
-            {
-                return g.GetSolidBrush(CssUtils.DefaultSelectionBackcolor);
-            }
         }
 
         protected override RFont GetCachedFont(string fontFamily, double fsize, RFontStyle st)
@@ -1517,7 +1411,7 @@ namespace PeachPDF.Html.Core.Dom
         /// <returns></returns>
         public override string ToString()
         {
-            var tag = HtmlTag != null ? string.Format("<{0}>", HtmlTag.Name) : "anon";
+            var tag = HtmlTag != null ? $"<{HtmlTag.Name}>" : "anon";
 
             if (HtmlTag?.Attributes?.ContainsKey("class") ?? false)
             {
@@ -1526,15 +1420,15 @@ namespace PeachPDF.Html.Core.Dom
 
             if (IsBlock)
             {
-                return string.Format("{0}{1} Block {2}, Children:{3}", ParentBox == null ? "Root: " : string.Empty, tag, FontSize, Boxes.Count);
+                return $"{(ParentBox == null ? "Root: " : string.Empty)}{tag} Block {FontSize}, Children:{Boxes.Count}";
             }
             else if (Display == CssConstants.None)
             {
-                return string.Format("{0}{1} None", ParentBox == null ? "Root: " : string.Empty, tag);
+                return $"{(ParentBox == null ? "Root: " : string.Empty)}{tag} None";
             }
             else
             {
-                return string.Format("{0}{1} {2}: {3}", ParentBox == null ? "Root: " : string.Empty, tag, Display, Text);
+                return $"{(ParentBox == null ? "Root: " : string.Empty)}{tag} {Display}: {Text}";
             }
         }
 

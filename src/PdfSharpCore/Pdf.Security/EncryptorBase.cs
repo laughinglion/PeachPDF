@@ -1,8 +1,8 @@
-﻿using PdfSharpCore.Pdf.Internal;
+﻿using PeachPDF.PdfSharpCore.Pdf.Internal;
 using System;
 using System.Security.Cryptography;
 
-namespace PdfSharpCore.Pdf.Security
+namespace PeachPDF.PdfSharpCore.Pdf.Security
 {
     internal abstract class EncryptorBase
     {

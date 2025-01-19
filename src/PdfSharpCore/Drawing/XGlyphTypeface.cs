@@ -30,10 +30,10 @@
 using System;
 using System.Diagnostics;
 using System.Globalization;
-using PdfSharpCore.Fonts;
-using PdfSharpCore.Fonts.OpenType;
+using PeachPDF.PdfSharpCore.Fonts;
+using PeachPDF.PdfSharpCore.Fonts.OpenType;
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     /// <summary>
     /// Specifies a physical font face that corresponds to a font file on the disk or in memory.

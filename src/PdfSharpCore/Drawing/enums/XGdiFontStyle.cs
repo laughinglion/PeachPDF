@@ -31,7 +31,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     /// <summary>
     /// Backward compatibility.
@@ -41,7 +41,7 @@ namespace PdfSharpCore.Drawing
     {
         // Must be identical to both:
         // System.Drawing.FontStyle and
-        // PdfSharpCore.Drawing.FontStyle
+        // PeachPDF.PdfSharpCore.Drawing.FontStyle
 
         /// <summary>
         /// Normal text.

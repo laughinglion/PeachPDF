@@ -30,11 +30,11 @@
 using System;
 using System.Collections.Generic;
 using System.Collections;
-using PdfSharpCore.Drawing;
+using PeachPDF.PdfSharpCore.Drawing;
 
 // Review: CountOpen does not work. - StL/14-10-05
 
-namespace PdfSharpCore.Pdf
+namespace PeachPDF.PdfSharpCore.Pdf
 {
     /// <summary>
     /// Represents a collection of outlines.
@@ -222,7 +222,7 @@ namespace PdfSharpCore.Pdf
         }
 
         /// <summary>
-        /// Gets the <see cref="PdfSharpCore.Pdf.PdfOutline"/> at the specified index.
+        /// Gets the <see cref="PeachPDF.PdfSharpCore.Pdf.PdfOutline"/> at the specified index.
         /// </summary>
         public PdfOutline this[int index]
         {

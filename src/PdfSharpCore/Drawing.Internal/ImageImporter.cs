@@ -29,9 +29,9 @@
 
 using System.Collections.Generic;
 using System.IO;
-using PdfSharpCore.Pdf;
+using PeachPDF.PdfSharpCore.Pdf;
 
-namespace PdfSharpCore.Drawing.Internal
+namespace PeachPDF.PdfSharpCore.Drawing.Internal
 {
     /// <summary>
     /// The class that imports images of various formats.

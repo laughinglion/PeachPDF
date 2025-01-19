@@ -29,10 +29,10 @@
 
 using System;
 using System.ComponentModel;
-using PdfSharpCore.Internal;
+using PeachPDF.PdfSharpCore.Internal;
 // ReSharper disable RedundantNameQualifier because it is required for hybrid build
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     /// <summary>
     /// Defines a Brush with a linear gradient.

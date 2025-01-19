@@ -177,7 +177,7 @@ namespace PeachPDF.Html.Core.Dom
             ArgChecker.AssertArgNotNull(g, "g");
             ArgChecker.AssertArgNotNull(cell, "cell");
 
-            if (cell.VerticalAlign == CssConstants.Top || cell.VerticalAlign == CssConstants.Baseline)
+            if (cell.VerticalAlign is CssConstants.Top or CssConstants.Baseline)
                 return;
 
             double cellbot = cell.ClientBottom;
@@ -314,11 +314,10 @@ namespace PeachPDF.Html.Core.Dom
                         maxRight = Math.Max(maxRight, word.Right);
                         maxbottom = Math.Max(maxbottom, word.Bottom);
 
-                        if (b.Position == CssConstants.Absolute)
-                        {
-                            word.Left += box.ActualMarginLeft;
-                            word.Top += box.ActualMarginTop;
-                        }
+                        if (b.Position != CssConstants.Absolute) continue;
+
+                        word.Left += box.ActualMarginLeft;
+                        word.Top += box.ActualMarginTop;
                     }
                 }
                 else

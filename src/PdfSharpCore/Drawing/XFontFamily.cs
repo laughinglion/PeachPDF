@@ -28,10 +28,10 @@
 #endregion
 
 using System;
-using PdfSharpCore.Fonts;
-using PdfSharpCore.Fonts.OpenType;
+using PeachPDF.PdfSharpCore.Fonts;
+using PeachPDF.PdfSharpCore.Fonts.OpenType;
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     /// <summary>
     /// Defines a group of typefaces having a similar basic design and certain variations in styles.

@@ -29,7 +29,7 @@
 
 using System;
 
-namespace PdfSharpCore.Pdf
+namespace PeachPDF.PdfSharpCore.Pdf
 {
     /// <summary>
     /// This class is intended for empira internal use only and may change or drop in future releases.
@@ -131,7 +131,7 @@ namespace PdfSharpCore.Pdf
                 page.CustomValues = null;
         }
 
-        //public static string Key = "/PdfSharpCore.CustomValue";
+        //public static string Key = "/PeachPDF.PdfSharpCore.CustomValue";
 
         internal static PdfCustomValues Get(DictionaryElements elem)
         {

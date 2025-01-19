@@ -29,7 +29,7 @@
 
 // Not used in PDFsharp 1.x.
 
-namespace PdfSharpCore.Drawing
+namespace PeachPDF.PdfSharpCore.Drawing
 {
     enum FontWeightValues
     {

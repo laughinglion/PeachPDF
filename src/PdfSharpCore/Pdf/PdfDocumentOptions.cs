@@ -29,7 +29,7 @@
 
 // ReSharper disable ConvertToAutoProperty
 
-namespace PdfSharpCore.Pdf
+namespace PeachPDF.PdfSharpCore.Pdf
 {
     /// <summary>
     /// Holds information how to handle the document when it is saved as PDF stream.
