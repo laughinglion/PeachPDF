@@ -10,15 +10,12 @@
 // - Sun Tsu,
 // "The Art of War"
 
-using System;
-using System.Net;
-using System.Text;
-using System.Threading;
 using PeachPDF.Html.Adapters;
 using PeachPDF.Html.Adapters.Entities;
-using PeachPDF.Html.Core.Entities;
 using PeachPDF.Html.Core.Handlers;
 using PeachPDF.Html.Core.Utils;
+using System;
+using System.Threading.Tasks;
 
 namespace PeachPDF.Html.Core.Dom
 {
@@ -34,11 +31,6 @@ namespace PeachPDF.Html.Core.Dom
         /// the image word of this image box
         /// </summary>
         private readonly CssRectImage _imageWord;
-
-        /// <summary>
-        /// is image load is finished, used to know if no image is found
-        /// </summary>
-        private bool _imageLoadingComplete;
 
         #endregion
 
@@ -60,18 +52,12 @@ namespace PeachPDF.Html.Core.Dom
         /// <summary>
         /// Is the css box clickable ("a" element is clickable)
         /// </summary>
-        public override bool IsClickable
-        {
-            get { return true; }
-        }
+        public override bool IsClickable => true;
 
         /// <summary>
         /// Get the href link of the box (by default get "href" attribute)
         /// </summary>
-        public override string HrefLink
-        {
-            get { return GetAttribute("src"); }
-        }
+        public override string HrefLink => GetAttribute("src");
 
         #region Private methods
 
@@ -79,7 +65,7 @@ namespace PeachPDF.Html.Core.Dom
         /// Paints the fragment
         /// </summary>
         /// <param name="g">the device to draw to</param>
-        protected override void PaintImp(RGraphics g)
+        protected override ValueTask PaintImp(RGraphics g)
         {
             var rects = CommonUtils.GetFirstValueOrDefault(Rectangles);
 
@@ -105,6 +91,8 @@ namespace PeachPDF.Html.Core.Dom
 
             if (clipped)
                 g.PopClip();
+
+            return ValueTask.CompletedTask;
         }
 
         /// <summary>
@@ -112,15 +100,11 @@ namespace PeachPDF.Html.Core.Dom
         /// </summary>
         private void DrawImage(RGraphics g, RPoint offset, RRect rect)
         {
-            if (_imageWord.Image != null)
+            if (_imageWord.Image == null) return;
+
+            if (rect is { Width: > 0, Height: > 0 })
             {
-                if (rect.Width > 0 && rect.Height > 0)
-                {
-                    if (_imageWord.ImageRectangle == RRect.Empty)
-                        g.DrawImage(_imageWord.Image, rect);
-                    else
-                        g.DrawImage(_imageWord.Image, rect, _imageWord.ImageRectangle);
-                }
+                g.DrawImage(_imageWord.Image, rect);
             }
         }
 
@@ -128,14 +112,17 @@ namespace PeachPDF.Html.Core.Dom
         /// Assigns words its width and height
         /// </summary>
         /// <param name="g">the device to use</param>
-        internal override void MeasureWordsSize(RGraphics g)
+        internal override ValueTask MeasureWordsSize(RGraphics g)
         {
             if (!_wordsSizeMeasured)
             {
                 MeasureWordSpacing(g);
                 _wordsSizeMeasured = true;
             }
+
             CssLayoutEngine.MeasureImageSize(_imageWord);
+
+            return ValueTask.CompletedTask;
         }
 
         /// <summary>
@@ -145,37 +132,6 @@ namespace PeachPDF.Html.Core.Dom
         {
             SetAllBorders(CssConstants.Solid, "2px", "#A0A0A0");
             BorderRightColor = BorderBottomColor = "#E3E3E3";
-        }
-
-        /// <summary>
-        /// On image load process is complete with image or without update the image box.
-        /// </summary>
-        /// <param name="image">the image loaded or null if failed</param>
-        /// <param name="rectangle">the source rectangle to draw in the image (empty - draw everything)</param>
-        /// <param name="async">is the callback was called async to load image call</param>
-        private void OnLoadImageComplete(RImage image, RRect rectangle, bool async)
-        {
-            _imageWord.Image = image;
-            _imageWord.ImageRectangle = rectangle;
-            _imageLoadingComplete = true;
-            _wordsSizeMeasured = false;
-
-            if (_imageLoadingComplete && image == null)
-            {
-                SetErrorBorder();
-            }
-
-            if (async)
-            {
-                HtmlContainer.RequestRefresh(IsLayoutRequired());
-            }
-        }
-
-        private bool IsLayoutRequired()
-        {
-            var width = new CssLength(Width);
-            var height = new CssLength(Height);
-            return (width.Number <= 0 || width.Unit != CssUnit.Pixels) || (height.Number <= 0 || height.Unit != CssUnit.Pixels);
         }
 
         #endregion

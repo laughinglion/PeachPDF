@@ -56,10 +56,11 @@ namespace PeachPDF.Adapters
         /// <summary>
         /// Init.
         /// </summary>
+        /// <param name="adapter">the adapter</param>
         /// <param name="g">the win forms graphics object to use</param>
         /// <param name="releaseGraphics">optional: if to release the graphics object on dispose (default - false)</param>
-        public GraphicsAdapter(XGraphics g, bool releaseGraphics = false)
-            : base(PdfSharpAdapter.Instance, new RRect(0, 0, double.MaxValue, double.MaxValue))
+        public GraphicsAdapter(RAdapter adapter, XGraphics g, bool releaseGraphics = false)
+            : base(adapter, new RRect(0, 0, double.MaxValue, double.MaxValue))
         {
             ArgChecker.AssertArgNotNull(g, "g");
 
@@ -83,14 +84,14 @@ namespace PeachPDF.Adapters
         public override void PushClipExclude(RRect rect)
         { }
 
-        public override Object SetAntiAliasSmoothingMode()
+        public override object SetAntiAliasSmoothingMode()
         {
             var prevMode = _g.SmoothingMode;
             _g.SmoothingMode = XSmoothingMode.AntiAlias;
             return prevMode;
         }
 
-        public override void ReturnPreviousSmoothingMode(Object prevMode)
+        public override void ReturnPreviousSmoothingMode(object prevMode)
         {
             if (prevMode != null)
             {
@@ -104,12 +105,11 @@ namespace PeachPDF.Adapters
             var realFont = fontAdapter.Font;
             var size = _g.MeasureString(str, realFont, _stringFormat);
 
-            if (font.Height < 0)
-            {
-                var height = realFont.Height;
-                var descent = realFont.Size * realFont.FontFamily.GetCellDescent(realFont.Style) / realFont.FontFamily.GetEmHeight(realFont.Style);
-                fontAdapter.SetMetrics(height, (int)Math.Round((height - descent + 1f)));
-            }
+            if (!(font.Height < 0)) return Utils.Convert(size);
+
+            var height = realFont.Height;
+            var descent = realFont.Size * realFont.FontFamily.GetCellDescent(realFont.Style) / realFont.FontFamily.GetEmHeight(realFont.Style);
+            fontAdapter.SetMetrics(height, (int)Math.Round((height - descent + 1f)));
 
             return Utils.Convert(size);
         }
@@ -158,14 +158,13 @@ namespace PeachPDF.Adapters
         public override void DrawRectangle(RBrush brush, double x, double y, double width, double height)
         {
             var xBrush = ((BrushAdapter)brush).Brush;
-            var xTextureBrush = xBrush as XTextureBrush;
-            if (xTextureBrush != null)
+            if (xBrush is XTextureBrush xTextureBrush)
             {
                 xTextureBrush.DrawRectangle(_g, x, y, width, height);
             }
             else
             {
-                _g.DrawRectangle((XBrush)xBrush, x, y, width, height);
+                _g.DrawRectangle(xBrush, x, y, width, height);
 
                 // handle bug in PdfSharp that keeps the brush color for next string draw
                 if (xBrush is XLinearGradientBrush)
@@ -190,12 +189,12 @@ namespace PeachPDF.Adapters
 
         public override void DrawPath(RBrush brush, RGraphicsPath path)
         {
-            _g.DrawPath((XBrush)((BrushAdapter)brush).Brush, ((GraphicsPathAdapter)path).GraphicsPath);
+            _g.DrawPath(((BrushAdapter)brush).Brush, ((GraphicsPathAdapter)path).GraphicsPath);
         }
 
         public override void DrawPolygon(RBrush brush, RPoint[] points)
         {
-            if (points != null && points.Length > 0)
+            if (points is { Length: > 0 })
             {
                 _g.DrawPolygon((XBrush)((BrushAdapter)brush).Brush, Utils.Convert(points), XFillMode.Winding);
             }

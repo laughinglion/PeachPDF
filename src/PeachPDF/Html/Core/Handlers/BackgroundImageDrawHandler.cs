@@ -33,15 +33,13 @@ namespace PeachPDF.Html.Core.Handlers
         public static void DrawBackgroundImage(RGraphics g, CssBox box, ImageLoadHandler imageLoadHandler, RRect rectangle)
         {
             // image size depends if specific rectangle given in image loader
-            var imgSize = new RSize(imageLoadHandler.Rectangle == RRect.Empty ? imageLoadHandler.Image.Width : imageLoadHandler.Rectangle.Width,
-                imageLoadHandler.Rectangle == RRect.Empty ? imageLoadHandler.Image.Height : imageLoadHandler.Rectangle.Height);
+            var imgSize = new RSize(imageLoadHandler.Image.Width,
+                imageLoadHandler.Image.Height);
 
             // get the location by BackgroundPosition value
             var location = GetLocation(box.BackgroundPosition, rectangle, imgSize);
 
-            var srcRect = imageLoadHandler.Rectangle == RRect.Empty
-                ? new RRect(0, 0, imgSize.Width, imgSize.Height)
-                : new RRect(imageLoadHandler.Rectangle.Left, imageLoadHandler.Rectangle.Top, imgSize.Width, imgSize.Height);
+            var srcRect = new RRect(0, 0, imgSize.Width, imgSize.Height);
 
             // initial image destination rectangle
             var destRect = new RRect(location, imgSize);

@@ -10,6 +10,7 @@
 // - Sun Tsu,
 // "The Art of War"
 
+using System.Threading.Tasks;
 using PeachPDF.Html.Adapters;
 using PeachPDF.Html.Adapters.Entities;
 using PeachPDF.Html.Core.Handlers;
@@ -39,10 +40,10 @@ namespace PeachPDF.Html.Core.Dom
         /// Performs layout of the DOM structure creating lines by set bounds restrictions.
         /// </summary>
         /// <param name="g">Device context to use</param>
-        protected override void PerformLayoutImp(RGraphics g)
+        protected override ValueTask PerformLayoutImp(RGraphics g)
         {
             if (Display == CssConstants.None)
-                return;
+                return ValueTask.CompletedTask;
 
             RectanglesReset();
 
@@ -87,13 +88,15 @@ namespace PeachPDF.Html.Core.Dom
             Size = new RSize(width, height);
 
             ActualBottom = Location.Y + ActualPaddingTop + ActualPaddingBottom + height;
+
+            return ValueTask.CompletedTask;
         }
 
         /// <summary>
         /// Paints the fragment
         /// </summary>
         /// <param name="g">the device to draw to</param>
-        protected override void PaintImp(RGraphics g)
+        protected override ValueTask PaintImp(RGraphics g)
         {
             var offset = (HtmlContainer != null && !IsFixed) ? HtmlContainer.ScrollOffset : RPoint.Empty;
             var rect = new RRect(Bounds.X + offset.X, Bounds.Y + offset.Y, Bounds.Width, Bounds.Height);
@@ -117,6 +120,8 @@ namespace PeachPDF.Html.Core.Dom
                 var b4 = g.GetSolidBrush(ActualBorderBottomColor);
                 BordersDrawHandler.DrawBorder(Border.Bottom, g, this, b4, rect);
             }
+
+            return ValueTask.CompletedTask;
         }
     }
 }

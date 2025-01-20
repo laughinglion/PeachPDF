@@ -10,6 +10,8 @@
 // - Sun Tsu,
 // "The Art of War"
 
+#nullable enable
+
 using PeachPDF.Html.Adapters;
 using PeachPDF.Html.Adapters.Entities;
 using PeachPDF.PdfSharpCore.Drawing;
@@ -17,10 +19,13 @@ using PeachPDF.PdfSharpCore.Pdf;
 using PeachPDF.PdfSharpCore.Utils;
 using PeachPDF.Utilities;
 using SixLabors.Fonts;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
+using PeachPDF.Network;
 
 namespace PeachPDF.Adapters
 {
@@ -32,9 +37,11 @@ namespace PeachPDF.Adapters
         /// <summary>
         /// Init color resolve.
         /// </summary>
-        private PdfSharpAdapter()
+        internal PdfSharpAdapter()
         {
             AddFontFamilyMapping("monospace", "Courier New");
+            AddFontFamilyMapping("serif", "Times New Roman");
+            AddFontFamilyMapping("sans-serif", "Arial");
             AddFontFamilyMapping("Helvetica", "Arial");
 
             var fonts = FontResolver.SupportedFonts;
@@ -49,10 +56,12 @@ namespace PeachPDF.Adapters
             }
         }
 
-        /// <summary>
-        /// Singleton instance of global adapter.
-        /// </summary>
-        public static PdfSharpAdapter Instance { get; } = new();
+        public RNetworkLoader NetworkLoader { get; set;  } = new DataUriNetworkLoader();
+
+        public override async Task<Stream?> GetResourceStream(Uri uri)
+        {
+            return await NetworkLoader.GetResourceStream(uri);
+        }
 
         public override string GetCssMediaType(IEnumerable<string> mediaTypesAvailable)
         {
@@ -99,7 +108,7 @@ namespace PeachPDF.Adapters
             return new BrushAdapter(new XLinearGradientBrush(Utils.Convert(rect), Utils.Convert(color1), Utils.Convert(color2), mode));
         }
 
-        protected override RImage ConvertImageInt(object image)
+        protected override RImage? ConvertImageInt(object? image)
         {
             return image != null ? new ImageAdapter((XImage)image) : null;
         }

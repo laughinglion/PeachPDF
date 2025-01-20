@@ -10,11 +10,10 @@
 // - Sun Tsu,
 // "The Art of War"
 
-using System;
 using PeachPDF.Html.Adapters;
-using PeachPDF.Html.Adapters.Entities;
 using PeachPDF.Html.Core.Dom;
 using PeachPDF.Html.Core.Parse;
+using System;
 
 namespace PeachPDF.Html.Core.Utils
 {
@@ -84,6 +83,7 @@ namespace PeachPDF.Html.Core.Utils
                 "width" => cssBox.Width,
                 "max-width" => cssBox.MaxWidth,
                 "height" => cssBox.Height,
+                "min-height" => cssBox.MinHeight,
                 "background-color" => cssBox.BackgroundColor,
                 "background-image" => cssBox.BackgroundImage,
                 "background-position" => cssBox.BackgroundPosition,
@@ -102,6 +102,9 @@ namespace PeachPDF.Html.Core.Utils
                 "text-indent" => cssBox.TextIndent,
                 "text-align" => cssBox.TextAlign,
                 "text-decoration" => cssBox.TextDecoration,
+                "text-decoration-color" => cssBox.TextDecorationColor,
+                "text-decoration-line" => cssBox.TextDecorationLine,
+                "text-decoration-style" => cssBox.TextDecorationStyle,
                 "white-space" => cssBox.WhiteSpace,
                 "word-break" => cssBox.WordBreak,
                 "visibility" => cssBox.Visibility,
@@ -233,6 +236,9 @@ namespace PeachPDF.Html.Core.Utils
                 case "height":
                     cssBox.Height = value;
                     break;
+                case "min-height":
+                    cssBox.MinHeight = value;
+                    break;
                 case "background-color":
                     cssBox.BackgroundColor = value;
                     break;
@@ -287,6 +293,15 @@ namespace PeachPDF.Html.Core.Utils
                 case "text-decoration":
                     cssBox.TextDecoration = value;
                     break;
+                case "text-decoration-color":
+                    cssBox.TextDecorationColor = value;
+                    break;
+                case "text-decoration-line":
+                    cssBox.TextDecorationLine = value;
+                    break;
+                case "text-decoration-style":
+                    cssBox.TextDecorationStyle = value;
+                    break;
                 case "white-space":
                     cssBox.WhiteSpace = value;
                     break;
@@ -328,6 +343,11 @@ namespace PeachPDF.Html.Core.Utils
                     break;
                 case "overflow":
                     cssBox.Overflow = value;
+                    break;
+                case "unicode-bidi":
+                case "background-attachment":
+                case "background-clip":
+                case "overflow-wrap":
                     break;
             }
         }

@@ -12,6 +12,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using PeachPDF.Html.Adapters;
 using PeachPDF.Html.Adapters.Entities;
 using PeachPDF.Html.Core.Entities;
@@ -121,7 +122,7 @@ namespace PeachPDF.Html.Core.Dom
         /// </summary>
         /// <param name="g"></param>
         /// <param name="tableBox"> </param>
-        public static void PerformLayout(RGraphics g, CssBox tableBox)
+        public static async ValueTask PerformLayout(RGraphics g, CssBox tableBox)
         {
             ArgChecker.AssertArgNotNull(g, "g");
             ArgChecker.AssertArgNotNull(tableBox, "tableBox");
@@ -129,7 +130,7 @@ namespace PeachPDF.Html.Core.Dom
             try
             {
                 var table = new CssLayoutEngineTable(tableBox);
-                table.Layout(g);
+                await table.Layout(g);
             }
             catch (Exception ex)
             {
@@ -144,9 +145,9 @@ namespace PeachPDF.Html.Core.Dom
         /// Analyzes the Table and assigns values to this CssTable object.
         /// To be called from the constructor
         /// </summary>
-        private void Layout(RGraphics g)
+        private async ValueTask Layout(RGraphics g)
         {
-            MeasureWords(_tableBox, g);
+            await MeasureWords(_tableBox, g);
 
             // get the table boxes into the proper fields
             AssignBoxKinds();
@@ -169,7 +170,7 @@ namespace PeachPDF.Html.Core.Dom
             _tableBox.PaddingLeft = _tableBox.PaddingTop = _tableBox.PaddingRight = _tableBox.PaddingBottom = "0";
 
             //Actually layout cells!
-            LayoutCells(g);
+            await LayoutCells(g);
         }
 
         /// <summary>
@@ -604,7 +605,7 @@ namespace PeachPDF.Html.Core.Dom
         /// Layout the cells by the calculated table layout
         /// </summary>
         /// <param name="g"></param>
-        private void LayoutCells(RGraphics g)
+        private async ValueTask LayoutCells(RGraphics g)
         {
             double startx = Math.Max(_tableBox.ClientLeft + GetHorizontalSpacing(), 0);
             double starty = Math.Max(_tableBox.ClientTop + GetVerticalSpacing(), 0);
@@ -642,7 +643,7 @@ namespace PeachPDF.Html.Core.Dom
                     double width = GetCellWidth(columnIndex, cell);
                     cell.Location = new RPoint(curx, cury);
                     cell.Size = new RSize(width, 0f);
-                    cell.PerformLayout(g); //That will automatically set the bottom of the cell
+                    await cell.PerformLayout(g); //That will automatically set the bottom of the cell
 
                     //Alter max bottom only if row is cell's row + cell's rowspan - 1
                     if (cell is CssSpacingBox sb)
@@ -805,14 +806,14 @@ namespace PeachPDF.Html.Core.Dom
         /// </summary>
         /// <param name="box">the box to measure</param>
         /// <param name="g">Device to use</param>
-        private static void MeasureWords(CssBox box, RGraphics g)
+        private static async ValueTask MeasureWords(CssBox box, RGraphics g)
         {
             if (box != null)
             {
                 foreach (var childBox in box.Boxes)
                 {
-                    childBox.MeasureWordsSize(g);
-                    MeasureWords(childBox, g);
+                    await childBox.MeasureWordsSize(g);
+                    await MeasureWords(childBox, g);
                 }
             }
         }

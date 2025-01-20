@@ -10,10 +10,12 @@
 // - Sun Tsu,
 // "The Art of War"
 
+#nullable enable
 
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using PeachPDF.Html.Adapters.Entities;
 using PeachPDF.Html.Core;
 using PeachPDF.Html.Core.Entities;
@@ -42,12 +44,12 @@ namespace PeachPDF.Html.Adapters
         /// <summary>
         /// cache of brush color to brush instance
         /// </summary>
-        private readonly Dictionary<RColor, RBrush> _brushesCache = new Dictionary<RColor, RBrush>();
+        private readonly Dictionary<RColor, RBrush> _brushesCache = new();
 
         /// <summary>
         /// cache of pen color to pen instance
         /// </summary>
-        private readonly Dictionary<RColor, RPen> _penCache = new Dictionary<RColor, RPen>();
+        private readonly Dictionary<RColor, RPen> _penCache = new();
 
         /// <summary>
         /// cache of all the font used not to create same font again and again
@@ -57,17 +59,17 @@ namespace PeachPDF.Html.Adapters
         /// <summary>
         /// default CSS parsed data singleton
         /// </summary>
-        private CssData _defaultCssData;
+        private CssData? _defaultCssData;
 
         /// <summary>
         /// image used to draw loading image icon
         /// </summary>
-        private RImage _loadImage;
+        private RImage? _loadImage;
 
         /// <summary>
         /// image used to draw error image icon
         /// </summary>
-        private RImage _errorImage;
+        private RImage? _errorImage;
 
         #endregion
 
@@ -85,7 +87,7 @@ namespace PeachPDF.Html.Adapters
         /// </summary>
         public CssData DefaultCssData
         {
-            get { return _defaultCssData ?? (_defaultCssData = CssData.Parse(this, CssDefaults.DefaultStyleSheet, false)); }
+            get { return _defaultCssData ??= CssData.Parse(this, CssDefaults.DefaultStyleSheet, false); }
         }
 
         /// <summary>
@@ -106,8 +108,7 @@ namespace PeachPDF.Html.Adapters
         /// <returns>pen instance</returns>
         public RPen GetPen(RColor color)
         {
-            RPen pen;
-            if (!_penCache.TryGetValue(color, out pen))
+            if (!_penCache.TryGetValue(color, out var pen))
             {
                 _penCache[color] = pen = CreatePen(color);
             }
@@ -121,8 +122,7 @@ namespace PeachPDF.Html.Adapters
         /// <returns>brush instance</returns>
         public RBrush GetSolidBrush(RColor color)
         {
-            RBrush brush;
-            if (!_brushesCache.TryGetValue(color, out brush))
+            if (!_brushesCache.TryGetValue(color, out var brush))
             {
                 _brushesCache[color] = brush = CreateSolidBrush(color);
             }
@@ -147,7 +147,7 @@ namespace PeachPDF.Html.Adapters
         /// </summary>
         /// <param name="image">the image returned from load event</param>
         /// <returns>converted image or null</returns>
-        public RImage ConvertImage(object image)
+        public RImage? ConvertImage(object image)
         {
             // TODO:a remove this by creating better API.
             return ConvertImageInt(image);
@@ -209,28 +209,26 @@ namespace PeachPDF.Html.Adapters
         /// <summary>
         /// Get image to be used while HTML image is loading.
         /// </summary>
-        public RImage GetLoadingImage()
+        public RImage? GetLoadingImage()
         {
-            if (_loadImage == null)
-            {
-                var stream = typeof(HtmlRendererUtils).Assembly.GetManifestResourceStream("PeachPDF.Html.Core.Utils.ImageLoad.png");
-                if (stream != null)
-                    _loadImage = ImageFromStream(stream);
-            }
+            if (_loadImage != null) return _loadImage;
+
+            var stream = typeof(HtmlRendererUtils).Assembly.GetManifestResourceStream("PeachPDF.Html.Core.Utils.ImageLoad.png");
+            if (stream != null)
+                _loadImage = ImageFromStream(stream);
             return _loadImage;
         }
 
         /// <summary>
         /// Get image to be used if HTML image load failed.
         /// </summary>
-        public RImage GetLoadingFailedImage()
+        public RImage? GetLoadingFailedImage()
         {
-            if (_errorImage == null)
-            {
-                var stream = typeof(HtmlRendererUtils).Assembly.GetManifestResourceStream("PeachPDF.Html.Core.Utils.ImageError.png");
-                if (stream != null)
-                    _errorImage = ImageFromStream(stream);
-            }
+            if (_errorImage != null) return _errorImage;
+
+            var stream = typeof(HtmlRendererUtils).Assembly.GetManifestResourceStream("PeachPDF.Html.Core.Utils.ImageError.png");
+            if (stream != null)
+                _errorImage = ImageFromStream(stream);
             return _errorImage;
         }
 
@@ -261,6 +259,12 @@ namespace PeachPDF.Html.Adapters
 
         public abstract string GetCssMediaType(IEnumerable<string> mediaTypesAvailable);
 
+        /// <summary>
+        /// Gets the given resource using the provided network loader
+        /// </summary>
+        /// <param name="uri">Uri to load</param>
+        /// <returns>The stream of the contents</returns>
+        public abstract Task<Stream?> GetResourceStream(Uri uri);
 
         #region Private/Protected methods
 
@@ -300,7 +304,7 @@ namespace PeachPDF.Html.Adapters
         /// </summary>
         /// <param name="image">the image returned from load event</param>
         /// <returns>converted image or null</returns>
-        protected abstract RImage ConvertImageInt(object image);
+        protected abstract RImage? ConvertImageInt(object image);
 
         /// <summary>
         /// Create an <see cref="RImage"/> object from the given stream.

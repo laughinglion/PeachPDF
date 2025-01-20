@@ -18,6 +18,7 @@ using PeachPDF.Html.Core.Parse;
 using PeachPDF.Html.Core.Utils;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace PeachPDF.Html.Core
 {
@@ -79,15 +80,6 @@ namespace PeachPDF.Html.Core
     {
         #region Fields and Consts
 
-        /// <summary>
-        /// list of all css boxes that have ":hover" selector on them
-        /// </summary>
-        private List<HoverBoxBlock> _hoverBoxes;
-
-        /// <summary>
-        /// is the load of the html document is complete
-        /// </summary>
-        private bool _loadComplete;
 
         /// <summary>
         /// the top margin between the page start and the text
@@ -134,41 +126,6 @@ namespace PeachPDF.Html.Core
         internal CssParser CssParser { get; }
 
         /// <summary>
-        /// Raised when the set html document has been fully loaded.<br/>
-        /// Allows manipulation of the html dom, scroll position, etc.
-        /// </summary>
-        public event EventHandler LoadComplete;
-
-        /// <summary>
-        /// Raised when html renderer requires refresh of the control hosting (invalidation and re-layout).
-        /// </summary>
-        /// <remarks>
-        /// There is no guarantee that the event will be raised on the main thread, it can be raised on thread-pool thread.
-        /// </remarks>
-        public event EventHandler<HtmlRefreshEventArgs> Refresh;
-
-        /// <summary>
-        /// Raised when an error occurred during html rendering.<br/>
-        /// </summary>
-        /// <remarks>
-        /// There is no guarantee that the event will be raised on the main thread, it can be raised on thread-pool thread.
-        /// </remarks>
-        public event EventHandler<HtmlRenderErrorEventArgs> RenderError;
-
-        /// <summary>
-        /// Raised when a stylesheet is about to be loaded by file path or URI by link element.<br/>
-        /// This event allows to provide the stylesheet manually or provide new source (file or Uri) to load from.<br/>
-        /// If no alternative data is provided the original source will be used.<br/>
-        /// </summary>
-        public event EventHandler<HtmlStylesheetLoadEventArgs> StylesheetLoad;
-
-        /// <summary>
-        /// Raised when an image is about to be loaded by file path or URI.<br/>
-        /// This event allows to provide the image manually, if not handled the image will be loaded from file or download from URI.
-        /// </summary>
-        public event EventHandler<HtmlImageLoadEventArgs> ImageLoad;
-
-        /// <summary>
         /// the parsed stylesheet data used for handling the html
         /// </summary>
         public CssData CssData { get; private set; }
@@ -177,33 +134,6 @@ namespace PeachPDF.Html.Core
         /// Gets or sets a value indicating if anti-aliasing should be avoided for geometry like backgrounds and borders (default - false).
         /// </summary>
         public bool AvoidGeometryAntialias { get; set; }
-
-        /// <summary>
-        /// Gets or sets a value indicating if image asynchronous loading should be avoided (default - false).<br/>
-        /// True - images are loaded synchronously during html parsing.<br/>
-        /// False - images are loaded asynchronously to html parsing when downloaded from URL or loaded from disk.<br/>
-        /// </summary>
-        /// <remarks>
-        /// Asynchronously image loading allows to unblock html rendering while image is downloaded or loaded from disk using IO 
-        /// ports to achieve better performance.<br/>
-        /// Asynchronously image loading should be avoided when the full html content must be available during render, like render to image.
-        /// </remarks>
-        public bool AvoidAsyncImagesLoading { get; set; }
-
-        /// <summary>
-        /// Gets or sets a value indicating if image loading only when visible should be avoided (default - false).<br/>
-        /// True - images are loaded as soon as the html is parsed.<br/>
-        /// False - images that are not visible because of scroll location are not loaded until they are scrolled to.
-        /// </summary>
-        /// <remarks>
-        /// Images late loading improve performance if the page contains image outside the visible scroll area, especially if there is large 
-        /// amount of images, as all image loading is delayed (downloading and loading into memory).<br/>
-        /// Late image loading may effect the layout and actual size as image without set size will not have actual size until they are loaded
-        /// resulting in layout change during user scroll.<br/>
-        /// Early image loading may also effect the layout if image without known size above the current scroll location are loaded as they
-        /// will push the html elements down.
-        /// </remarks>
-        public bool AvoidImagesLateLoading { get; set; }
 
         /// <summary>
         /// The scroll offset of the html.<br/>
@@ -309,16 +239,15 @@ namespace PeachPDF.Html.Core
         /// </summary>
         /// <param name="htmlSource">the html to init with, init empty if not given</param>
         /// <param name="baseCssData">optional: the stylesheet to init with, init default if not given</param>
-        public void SetHtml(string htmlSource, CssData baseCssData = null)
+        public async Task SetHtml(string htmlSource, CssData baseCssData = null)
         {
             Clear();
             if (string.IsNullOrEmpty(htmlSource)) return;
 
-            _loadComplete = false;
             CssData = baseCssData ?? Adapter.DefaultCssData;
 
             DomParser parser = new(CssParser);
-            (Root,CssData) = parser.GenerateCssTree(htmlSource, this, CssData);
+            (Root,CssData) = await parser.GenerateCssTree(htmlSource, this, CssData);
         }
 
         /// <summary>
@@ -330,8 +259,6 @@ namespace PeachPDF.Html.Core
 
             Root.Dispose();
             Root = null;
-
-            _hoverBoxes = null;
         }
 
         /// <summary>
@@ -406,7 +333,7 @@ namespace PeachPDF.Html.Core
         /// Measures the bounds of box and children, recursively.
         /// </summary>
         /// <param name="g">Device context to draw</param>
-        public void PerformLayout(RGraphics g)
+        public async ValueTask PerformLayout(RGraphics g)
         {
             ArgChecker.AssertArgNotNull(g, "g");
 
@@ -416,20 +343,15 @@ namespace PeachPDF.Html.Core
             // if width is not restricted we set it to large value to get the actual later
             Root.Size = new RSize(MaxSize.Width > 0 ? MaxSize.Width : 99999, 0);
             Root.Location = Location;
-            Root.PerformLayout(g);
+            await Root.PerformLayout(g);
 
             if (MaxSize.Width <= 0.1)
             {
                 // in case the width is not restricted we need to double layout, first will find the width so second can layout by it (center alignment)
                 Root.Size = new RSize((int)Math.Ceiling(ActualSize.Width), 0);
                 ActualSize = RSize.Empty;
-                Root.PerformLayout(g);
+                await Root.PerformLayout(g);
             }
-
-            if (_loadComplete) return;
-            _loadComplete = true;
-            EventHandler handler = LoadComplete;
-            handler?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
@@ -461,57 +383,6 @@ namespace PeachPDF.Html.Core
         }
 
         /// <summary>
-        /// Raise the stylesheet load event with the given event args.
-        /// </summary>
-        /// <param name="args">the event args</param>
-        internal void RaiseHtmlStylesheetLoadEvent(HtmlStylesheetLoadEventArgs args)
-        {
-            try
-            {
-                EventHandler<HtmlStylesheetLoadEventArgs> handler = StylesheetLoad;
-                handler?.Invoke(this, args);
-            }
-            catch (Exception ex)
-            {
-                ReportError(HtmlRenderErrorType.CssParsing, "Failed stylesheet load event", ex);
-            }
-        }
-
-        /// <summary>
-        /// Raise the image load event with the given event args.
-        /// </summary>
-        /// <param name="args">the event args</param>
-        internal void RaiseHtmlImageLoadEvent(HtmlImageLoadEventArgs args)
-        {
-            try
-            {
-                EventHandler<HtmlImageLoadEventArgs> handler = ImageLoad;
-                handler?.Invoke(this, args);
-            }
-            catch (Exception ex)
-            {
-                ReportError(HtmlRenderErrorType.Image, "Failed image load event", ex);
-            }
-        }
-
-        /// <summary>
-        /// Request invalidation and re-layout of the control hosting the renderer.
-        /// </summary>
-        /// <param name="layout">is re-layout is required for the refresh</param>
-        public void RequestRefresh(bool layout)
-        {
-            try
-            {
-                EventHandler<HtmlRefreshEventArgs> handler = Refresh;
-                handler?.Invoke(this, new HtmlRefreshEventArgs(layout));
-            }
-            catch (Exception ex)
-            {
-                ReportError(HtmlRenderErrorType.General, "Failed refresh request", ex);
-            }
-        }
-
-        /// <summary>
         /// Report error in html render process.
         /// </summary>
         /// <param name="type">the type of error to report</param>
@@ -519,29 +390,7 @@ namespace PeachPDF.Html.Core
         /// <param name="exception">optional: the exception that occured</param>
         internal void ReportError(HtmlRenderErrorType type, string message, Exception exception = null)
         {
-            try
-            {
-                EventHandler<HtmlRenderErrorEventArgs> handler = RenderError;
-                handler?.Invoke(this, new HtmlRenderErrorEventArgs(type, message, exception));
-            }
-            catch
-            {
-            }
-        }
-
-        /// <summary>
-        /// Add css box that has ":hover" selector to be handled on mouse hover.
-        /// </summary>
-        /// <param name="box">the box that has the hover selector</param>
-        /// <param name="block">the css block with the css data with the selector</param>
-        internal void AddHoverBox(CssBox box, CssBlock block)
-        {
-            ArgChecker.AssertArgNotNull(box, "box");
-            ArgChecker.AssertArgNotNull(block, "block");
-
-            _hoverBoxes ??= new List<HoverBoxBlock>();
-
-            _hoverBoxes.Add(new HoverBoxBlock(box, block));
+            throw new HtmlRenderException(message, type, exception);
         }
 
         /// <summary>
@@ -573,14 +422,6 @@ namespace PeachPDF.Html.Core
         {
             try
             {
-                if (all)
-                {
-                    Refresh = null;
-                    RenderError = null;
-                    StylesheetLoad = null;
-                    ImageLoad = null;
-                }
-
                 CssData = null;
                 Root?.Dispose();
                 Root = null;

@@ -17,6 +17,9 @@ using PeachPDF.Html.Core.Utils;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
+using System.Threading.Tasks;
+using ExCSS;
 
 namespace PeachPDF.Html.Core.Parse
 {
@@ -52,7 +55,7 @@ namespace PeachPDF.Html.Core.Parse
         /// <param name="htmlContainer">the html container to use for reference resolve</param>
         /// <param name="cssData">the css data to use</param>
         /// <returns>the root of the generated tree</returns>
-        public (CssBox cssBox, CssData cssData) GenerateCssTree(string html, HtmlContainerInt htmlContainer, CssData cssData)
+        public async Task<(CssBox cssBox, CssData cssData)> GenerateCssTree(string html, HtmlContainerInt htmlContainer, CssData cssData)
         {
             var root = HtmlParser.ParseDocument(html);
             if (root is null) return (null, cssData);
@@ -60,9 +63,10 @@ namespace PeachPDF.Html.Core.Parse
             root.HtmlContainer = htmlContainer;
             const bool cssDataChanged = false;
 
-            (cssData, _) = CascadeParseStyles(root, htmlContainer, cssData, cssDataChanged);
+            (cssData, _) = await CascadeParseStyles(root, htmlContainer, cssData, cssDataChanged);
 
-            var media = htmlContainer.GetCssMediaType(cssData.MediaBlocks.Keys);
+            //var media = htmlContainer.GetCssMediaType(cssData.MediaBlocks.Keys);
+            var media = "print"; // TODO: fix this
 
             CascadeApplyStyles(root, cssData, media);
 
@@ -93,7 +97,7 @@ namespace PeachPDF.Html.Core.Parse
         /// <param name="htmlContainer">the html container to use for reference resolve</param>
         /// <param name="cssData">the style data to fill with found styles</param>
         /// <param name="cssDataChanged">check if the css data has been modified by the handled html not to change the base css data</param>
-        private (CssData cssData, bool cssDataChanged) CascadeParseStyles(CssBox box, HtmlContainerInt htmlContainer, CssData cssData, bool cssDataChanged)
+        private async Task<(CssData cssData, bool cssDataChanged)> CascadeParseStyles(CssBox box, HtmlContainerInt htmlContainer, CssData cssData, bool cssDataChanged)
         {
             if (box.HtmlTag != null)
             {
@@ -102,11 +106,9 @@ namespace PeachPDF.Html.Core.Parse
                     box.GetAttribute("rel", string.Empty).Equals("stylesheet", StringComparison.CurrentCultureIgnoreCase))
                 {
                     CloneCssData(ref cssData, ref cssDataChanged);
-                    var (stylesheet, stylesheetData) = StylesheetLoadHandler.LoadStylesheet(htmlContainer, box.GetAttribute("href", string.Empty), box.HtmlTag.Attributes);
+                    var stylesheet = await StylesheetLoadHandler.LoadStylesheet(htmlContainer, box.GetAttribute("href", string.Empty), box.HtmlTag.Attributes);
                     if (stylesheet != null)
                         _cssParser.ParseStyleSheet(cssData, stylesheet);
-                    else if (stylesheetData != null)
-                        cssData.Combine(stylesheetData);
                 }
 
                 // Check for the <style> tag
@@ -114,13 +116,13 @@ namespace PeachPDF.Html.Core.Parse
                 {
                     CloneCssData(ref cssData, ref cssDataChanged);
                     foreach (var child in box.Boxes)
-                        _cssParser.ParseStyleSheet(cssData, child.Text.CutSubstring());
+                        _cssParser.ParseStyleSheet(cssData, child.Text);
                 }
             }
 
             foreach (var childBox in box.Boxes)
             {
-                (cssData,cssDataChanged) = CascadeParseStyles(childBox, htmlContainer, cssData, cssDataChanged);
+                (cssData,cssDataChanged) = await CascadeParseStyles(childBox, htmlContainer, cssData, cssDataChanged);
             }
 
             return (cssData, cssDataChanged);
@@ -140,35 +142,22 @@ namespace PeachPDF.Html.Core.Parse
         {
             box.InheritStyle();
 
+            // try assign style using all wildcard
+            AssignCssBlocks(box, cssData, media);
+
             if (box.HtmlTag != null)
             {
-                // try assign style using all wildcard
-                AssignCssBlocks(box, cssData, "*", media);
-
-                // try assign style using the html element tag
-                AssignCssBlocks(box, cssData, box.HtmlTag.Name, media);
-
-                // try assign style using the "class" attribute of the html element
-                if (box.HtmlTag.HasAttribute("class"))
-                {
-                    AssignClassCssBlocks(box, cssData, media);
-                }
-
-                // try assign style using the "id" attribute of the html element
-                if (box.HtmlTag.HasAttribute("id"))
-                {
-                    var id = box.HtmlTag.TryGetAttribute("id");
-                    AssignCssBlocks(box, cssData, "#" + id, media);
-                }
-
                 TranslateAttributes(box.HtmlTag, box);
 
                 // Check for the style="" attribute
                 if (box.HtmlTag.HasAttribute("style"))
                 {
-                    var block = _cssParser.ParseCssBlock(box.HtmlTag.Name, box.HtmlTag.TryGetAttribute("style"));
+                    var styleAttributeText = box.HtmlTag.TryGetAttribute("style");
+                    var stylesheet = "* { " + styleAttributeText + " }";
+
+                    var block = _cssParser.ParseStyleSheet(stylesheet);
                     if (block != null)
-                        AssignCssBlock(box, block);
+                        AssignCssBlock(box, block.StyleRules.Single());
                 }
             }
 
@@ -176,8 +165,17 @@ namespace PeachPDF.Html.Core.Parse
             if (box.TextDecoration != string.Empty && box.Text == null)
             {
                 foreach (var childBox in box.Boxes)
+                {
                     childBox.TextDecoration = box.TextDecoration;
+                    childBox.TextDecorationLine = box.TextDecorationLine;
+                    childBox.TextDecorationStyle = box.TextDecorationStyle;
+                    childBox.TextDecorationColor = box.TextDecorationColor;
+                }
+                    
                 box.TextDecoration = string.Empty;
+                box.TextDecorationLine = string.Empty;
+                box.TextDecorationStyle = string.Empty;
+                box.TextDecorationColor = string.Empty;
             }
 
             foreach (var childBox in box.Boxes)
@@ -187,161 +185,41 @@ namespace PeachPDF.Html.Core.Parse
         }
 
         /// <summary>
-        /// Assigns the given css classes to the given css box checking if matching.<br/>
-        /// Support multiple classes in single attribute separated by whitespace.
-        /// </summary>
-        /// <param name="box">the css box to assign css to</param>
-        /// <param name="cssData">the css data to use to get the matching css blocks</param>
-        /// <param name="media">CSS media to use (in addition to all)</param>
-        private static void AssignClassCssBlocks(CssBox box, CssData cssData, string media)
-        {
-            var classes = box.HtmlTag.TryGetAttribute("class");
-
-            var startIdx = 0;
-            while (startIdx < classes.Length)
-            {
-                while (startIdx < classes.Length && classes[startIdx] == ' ')
-                    startIdx++;
-
-                if (startIdx >= classes.Length) continue;
-
-                var endIdx = classes.IndexOf(' ', startIdx);
-
-                if (endIdx < 0)
-                    endIdx = classes.Length;
-
-                var cls = string.Concat(".", classes.AsSpan(startIdx, endIdx - startIdx));
-                AssignCssBlocks(box, cssData, cls, media);
-                AssignCssBlocks(box, cssData, box.HtmlTag.Name + cls, media);
-
-                startIdx = endIdx + 1;
-            }
-        }
-
-        /// <summary>
         /// Assigns the given css style blocks to the given css box checking if matching.
         /// </summary>
         /// <param name="box">the css box to assign css to</param>
         /// <param name="cssData">the css data to use to get the matching css blocks</param>
-        /// <param name="className">the class selector to search for css blocks</param>
         /// <param name="media">The media type to apply styles for</param>
-        private static void AssignCssBlocks(CssBox box, CssData cssData, string className, string media)
+        private static void AssignCssBlocks(CssBox box, CssData cssData, string media)
         {
-            var combinedBlocks = new List<CssBlock>();
-
-            var blocks = cssData.GetCssBlock(className);
-            combinedBlocks.AddRange(blocks);
-
-            if (media is not "all")
-            {
-                var mediaBlocks = cssData.GetCssBlock(className, media);
-                combinedBlocks.AddRange(mediaBlocks);
-            }
+            var combinedBlocks = new List<IStyleRule>();
+            var styleRules = cssData.GetStyleRules(media, box);
+            combinedBlocks.AddRange(styleRules);
 
             foreach (var block in combinedBlocks)
             {
-                if (IsBlockAssignableToBox(box, block))
-                {
-                    AssignCssBlock(box, block);
-                }
+                AssignCssBlock(box, block);
             }
-        }
-
-        /// <summary>
-        /// Check if the given css block is assignable to the given css box.<br/>
-        /// the block is assignable if it has no hierarchical selectors or if the hierarchy matches.<br/>
-        /// Special handling for ":hover" pseudo-class.<br/>
-        /// </summary>
-        /// <param name="box">the box to check assign to</param>
-        /// <param name="block">the block to check assign of</param>
-        /// <returns>true - the block is assignable to the box, false - otherwise</returns>
-        private static bool IsBlockAssignableToBox(CssBox box, CssBlock block)
-        {
-            bool assignable = true;
-            if (block.Selectors != null)
-            {
-                assignable = IsBlockAssignableToBoxWithSelector(box, block);
-            }
-            else if (box.HtmlTag.Name.Equals("a", StringComparison.OrdinalIgnoreCase) && block.Class.Equals("a", StringComparison.OrdinalIgnoreCase) && !box.HtmlTag.HasAttribute("href"))
-            {
-                assignable = false;
-            }
-
-            if (assignable && block.Hover)
-            {
-                box.HtmlContainer.AddHoverBox(box, block);
-                assignable = false;
-            }
-
-            return assignable;
-        }
-
-        /// <summary>
-        /// Check if the given css block is assignable to the given css box by validating the selector.<br/>
-        /// </summary>
-        /// <param name="box">the box to check assign to</param>
-        /// <param name="block">the block to check assign of</param>
-        /// <returns>true - the block is assignable to the box, false - otherwise</returns>
-        private static bool IsBlockAssignableToBoxWithSelector(CssBox box, CssBlock block)
-        {
-            foreach (var selector in block.Selectors)
-            {
-                bool matched = false;
-
-                while (!matched)
-                {
-                    box = box.ParentBox;
-                    while (box is { HtmlTag: null })
-                        box = box.ParentBox;
-
-                    if (box == null)
-                        return false;
-
-                    if (box.HtmlTag.Name.Equals(selector.Class, StringComparison.InvariantCultureIgnoreCase))
-                        matched = true;
-
-                    if (!matched && box.HtmlTag.HasAttribute("class"))
-                    {
-                        var className = box.HtmlTag.TryGetAttribute("class");
-                        if (selector.Class.Equals("." + className, StringComparison.InvariantCultureIgnoreCase) || selector.Class.Equals(box.HtmlTag.Name + "." + className, StringComparison.InvariantCultureIgnoreCase))
-                            matched = true;
-                    }
-
-                    if (!matched && box.HtmlTag.HasAttribute("id"))
-                    {
-                        var id = box.HtmlTag.TryGetAttribute("id");
-
-                        if (selector.Class.Equals("#" + id, StringComparison.InvariantCultureIgnoreCase))
-                            matched = true;
-
-                        if (selector.Class.Equals(box.HtmlTag.Name + "#" + id, StringComparison.InvariantCultureIgnoreCase))
-                            matched = true;
-                    }
-
-                    if (!matched && selector.DirectParent)
-                        return false;
-                }
-            }
-            return true;
         }
 
         /// <summary>
         /// Assigns the given css style block properties to the given css box.
         /// </summary>
         /// <param name="box">the css box to assign css to</param>
-        /// <param name="block">the css block to assign</param>
-        private static void AssignCssBlock(CssBox box, CssBlock block)
+        /// <param name="stylesheetRule">the stylesheet rule to assign</param>
+        private static void AssignCssBlock(CssBox box, IStyleRule stylesheetRule)
         {
-            foreach (var prop in block.Properties)
+            foreach (var prop in stylesheetRule.Style)
             {
                 var value = prop.Value;
+
                 if (prop.Value == CssConstants.Inherit && box.ParentBox != null)
                 {
-                    value = CssUtils.GetPropertyValue(box.ParentBox, prop.Key);
+                    value = CssUtils.GetPropertyValue(box.ParentBox, prop.Name);
                 }
-                if (IsStyleOnElementAllowed(box, prop.Key, value))
+                if (IsStyleOnElementAllowed(box, prop.Name, value))
                 {
-                    CssUtils.SetPropertyValue(box, prop.Key, value);
+                    CssUtils.SetPropertyValue(box, prop.Name, value);
                 }
             }
         }
@@ -448,7 +326,8 @@ namespace PeachPDF.Html.Core.Parse
                         box.Direction = value.ToLower();
                         break;
                     case HtmlConstants.Face:
-                        box.FontFamily = _cssParser.ParseFontFamily(value);
+                        //box.FontFamily = _cssParser.ParseFontFamily(value);
+                        throw new NotImplementedException();
                         break;
                     case HtmlConstants.Height:
                         box.Height = TranslateLength(value);
@@ -556,7 +435,7 @@ namespace PeachPDF.Html.Core.Parse
                 if (childBox.Text != null)
                 {
                     // is the box has text
-                    var keepBox = !childBox.Text.IsEmptyOrWhitespace();
+                    var keepBox = !string.IsNullOrWhiteSpace(childBox.Text);
 
                     // is the box is pre-formatted
                     keepBox = keepBox || childBox.WhiteSpace == CssConstants.Pre || childBox.WhiteSpace == CssConstants.PreWrap;

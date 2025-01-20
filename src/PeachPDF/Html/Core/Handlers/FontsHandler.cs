@@ -110,9 +110,10 @@ namespace PeachPDF.Html.Core.Handlers
         public RFont GetCachedFont(string family, double size, RFontStyle style)
         {
             var font = TryGetFont(family, size, style);
+
             if (font == null)
             {
-                if (!_existingFontFamilies.ContainsKey(family))
+                if (!_existingFontFamilies.TryGetValue(family, out var existingFontFamily))
                 {
                     if (_fontsMapping.TryGetValue(family, out string mappedFamily))
                     {
@@ -125,10 +126,14 @@ namespace PeachPDF.Html.Core.Handlers
                     }
                 }
 
-                font ??= CreateFont(family, size, style);
+                if (existingFontFamily is not null)
+                {
+                    font = CreateFont(existingFontFamily.Name, size, style);
+                }
 
                 _fontsCache[family][size][style] = font;
             }
+
             return font;
         }
 

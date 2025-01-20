@@ -10,6 +10,9 @@
 // - Sun Tsu,
 // "The Art of War"
 
+#nullable enable
+
+using PeachPDF.Network;
 using PeachPDF.PdfSharpCore;
 using PeachPDF.PdfSharpCore.Drawing;
 
@@ -44,6 +47,10 @@ namespace PeachPDF
 
         #endregion
 
+        /// <summary>
+        /// the dots per inch to use for the generated pdf
+        /// </summary>
+        public int DotsPerInch { get; set; } = 72;
 
         /// <summary>
         /// the page size to use for each page in the generated pdf
@@ -59,6 +66,14 @@ namespace PeachPDF
         /// the orientation of each page of the generated pdf
         /// </summary>
         public PageOrientation PageOrientation { get; set; }
+
+
+        /// <summary>
+        /// The resources to load network content for the renderer.
+        /// If null is provided, then an implementation that loads only the default document and any resources with data: URIs is provided
+        /// We ship with MimeKit (MHTML) and HttpClient based implementations that can be used instead.
+        /// </summary>
+        public RNetworkLoader? NetworkLoader { get; set; } = null;
 
         /// <summary>
         /// the top margin between the page start and the text
@@ -120,30 +135,6 @@ namespace PeachPDF
         {
             if (value > -1)
                 _marginBottom = _marginLeft = _marginTop = _marginRight = value;
-        }
-
-        // The international definitions are:
-        //   1 inch == 25.4 mm
-        //   1 inch == 72 point
-
-        /// <summary>
-        /// Convert the units passed in millimeters to the units used in PdfSharp
-        /// </summary>
-        /// <param name="width"></param>
-        /// <param name="height"></param>
-        /// <returns></returns>
-        public static XSize MillimetersToUnits(double width, double height) {
-            return new XSize(width / 25.4 * 72, height / 25.4 * 72);
-        }
-
-        /// <summary>
-        /// Convert the units passed in inches to the units used in PdfSharp
-        /// </summary>
-        /// <param name="width"></param>
-        /// <param name="height"></param>
-        /// <returns></returns>
-        public static XSize InchesToUnits(double width, double height) {
-            return new XSize(width * 72, height * 72);
         }
     }
 }

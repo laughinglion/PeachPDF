@@ -13,8 +13,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using PeachPDF.Html.Adapters;
 using PeachPDF.Html.Adapters.Entities;
+using PeachPDF.Html.Core.Entities;
 using PeachPDF.Html.Core.Utils;
 
 namespace PeachPDF.Html.Core.Dom
@@ -52,7 +54,7 @@ namespace PeachPDF.Html.Core.Dom
             }
             else if (imageWord.Image != null)
             {
-                imageWord.Width = imageWord.ImageRectangle == RRect.Empty ? imageWord.Image.Width : imageWord.ImageRectangle.Width;
+                imageWord.Width = imageWord.Image.Width;
             }
             else
             {
@@ -85,7 +87,7 @@ namespace PeachPDF.Html.Core.Dom
             }
             else if (imageWord.Image != null)
             {
-                imageWord.Height = imageWord.ImageRectangle == RRect.Empty ? imageWord.Image.Height : imageWord.ImageRectangle.Height;
+                imageWord.Height = imageWord.Image.Height;
             }
             else
             {
@@ -118,7 +120,7 @@ namespace PeachPDF.Html.Core.Dom
         /// </summary>
         /// <param name="g"></param>
         /// <param name="blockBox"></param>
-        public static void CreateLineBoxes(RGraphics g, CssBox blockBox)
+        public static async ValueTask CreateLineBoxes(RGraphics g, CssBox blockBox)
         {
             ArgChecker.AssertArgNotNull(g, "g");
             ArgChecker.AssertArgNotNull(blockBox, "blockBox");
@@ -130,23 +132,23 @@ namespace PeachPDF.Html.Core.Dom
             //Get the start x and y of the blockBox
             double startx = blockBox.Location.X + blockBox.ActualPaddingLeft - 0 + blockBox.ActualBorderLeftWidth;
             double starty = blockBox.Location.Y + blockBox.ActualPaddingTop - 0 + blockBox.ActualBorderTopWidth;
-            double curx = startx + blockBox.ActualTextIndent;
-            double cury = starty;
 
-            //Reminds the maximum bottom reached
-            double maxRight = startx;
-            double maxBottom = starty;
-
-            //First line box
-            CssLineBox line = new CssLineBox(blockBox);
+            CssLineBoxCoordinates coordinates = new()
+            {
+                Line = new CssLineBox(blockBox),
+                CurrentX = startx + blockBox.ActualTextIndent,
+                CurrentY = starty,
+                MaxRight = startx,
+                MaxBottom = starty
+            };
 
             //Flow words and boxes
-            FlowBox(g, blockBox, blockBox, limitRight, 0, startx, ref line, ref curx, ref cury, ref maxRight, ref maxBottom);
+            await FlowBox(g, blockBox, blockBox, limitRight, 0, startx, coordinates);
 
             // if width is not restricted we need to lower it to the actual width
             if (blockBox.ActualRight >= 90999)
             {
-                blockBox.ActualRight = maxRight + blockBox.ActualPaddingRight + blockBox.ActualBorderRightWidth;
+                blockBox.ActualRight = coordinates.MaxRight + blockBox.ActualPaddingRight + blockBox.ActualBorderRightWidth;
             }
 
             //Gets the rectangles for each line-box
@@ -159,12 +161,12 @@ namespace PeachPDF.Html.Core.Dom
                 linebox.AssignRectanglesToBoxes();
             }
 
-            blockBox.ActualBottom = maxBottom + blockBox.ActualPaddingBottom + blockBox.ActualBorderBottomWidth;
+            blockBox.ActualBottom = coordinates.MaxBottom + blockBox.ActualPaddingBottom + blockBox.ActualBorderBottomWidth;
 
             // handle limiting block height when overflow is hidden
             if (blockBox.Height != null && blockBox.Height != CssConstants.Auto && blockBox.Overflow == CssConstants.Hidden && blockBox.ActualBottom - blockBox.Location.Y > blockBox.ActualHeight)
             {
-                blockBox.ActualBottom = blockBox.Location.Y + blockBox.ActualHeight;
+                blockBox.ActualBottom = blockBox.Location.Y + blockBox.ActualHeight + blockBox.ActualPaddingBottom + blockBox.ActualPaddingTop;
             }
         }
 
@@ -212,19 +214,15 @@ namespace PeachPDF.Html.Core.Dom
         /// <param name="limitRight">Maximum reached right</param>
         /// <param name="linespacing">Space to use between rows of text</param>
         /// <param name="startx">x starting coordinate for when breaking lines of text</param>
-        /// <param name="line">Current linebox being used</param>
-        /// <param name="curx">Current x coordinate that will be the left of the next word</param>
-        /// <param name="cury">Current y coordinate that will be the top of the next word</param>
-        /// <param name="maxRight">Maximum right reached so far</param>
-        /// <param name="maxbottom">Maximum bottom reached so far</param>
-        private static void FlowBox(RGraphics g, CssBox blockbox, CssBox box, double limitRight, double linespacing, double startx, ref CssLineBox line, ref double curx, ref double cury, ref double maxRight, ref double maxbottom)
+        /// <param name="coordinates">Current coordinates being used</param>
+        private static async ValueTask FlowBox(RGraphics g, CssBox blockbox, CssBox box, double limitRight, double linespacing, double startx, CssLineBoxCoordinates coordinates)
         {
-            var startX = curx;
-            var startY = cury;
-            box.FirstHostingLineBox = line;
-            var localCurx = curx;
-            var localMaxRight = maxRight;
-            var localmaxbottom = maxbottom;
+            var startX = coordinates.CurrentX;
+            var startY = coordinates.CurrentY;
+            box.FirstHostingLineBox = coordinates.Line;
+            var localCurx = coordinates.CurrentX;
+            var localMaxRight = coordinates.MaxRight;
+            var localmaxbottom = coordinates.MaxBottom;
 
             foreach (CssBox b in box.Boxes)
             {
@@ -232,16 +230,16 @@ namespace PeachPDF.Html.Core.Dom
                 double rightspacing = (b.Position != CssConstants.Absolute && b.Position != CssConstants.Fixed) ? b.ActualMarginRight + b.ActualBorderRightWidth + b.ActualPaddingRight : 0;
 
                 b.RectanglesReset();
-                b.MeasureWordsSize(g);
+                await b.MeasureWordsSize(g);
 
-                curx += leftspacing;
+                coordinates.CurrentX += leftspacing;
 
                 if (b.Words.Count > 0)
                 {
                     bool wrapNoWrapBox = false;
-                    if (b.WhiteSpace == CssConstants.NoWrap && curx > startx)
+                    if (b.WhiteSpace == CssConstants.NoWrap && coordinates.CurrentX > startx)
                     {
-                        var boxRight = curx;
+                        var boxRight = coordinates.CurrentX;
                         foreach (var word in b.Words)
                             boxRight += word.FullWidth;
                         if (boxRight > limitRight)
@@ -249,48 +247,48 @@ namespace PeachPDF.Html.Core.Dom
                     }
 
                     if (DomUtils.IsBoxHasWhitespace(b))
-                        curx += box.ActualWordSpacing;
+                        coordinates.CurrentX += box.ActualWordSpacing;
 
                     foreach (var word in b.Words)
                     {
-                        if (maxbottom - cury < box.ActualLineHeight)
-                            maxbottom += box.ActualLineHeight - (maxbottom - cury);
+                        if (coordinates.MaxBottom - coordinates.CurrentY < box.ActualLineHeight)
+                            coordinates.MaxBottom += box.ActualLineHeight - (coordinates.MaxBottom - coordinates.CurrentY);
 
-                        if ((b.WhiteSpace != CssConstants.NoWrap && b.WhiteSpace != CssConstants.Pre && curx + word.Width + rightspacing > limitRight
+                        if ((b.WhiteSpace != CssConstants.NoWrap && b.WhiteSpace != CssConstants.Pre && coordinates.CurrentX + word.Width + rightspacing > limitRight
                              && (b.WhiteSpace != CssConstants.PreWrap || !word.IsSpaces))
                             || word.IsLineBreak || wrapNoWrapBox)
                         {
                             wrapNoWrapBox = false;
-                            curx = startx;
+                            coordinates.CurrentX = startx;
 
                             // handle if line is wrapped for the first text element where parent has left margin\padding
                             if (b == box.Boxes[0] && !word.IsLineBreak && (word == b.Words[0] || (box.ParentBox != null && box.ParentBox.IsBlock)))
-                                curx += box.ActualMarginLeft + box.ActualBorderLeftWidth + box.ActualPaddingLeft;
+                                coordinates.CurrentX += box.ActualMarginLeft + box.ActualBorderLeftWidth + box.ActualPaddingLeft;
 
-                            cury = maxbottom + linespacing;
+                            coordinates.CurrentY = coordinates.MaxBottom + linespacing;
 
-                            line = new CssLineBox(blockbox);
+                            coordinates.Line = new CssLineBox(blockbox);
 
                             if (word.IsImage || word.Equals(b.FirstWord))
                             {
-                                curx += leftspacing;
+                                coordinates.CurrentX += leftspacing;
                             }
                         }
 
-                        line.ReportExistanceOf(word);
+                        coordinates.Line.ReportExistanceOf(word);
 
-                        word.Left = curx;
-                        word.Top = cury;
+                        word.Left = coordinates.CurrentX;
+                        word.Top = coordinates.CurrentY;
 
                         if (!box.IsFixed)
                         {
                             word.BreakPage();
                         }
 
-                        curx = word.Left + word.FullWidth;
+                        coordinates.CurrentX = word.Left + word.FullWidth;
 
-                        maxRight = Math.Max(maxRight, word.Right);
-                        maxbottom = Math.Max(maxbottom, word.Bottom);
+                        coordinates.MaxRight = Math.Max(coordinates.MaxRight, word.Right);
+                        coordinates.MaxBottom = Math.Max(coordinates.MaxBottom, word.Bottom);
 
                         if (b.Position != CssConstants.Absolute) continue;
 
@@ -300,65 +298,35 @@ namespace PeachPDF.Html.Core.Dom
                 }
                 else
                 {
-                    FlowBox(g, blockbox, b, limitRight, linespacing, startx, ref line, ref curx, ref cury, ref maxRight, ref maxbottom);
+                    await FlowBox(g, blockbox, b, limitRight, linespacing, startx, coordinates);
                 }
 
-                curx += rightspacing;
+                coordinates.CurrentX += rightspacing;
             }
 
             // handle height setting
-            if (maxbottom - startY < box.ActualHeight)
+            if (coordinates.MaxBottom - startY < box.ActualHeight)
             {
-                maxbottom += box.ActualHeight - (maxbottom - startY);
+                coordinates.MaxBottom += box.ActualHeight - (coordinates.MaxBottom - startY);
             }
 
             // handle width setting
-            if (box.IsInline && 0 <= curx - startX && curx - startX < box.ActualWidth)
+            if (box.IsInline && 0 <= coordinates.CurrentX - startX && coordinates.CurrentX - startX < box.ActualWidth)
             {
                 // hack for actual width handling
-                curx += box.ActualWidth - (curx - startX);
-                line.Rectangles.Add(box, new RRect(startX, startY, box.ActualWidth, box.ActualHeight));
+                coordinates.CurrentX += box.ActualWidth - (coordinates.CurrentX - startX);
+                coordinates.Line.Rectangles.Add(box, new RRect(startX, startY, box.ActualWidth, box.ActualHeight));
             }
 
             // handle box that is only a whitespace
-            if (box.Text != null && box.Text.IsWhitespace() && !box.IsImage && box.IsInline && box.Boxes.Count == 0 && box.Words.Count == 0)
+            if (box.Text is { Length: > 0 } && string.IsNullOrWhiteSpace(box.Text) && !box.IsImage && box.IsInline && box.Boxes.Count == 0 && box.Words.Count == 0)
             {
-                curx += box.ActualWordSpacing;
+                coordinates.CurrentX += box.ActualWordSpacing;
             }
 
-            // hack to support specific absolute position elements
-            if (box.Position == CssConstants.Absolute)
-            {
-                curx = localCurx;
-                maxRight = localMaxRight;
-                maxbottom = localmaxbottom;
-                AdjustAbsolutePosition(box, 0, 0);
-            }
-
-            box.LastHostingLineBox = line;
+            box.LastHostingLineBox = coordinates.Line;
         }
 
-        /// <summary>
-        /// Adjust the position of absolute elements by letf and top margins.
-        /// </summary>
-        private static void AdjustAbsolutePosition(CssBox box, double left, double top)
-        {
-            left += box.ActualMarginLeft;
-            top += box.ActualMarginTop;
-            if (box.Words.Count > 0)
-            {
-                foreach (var word in box.Words)
-                {
-                    word.Left += left;
-                    word.Top += top;
-                }
-            }
-            else
-            {
-                foreach (var b in box.Boxes)
-                    AdjustAbsolutePosition(b, left, top);
-            }
-        }
 
         /// <summary>
         /// Recursively creates the rectangles of the blockBox, by bubbling from deep to outside of the boxes 

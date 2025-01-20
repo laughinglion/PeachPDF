@@ -19,6 +19,7 @@ using PeachPDF.PdfSharpCore.Drawing;
 using PeachPDF.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace PeachPDF
 {
@@ -41,56 +42,9 @@ namespace PeachPDF
         /// <summary>
         /// Init.
         /// </summary>
-        public HtmlContainer()
+        internal HtmlContainer(PdfSharpAdapter adapter)
         {
-            _htmlContainerInt = new HtmlContainerInt(PdfSharpAdapter.Instance)
-            {
-                AvoidAsyncImagesLoading = true,
-                AvoidImagesLateLoading = true
-            };
-        }
-
-        /// <summary>
-        /// Raised when the set html document has been fully loaded.<br/>
-        /// Allows manipulation of the html dom, scroll position, etc.
-        /// </summary>
-        public event EventHandler LoadComplete
-        {
-            add => _htmlContainerInt.LoadComplete += value;
-            remove => _htmlContainerInt.LoadComplete -= value;
-        }
-
-        /// <summary>
-        /// Raised when an error occurred during html rendering.<br/>
-        /// </summary>
-        /// <remarks>
-        /// There is no guarantee that the event will be raised on the main thread, it can be raised on thread-pool thread.
-        /// </remarks>
-        public event EventHandler<HtmlRenderErrorEventArgs> RenderError
-        {
-            add => _htmlContainerInt.RenderError += value;
-            remove => _htmlContainerInt.RenderError -= value;
-        }
-
-        /// <summary>
-        /// Raised when a stylesheet is about to be loaded by file path or URI by link element.<br/>
-        /// This event allows to provide the stylesheet manually or provide new source (file or Uri) to load from.<br/>
-        /// If no alternative data is provided the original source will be used.<br/>
-        /// </summary>
-        public event EventHandler<HtmlStylesheetLoadEventArgs> StylesheetLoad
-        {
-            add => _htmlContainerInt.StylesheetLoad += value;
-            remove => _htmlContainerInt.StylesheetLoad -= value;
-        }
-
-        /// <summary>
-        /// Raised when an image is about to be loaded by file path or URI.<br/>
-        /// This event allows to provide the image manually, if not handled the image will be loaded from file or download from URI.
-        /// </summary>
-        public event EventHandler<HtmlImageLoadEventArgs> ImageLoad
-        {
-            add => _htmlContainerInt.ImageLoad += value;
-            remove => _htmlContainerInt.ImageLoad -= value;
+            _htmlContainerInt = new HtmlContainerInt(adapter);
         }
 
         /// <summary>
@@ -230,9 +184,9 @@ namespace PeachPDF
         /// </summary>
         /// <param name="htmlSource">the html to init with, init empty if not given</param>
         /// <param name="baseCssData">optional: the stylesheet to init with, init default if not given</param>
-        public void SetHtml(string htmlSource, CssData baseCssData = null)
+        public async Task SetHtml(string htmlSource, CssData baseCssData = null)
         {
-            _htmlContainerInt.SetHtml(htmlSource, baseCssData);
+            await _htmlContainerInt.SetHtml(htmlSource, baseCssData);
         }
 
         /// <summary>
@@ -311,12 +265,12 @@ namespace PeachPDF
         /// Measures the bounds of box and children, recursively.
         /// </summary>
         /// <param name="g">Device context to draw</param>
-        public void PerformLayout(XGraphics g)
+        public async ValueTask PerformLayout(XGraphics g)
         {
             ArgChecker.AssertArgNotNull(g, "g");
 
-            using var ig = new GraphicsAdapter(g);
-            _htmlContainerInt.PerformLayout(ig);
+            using var ig = new GraphicsAdapter(_htmlContainerInt.Adapter, g);
+            await _htmlContainerInt.PerformLayout(ig);
         }
 
         /// <summary>
@@ -327,7 +281,7 @@ namespace PeachPDF
         {
             ArgChecker.AssertArgNotNull(g, "g");
 
-            using var ig = new GraphicsAdapter(g);
+            using var ig = new GraphicsAdapter(_htmlContainerInt.Adapter, g);
             _htmlContainerInt.PerformPaint(ig);
         }
 

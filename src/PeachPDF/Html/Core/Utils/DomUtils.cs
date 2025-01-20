@@ -12,6 +12,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using PeachPDF.Html.Adapters.Entities;
 using PeachPDF.Html.Core.Dom;
@@ -458,6 +459,23 @@ namespace PeachPDF.Html.Core.Utils
         }
 
         /// <summary>
+        /// This returns the nearest positioned ancestor, or the root if none is found
+        /// </summary>
+        /// <param name="box">The box to use for locating</param>
+        /// <returns>the nearest positioned ancestor, or the root if none is found</returns>
+        public static CssBox GetNearestPositionedAncestor(CssBox box)
+        {
+            var currentBox = box;
+
+            do
+            {
+                currentBox = currentBox.ParentBox;
+            } while (!currentBox.IsPositioned && currentBox.ParentBox is not null);
+
+            return currentBox;
+        }
+
+        /// <summary>
         /// Generate html from the given DOM tree.<br/>
         /// Generate all the style inside the html, in header or for every tag depending on <paramref name="styleGen"/> value.
         /// </summary>
@@ -539,13 +557,13 @@ namespace PeachPDF.Html.Core.Utils
 
             // collect all element style properties including from stylesheet
             var tagStyles = new Dictionary<string, string>();
-            var tagCssBlock = box.HtmlContainer.CssData.GetCssBlock(box.HtmlTag.Name);
+            var tagCssBlock = box.HtmlContainer.CssData.GetStyleRules("all", box);
             if (tagCssBlock != null)
             {
                 // TODO:a handle selectors
                 foreach (var cssBlock in tagCssBlock)
-                    foreach (var prop in cssBlock.Properties)
-                        tagStyles[prop.Key] = prop.Value;
+                    foreach (var prop in cssBlock.Style)
+                        tagStyles[prop.Name] = prop.Value;
             }
 
             if (box.HtmlTag.HasAttributes())
@@ -557,20 +575,20 @@ namespace PeachPDF.Html.Core.Utils
                     if (styleGen == HtmlGenerationStyle.Inline && att.Key == HtmlConstants.Style)
                     {
                         // if inline style add the styles to the collection
-                        var block = cssParser.ParseCssBlock(box.HtmlTag.Name, box.HtmlTag.TryGetAttribute("style"));
-                        foreach (var prop in block.Properties)
-                            tagStyles[prop.Key] = prop.Value;
+                        var block = cssParser.ParseStyleSheet(box.HtmlTag.TryGetAttribute("style"));
+                        foreach (var prop in block.StyleRules.SelectMany(a => a.Style))
+                            tagStyles[prop.Name] = prop.Value;
                     }
                     else if (styleGen == HtmlGenerationStyle.Inline && att.Key == HtmlConstants.Class)
                     {
                         // if inline style convert the style class to actual properties and add to collection
-                        var cssBlocks = box.HtmlContainer.CssData.GetCssBlock("." + att.Value);
+                        var cssBlocks = box.HtmlContainer.CssData.GetStyleRules("all", box);
                         if (cssBlocks != null)
                         {
                             // TODO:a handle selectors
                             foreach (var cssBlock in cssBlocks)
-                                foreach (var prop in cssBlock.Properties)
-                                    tagStyles[prop.Key] = prop.Value;
+                                foreach (var prop in cssBlock.Style)
+                                    tagStyles[prop.Name] = prop.Value;
                         }
                     }
                     else
@@ -610,13 +628,15 @@ namespace PeachPDF.Html.Core.Utils
         {
             // ReSharper disable PossibleMultipleEnumeration
             var cleanTagStyles = new Dictionary<string, string>();
-            var defaultBlocks = box.HtmlContainer.Adapter.DefaultCssData.GetCssBlock(box.HtmlTag.Name);
+            var defaultBlocks = box.HtmlContainer.Adapter.DefaultCssData.GetStyleRules("all", box);
             foreach (var style in tagStyles)
             {
                 bool isDefault = false;
                 foreach (var defaultBlock in defaultBlocks)
                 {
-                    if (defaultBlock.Properties.TryGetValue(style.Key, out string value) && value.Equals(style.Value, StringComparison.OrdinalIgnoreCase))
+                    var styleDictionary = defaultBlock.Style.ToDictionary(a => a.Name, a => a.Value);
+
+                    if (styleDictionary.TryGetValue(style.Key, out string value) && value.Equals(style.Value, StringComparison.OrdinalIgnoreCase))
                     {
                         isDefault = true;
                         break;
@@ -637,23 +657,7 @@ namespace PeachPDF.Html.Core.Utils
         /// <param name="cssData">the css data to write to the head</param>
         private static void WriteStylesheet(StringBuilder sb, CssData cssData)
         {
-            sb.AppendLine("<style type=\"text/css\">");
-            foreach (var cssBlocks in cssData.MediaBlocks["all"])
-            {
-                sb.Append(cssBlocks.Key);
-                sb.Append(" { ");
-                foreach (var cssBlock in cssBlocks.Value)
-                {
-                    foreach (var property in cssBlock.Properties)
-                    {
-                        // TODO:a handle selectors
-                        sb.AppendFormat("{0}: {1};", property.Key, property.Value);
-                    }
-                }
-                sb.Append(" }");
-                sb.AppendLine();
-            }
-            sb.AppendLine("</style>");
+            throw new NotImplementedException();
         }
 
         /// <summary>

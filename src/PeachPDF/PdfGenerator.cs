@@ -18,14 +18,18 @@ using PeachPDF.PdfSharpCore;
 using PeachPDF.PdfSharpCore.Drawing;
 using PeachPDF.PdfSharpCore.Pdf;
 using System;
+using System.Threading.Tasks;
+using PeachPDF.Network;
 
 namespace PeachPDF
 {
     /// <summary>
     /// TODO:a add doc
     /// </summary>
-    public static class PdfGenerator
+    public class PdfGenerator
     {
+        private readonly PdfSharpAdapter _pdfSharpAdapter = new();
+
         /// <summary>
         /// Adds a font mapping from <paramref name="fromFamily"/> to <paramref name="toFamily"/> iff the <paramref name="fromFamily"/> is not found.<br/>
         /// When the <paramref name="fromFamily"/> font is used in rendered html and is not found in existing 
@@ -36,12 +40,12 @@ namespace PeachPDF
         /// </remarks>
         /// <param name="fromFamily">the font family to replace</param>
         /// <param name="toFamily">the font family to replace with</param>
-        public static void AddFontFamilyMapping(string fromFamily, string toFamily)
+        public void AddFontFamilyMapping(string fromFamily, string toFamily)
         {
             ArgChecker.AssertArgNotNullOrEmpty(fromFamily, "fromFamily");
             ArgChecker.AssertArgNotNullOrEmpty(toFamily, "toFamily");
 
-            PdfSharpAdapter.Instance.AddFontFamilyMapping(fromFamily, toFamily);
+            _pdfSharpAdapter.AddFontFamilyMapping(fromFamily, toFamily);
         }
 
         /// <summary>
@@ -53,9 +57,9 @@ namespace PeachPDF
         /// <param name="stylesheet">the stylesheet source to parse</param>
         /// <param name="combineWithDefault">true - combine the parsed css data with default css data, false - return only the parsed css data</param>
         /// <returns>the parsed css data</returns>
-        public static CssData ParseStyleSheet(string stylesheet, bool combineWithDefault = true)
+        public CssData ParseStyleSheet(string stylesheet, bool combineWithDefault = true)
         {
-            return CssData.Parse(PdfSharpAdapter.Instance, stylesheet, combineWithDefault);
+            return CssData.Parse(_pdfSharpAdapter, stylesheet, combineWithDefault);
         }
 
         /// <summary>
@@ -68,14 +72,16 @@ namespace PeachPDF
         /// <param name="stylesheetLoad">optional: can be used to overwrite stylesheet resolution logic</param>
         /// <param name="imageLoad">optional: can be used to overwrite image resolution logic</param>
         /// <returns>the generated image of the html</returns>
-        public static PdfDocument GeneratePdf(string html, PageSize pageSize, int margin = 20, CssData cssData = null, EventHandler<HtmlStylesheetLoadEventArgs> stylesheetLoad = null, EventHandler<HtmlImageLoadEventArgs> imageLoad = null)
+        public async Task<PdfDocument> GeneratePdf(string html, PageSize pageSize, int margin = 20, CssData cssData = null)
         {
             var config = new PdfGenerateConfig
             {
                 PageSize = pageSize
             };
+
             config.SetMargins(margin);
-            return GeneratePdf(html, config, cssData, stylesheetLoad, imageLoad);
+
+            return await GeneratePdf(html, config, cssData);
         }
 
         /// <summary>
@@ -87,13 +93,13 @@ namespace PeachPDF
         /// <param name="stylesheetLoad">optional: can be used to overwrite stylesheet resolution logic</param>
         /// <param name="imageLoad">optional: can be used to overwrite image resolution logic</param>
         /// <returns>the generated image of the html</returns>
-        public static PdfDocument GeneratePdf(string html, PdfGenerateConfig config, CssData cssData = null, EventHandler<HtmlStylesheetLoadEventArgs> stylesheetLoad = null, EventHandler<HtmlImageLoadEventArgs> imageLoad = null)
+        public async Task<PdfDocument> GeneratePdf(string html, PdfGenerateConfig config, CssData cssData = null)
         {
             // create PDF document to render the HTML into
             var document = new PdfDocument();
 
             // add rendered PDF pages to document
-            AddPdfPages(document, html, config, cssData, stylesheetLoad, imageLoad);
+            await AddPdfPages(document, html, config, cssData);
 
             return document;
         }
@@ -109,7 +115,7 @@ namespace PeachPDF
         /// <param name="stylesheetLoad">optional: can be used to overwrite stylesheet resolution logic</param>
         /// <param name="imageLoad">optional: can be used to overwrite image resolution logic</param>
         /// <returns>the generated image of the html</returns>
-        public static void AddPdfPages(PdfDocument document, string html, PageSize pageSize, int margin = 20, CssData cssData = null, EventHandler<HtmlStylesheetLoadEventArgs> stylesheetLoad = null, EventHandler<HtmlImageLoadEventArgs> imageLoad = null)
+        public async Task AddPdfPages(PdfDocument document, string html, PageSize pageSize, int margin = 20, CssData cssData = null)
         {
             var config = new PdfGenerateConfig
             {
@@ -117,7 +123,8 @@ namespace PeachPDF
             };
 
             config.SetMargins(margin);
-            AddPdfPages(document, html, config, cssData, stylesheetLoad, imageLoad);
+
+            await AddPdfPages(document, html, config, cssData);
         }
 
         /// <summary>
@@ -130,10 +137,10 @@ namespace PeachPDF
         /// <param name="stylesheetLoad">optional: can be used to overwrite stylesheet resolution logic</param>
         /// <param name="imageLoad">optional: can be used to overwrite image resolution logic</param>
         /// <returns>the generated image of the html</returns>
-        public static void AddPdfPages(PdfDocument document, string html, PdfGenerateConfig config, CssData cssData = null, EventHandler<HtmlStylesheetLoadEventArgs> stylesheetLoad = null, EventHandler<HtmlImageLoadEventArgs> imageLoad = null)
+        public async Task AddPdfPages(PdfDocument document, string html, PdfGenerateConfig config, CssData cssData = null)
         {
             // get the size of each page to layout the HTML in
-            var orgPageSize = config.PageSize != PageSize.Undefined ? PageSizeConverter.ToSize(config.PageSize) : config.ManualPageSize;
+            var orgPageSize = config.PageSize != PageSize.Undefined ? PageSizeConverter.ToSize(config.PageSize, config.DotsPerInch) : config.ManualPageSize;
 
             if (config.PageOrientation == PageOrientation.Landscape)
             {
@@ -143,17 +150,17 @@ namespace PeachPDF
 
             var pageSize = new XSize(orgPageSize.Width - config.MarginLeft - config.MarginRight, orgPageSize.Height - config.MarginTop - config.MarginBottom);
 
-            if (string.IsNullOrEmpty(html)) return;
+            if (string.IsNullOrEmpty(html) && config.NetworkLoader is null) return;
 
-            using var container = new HtmlContainer();
-            if (stylesheetLoad != null)
-                container.StylesheetLoad += stylesheetLoad;
-            if (imageLoad != null)
-                container.ImageLoad += imageLoad;
+            _pdfSharpAdapter.NetworkLoader = config.NetworkLoader ?? new DataUriNetworkLoader();
+
+            html ??= await config.NetworkLoader.GetPrimaryContents();
+
+            using var container = new HtmlContainer(_pdfSharpAdapter);
 
             container.Location = new XPoint(config.MarginLeft, config.MarginTop);
             container.MaxSize = new XSize(pageSize.Width, 0);
-            container.SetHtml(html, cssData);
+            await container.SetHtml(html, cssData);
             container.PageSize = pageSize;
             container.MarginBottom = config.MarginBottom;
             container.MarginLeft = config.MarginLeft;
@@ -162,7 +169,7 @@ namespace PeachPDF
 
             // layout the HTML with the page width restriction to know how many pages are required
             using var measure = XGraphics.CreateMeasureContext(pageSize, XGraphicsUnit.Point, XPageDirection.Downwards);
-            container.PerformLayout(measure);
+            await container.PerformLayout(measure);
 
             // while there is un-rendered HTML, create another PDF page and render with proper offset for the next page
             double scrollOffset = 0;

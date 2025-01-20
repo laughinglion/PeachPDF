@@ -83,7 +83,6 @@ namespace PeachPDF.Html.Core.Dom
         private double _actualBorderLeftWidth = double.NaN;
         private double _actualBorderBottomWidth = double.NaN;
         private double _actualBorderRightWidth = double.NaN;
-        private double _actualPageBreakHeight = double.NaN;
 
         /// <summary>
         /// the width of whitespace between words
@@ -329,6 +328,7 @@ namespace PeachPDF.Html.Core.Dom
         public string MaxWidth { get; set; } = "none";
 
         public string Height { get; set; } = "auto";
+        public string MinHeight { get; set; } = "auto";
 
         public string BackgroundColor { get; set; } = "transparent";
 
@@ -381,6 +381,12 @@ namespace PeachPDF.Html.Core.Dom
         public string TextAlign { get; set; } = string.Empty;
 
         public string TextDecoration { get; set; } = string.Empty;
+
+        public string TextDecorationLine { get; set; } = string.Empty;
+
+        public string TextDecorationStyle { get; set; } = string.Empty;
+
+        public string TextDecorationColor { get; set; } = string.Empty;
 
         public string WhiteSpace { get; set; } = "normal";
 
@@ -531,6 +537,16 @@ namespace PeachPDF.Html.Core.Dom
                 if (double.IsNaN(_actualHeight))
                 {
                     _actualHeight = CssValueParser.ParseLength(Height, Size.Height, this);
+
+                    if (CssValueParser.IsValidLength(MinHeight))
+                    {
+                        var minHeight = CssValueParser.ParseLength(MinHeight, Size.Height, this);
+                        
+                        if (_actualHeight < minHeight)
+                        {
+                            _actualHeight = minHeight;
+                        }
+                    }
                 }
                 return _actualHeight;
             }
@@ -771,8 +787,6 @@ namespace PeachPDF.Html.Core.Dom
             }
         }
 
-        public double ActualPageBreakHeight => !double.IsNaN(_actualPageBreakHeight) ? _actualPageBreakHeight : 0f;
-
         /// <summary>
         /// Gets the actual top border Color
         /// </summary>
@@ -989,6 +1003,7 @@ namespace PeachPDF.Html.Core.Dom
                 {
                     FontFamily = CssConstants.DefaultFont;
                 }
+
                 if (string.IsNullOrEmpty(FontSize))
                 {
                     FontSize = CssConstants.FontSize.ToString(CultureInfo.InvariantCulture) + "pt";
@@ -1031,7 +1046,8 @@ namespace PeachPDF.Html.Core.Dom
                     fsize = CssConstants.FontSize;
                 }
 
-                _actualFont = GetCachedFont(FontFamily, fsize, st);
+                _actualFont = GetCachedFont(FontFamily, fsize, st) ?? GetCachedFont(CssConstants.DefaultFont, fsize, st);
+
                 return _actualFont;
             }
         }
@@ -1111,6 +1127,12 @@ namespace PeachPDF.Html.Core.Dom
                 return _actualBorderSpacingVertical;
             }
         }
+
+        /// <summary>
+        /// Returns true if this is a positioned element, i.e., it has a position of
+        /// relative, absolute, fixed, or sticky
+        /// </summary>
+        public bool IsPositioned => Position is CssConstants.Relative or CssConstants.Absolute or CssConstants.Fixed or CssConstants.Sticky;
 
         /// <summary>
         /// Get the parent of this css properties instance.
@@ -1245,6 +1267,9 @@ namespace PeachPDF.Html.Core.Dom
             _paddingTop = p._paddingTop;
             _right = p._right;
             TextDecoration = p.TextDecoration;
+            TextDecorationLine = p.TextDecorationLine;
+            TextDecorationStyle = p.TextDecorationStyle;
+            TextDecorationColor = p.TextDecorationColor;
             _top = p._top;
             Position = p.Position;
             Width = p.Width;

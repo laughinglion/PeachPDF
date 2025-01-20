@@ -40,9 +40,17 @@ namespace PeachPDF.PdfSharpCore.Utils
         {
             using var stream = imageStream.Invoke();
 
+            using var imageStreamBuffer = new MemoryStream();
+            stream.CopyTo(imageStreamBuffer);
+
+            imageStreamBuffer.Seek(0, SeekOrigin.Begin);
+
             var decoderOptions = new DecoderOptions();
-            var image = Image.Load<TPixel>(decoderOptions, stream);
-            var imgFormat = Image.DetectFormat(decoderOptions, stream);
+            var imgFormat = Image.DetectFormat(decoderOptions, imageStreamBuffer);
+
+            imageStreamBuffer.Seek(0, SeekOrigin.Begin);
+
+            var image = Image.Load<TPixel>(decoderOptions, imageStreamBuffer);
 
             //var image = Image.Load<TPixel>(stream, out IImageFormat imgFormat);
             return new ImageSharpImageSourceImpl<TPixel>(name, image, (int)quality!, imgFormat is PngFormat);

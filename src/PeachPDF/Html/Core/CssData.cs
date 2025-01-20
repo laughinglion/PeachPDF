@@ -10,45 +10,31 @@
 // - Sun Tsu,
 // "The Art of War"
 
+using ExCSS;
+using PeachPDF.Html.Adapters;
+using PeachPDF.Html.Core.Dom;
+using PeachPDF.Html.Core.Parse;
 using System;
 using System.Collections.Generic;
-using PeachPDF.Html.Adapters;
-using PeachPDF.Html.Core.Entities;
-using PeachPDF.Html.Core.Parse;
-using PeachPDF.Html.Core.Utils;
+using System.Linq;
 
 namespace PeachPDF.Html.Core
 {
     /// <summary>
     /// Holds parsed stylesheet css blocks arranged by media and classes.<br/>
-    /// <seealso cref="CssBlock"/>
     /// </summary>
     /// <remarks>
     /// To learn more about CSS blocks visit CSS spec: http://www.w3.org/TR/CSS21/syndata.html#block
     /// </remarks>
     public sealed class CssData
     {
-        #region Fields and Consts
-
-        /// <summary>
-        /// used to return empty array
-        /// </summary>
-        private static readonly List<CssBlock> _emptyArray = [];
-
-        /// <summary>
-        /// dictionary of media type to dictionary of css class name to the cssBlocks collection with all the data.
-        /// </summary>
-        private readonly Dictionary<string, Dictionary<string, List<CssBlock>>> _mediaBlocks = new(StringComparer.InvariantCultureIgnoreCase);
-
-        #endregion
-
+        public List<Stylesheet> Stylesheets { get; } = [];
 
         /// <summary>
         /// Init.
         /// </summary>
         internal CssData()
         {
-            _mediaBlocks.Add("all", new Dictionary<string, List<CssBlock>>(StringComparer.InvariantCultureIgnoreCase));
         }
 
         /// <summary>
@@ -67,142 +53,220 @@ namespace PeachPDF.Html.Core
             return parser.ParseStyleSheet(stylesheet, combineWithDefault);
         }
 
-        /// <summary>
-        /// dictionary of media type to dictionary of css class name to the cssBlocks collection with all the data
-        /// </summary>
-        internal IDictionary<string, Dictionary<string, List<CssBlock>>> MediaBlocks => _mediaBlocks;
-
-        /// <summary>
-        /// Check if there are css blocks for the given class selector.
-        /// </summary>
-        /// <param name="className">the class selector to check for css blocks by</param>
-        /// <param name="media">optional: the css media type (default - all)</param>
-        /// <returns>true - has css blocks for the class, false - otherwise</returns>
-        public bool ContainsCssBlock(string className, string media = "all")
+        internal IEnumerable<IStyleRule> GetStyleRules(string media, CssBox box)
         {
-            return _mediaBlocks.TryGetValue(media, out var mid) && mid.ContainsKey(className);
-        }
-
-        /// <summary>
-        /// Get collection of css blocks for the requested class selector.<br/>
-        /// the <paramref name="className"/> can be: class name, html element name, html element and 
-        /// class name (elm.class), hash tag with element id (#id).<br/>
-        /// returned all the blocks that word on the requested class selector, it can contain simple
-        /// selector or hierarchy selector.
-        /// </summary>
-        /// <param name="className">the class selector to get css blocks by</param>
-        /// <param name="media">optional: the css media type (default - all)</param>
-        /// <returns>collection of css blocks, empty collection if no blocks exists (never null)</returns>
-        public IEnumerable<CssBlock> GetCssBlock(string className, string media = "all")
-        {
-            List<CssBlock> block = null;
-            if (_mediaBlocks.TryGetValue(media, out var mid))
+            foreach (var stylesheet in Stylesheets)
             {
-                mid.TryGetValue(className, out block);
-            }
-            return block ?? _emptyArray;
-        }
-
-        /// <summary>
-        /// Add the given css block to the css data, merging to existing block if required.
-        /// </summary>
-        /// <remarks>
-        /// If there is no css blocks for the same class it will be added to data collection.<br/>
-        /// If there is already css blocks for the same class it will check for each existing block
-        /// if the hierarchical selectors match (or not exists). if do the two css blocks will be merged into
-        /// one where the new block properties overwrite existing if needed. if the new block doesn't mach any
-        /// existing it will be added either to the beginning of the list if it has no  hierarchical selectors or at the end.<br/>
-        /// Css block without hierarchical selectors must be added to the beginning of the list so more specific block
-        /// can overwrite it when the style is applied.
-        /// </remarks>
-        /// <param name="media">the media type to add the CSS to</param>
-        /// <param name="cssBlock">the css block to add</param>
-        public void AddCssBlock(string media, CssBlock cssBlock)
-        {
-            if (!_mediaBlocks.TryGetValue(media, out var mid))
-            {
-                mid = new Dictionary<string, List<CssBlock>>(StringComparer.InvariantCultureIgnoreCase);
-                _mediaBlocks.Add(media, mid);
-            }
-
-            if (!mid.TryGetValue(cssBlock.Class, out var list))
-            {
-                list =
-                [
-                    cssBlock
-                ];
-
-                mid[cssBlock.Class] = list;
-            }
-            else
-            {
-                var merged = false;
-                foreach (var block in list)
+                foreach (var rule in GetStyleRules(stylesheet.StyleRules, box))
                 {
-                    if (!block.EqualsSelector(cssBlock)) continue;
-
-                    merged = true;
-                    block.Merge(cssBlock);
-                    break;
+                    yield return rule;
                 }
 
-                if (merged) return;
-
-                // general block must be first
-                if (cssBlock.Selectors == null)
-                    list.Insert(0, cssBlock);
-                else
-                    list.Add(cssBlock);
-            }
-        }
-
-        /// <summary>
-        /// Combine this CSS data blocks with <paramref name="other"/> CSS blocks for each media.<br/>
-        /// Merge blocks if exists in both.
-        /// </summary>
-        /// <param name="other">the CSS data to combine with</param>
-        public void Combine(CssData other)
-        {
-            ArgChecker.AssertArgNotNull(other, "other");
-
-            // for each media block
-            foreach (var mediaBlock in other.MediaBlocks)
-            {
-                // for each css class in the media block
-                foreach (var bla in mediaBlock.Value)
+                foreach (var mediaRule in stylesheet.MediaRules)
                 {
-                    // for each css block of the css class
-                    foreach (var cssBlock in bla.Value)
+                    foreach (var medium in mediaRule.Media)
                     {
-                        // combine with this
-                        AddCssBlock(mediaBlock.Key, cssBlock);
+                        if (medium.Type != media) continue;
+
+                        foreach (var rule in GetStyleRules(mediaRule.Rules.OfType<IStyleRule>(), box))
+                        {
+                            yield return rule;
+                        }
                     }
                 }
+
             }
         }
 
-        /// <summary>
-        /// Create deep copy of the css data with cloned css blocks.
-        /// </summary>
-        /// <returns>cloned object</returns>
+        private static IEnumerable<IStyleRule> GetStyleRules(IEnumerable<IStyleRule> styleRules, CssBox box)
+        {
+            return styleRules.Where(rule => DoesSelectorMatch(rule.Selector, box));
+        }
+
+        private static bool DoesSelectorMatch(ISelector selector, CssBox box)
+        {
+            return selector switch
+            {
+                AllSelector => true,
+                ListSelector listSelector => DoesSelectorMatch(listSelector, box),
+                TypeSelector typeSelector => DoesSelectorMatch(typeSelector, box),
+                ComplexSelector complexSelector => DoesSelectorMatch(complexSelector, box),
+                CompoundSelector compoundSelector => DoesSelectorMatch(compoundSelector, box),
+                PseudoElementSelector pseudoElementSelector => DoesSelectorMatch(pseudoElementSelector, box),
+                PseudoClassSelector pseudoClassSelector => DoesSelectorMatch(pseudoClassSelector, box),
+                AttrMatchSelector attrMatchSelector => DoesSelectorMatch(attrMatchSelector, box),
+                ClassSelector classSelector => DoesSelectorMatch(classSelector, box),
+                IdSelector idSelector => DoesSelectorMatch(idSelector, box),
+                AttrAvailableSelector attrAvailableSelector => DoesSelectorMatch(attrAvailableSelector, box),
+                AttrContainsSelector attrContainsSelector => DoesSelectorMatch(attrContainsSelector, box),
+                _ => false
+            };
+        }
+        private static bool DoesSelectorMatch(ListSelector listSelector, CssBox box)
+        {
+            return listSelector.Any(selector => DoesSelectorMatch(selector, box));
+        }
+
+        private static bool DoesSelectorMatch(CompoundSelector compoundSelector, CssBox box)
+        {
+            return compoundSelector.All(selector => DoesSelectorMatch(selector, box));
+        }
+
+        private static bool DoesSelectorMatch(TypeSelector typeSelector, CssBox box)
+        {
+            return box.HtmlTag is not null && typeSelector.Name.Equals(box.HtmlTag.Name, StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        private static bool DoesSelectorMatch(ClassSelector classSelector, CssBox box)
+        {
+            if (box.HtmlTag is not null && box.HtmlTag.Attributes.TryGetValue("class", out var classNames))
+            {
+                return classNames.Split(' ').Any(className =>
+                    className.Equals(classSelector.Class, StringComparison.InvariantCultureIgnoreCase));
+            }
+
+            return false;
+        }
+
+        private static bool DoesSelectorMatch(IdSelector idSelector, CssBox box)
+        {
+            if (box.HtmlTag is not null && box.HtmlTag.Attributes.TryGetValue("id", out var id))
+            {
+                return id.Equals(idSelector.Id, StringComparison.InvariantCultureIgnoreCase);
+            }
+
+            return false;
+        }
+
+        private static bool DoesSelectorMatch(AttrAvailableSelector attrAvailableSelector, CssBox box)
+        {
+            if (box.HtmlTag is null)
+            {
+                return false;
+            }
+
+            foreach (var attribute in box.HtmlTag.Attributes)
+            {
+                if (attribute.Key.Equals(attrAvailableSelector.Attribute, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool DoesSelectorMatch(AttrMatchSelector attrMatchSelector, CssBox box)
+        {
+            if (box.HtmlTag is null)
+            {
+                return false;
+            }
+
+            foreach (var attribute in box.HtmlTag.Attributes)
+            {
+                if (attribute.Key.Equals(attrMatchSelector.Attribute, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return attribute.Value.Equals(attrMatchSelector.Value, StringComparison.InvariantCultureIgnoreCase);
+                }
+            }
+
+            return false;
+        }
+
+        private static bool DoesSelectorMatch(AttrContainsSelector attrContainsSelector, CssBox box)
+        {
+            if (box.HtmlTag is null)
+            {
+                return false;
+            }
+
+            foreach (var attribute in box.HtmlTag.Attributes)
+            {
+                if (attribute.Key.Equals(attrContainsSelector.Attribute, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return attribute.Value.Contains(attrContainsSelector.Value, StringComparison.InvariantCultureIgnoreCase);
+                }
+            }
+
+            return false;
+        }
+
+        private static bool DoesSelectorMatch(PseudoElementSelector pseudoElementSelector, CssBox box)
+        {
+            // TODO: implement this
+            return false;
+        }
+
+        private static bool DoesSelectorMatch(PseudoClassSelector pseudoClassSelector, CssBox box)
+        {
+            return pseudoClassSelector.Class == "link" && box.IsClickable;
+        }
+
+        private static bool DoesSelectorMatch(ComplexSelector complexSelector, CssBox box)
+        {
+            CssBox matchingAncestor = null;
+
+            foreach (var selector in complexSelector)
+            {
+                if (selector.Selector is not null)
+                {
+                    var currentBox = box;
+                    bool isMatch;
+
+                    if (selector.Delimiter == ">")
+                    {
+                        if (currentBox.ParentBox is null)
+                        {
+                            return false;
+                        }
+
+                        isMatch = DoesSelectorMatch(selector.Selector, currentBox.ParentBox);
+                        matchingAncestor = currentBox.ParentBox;
+
+                        if (!isMatch)
+                        {
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        do
+                        {
+                            isMatch = DoesSelectorMatch(selector.Selector, currentBox);
+
+                            if (!isMatch)
+                            {
+                                currentBox = currentBox.ParentBox;
+                            }
+
+                        } while (!isMatch && currentBox is not null && (matchingAncestor is not null && currentBox == matchingAncestor));
+
+                        if (!isMatch)
+                        {
+                            return false;
+                        }
+
+                        matchingAncestor = currentBox;
+                    }
+
+
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+            }
+
+            return false;
+        }
+
+
         public CssData Clone()
         {
-            var clone = new CssData();
-            foreach (var mid in _mediaBlocks)
-            {
-                var cloneMid = new Dictionary<string, List<CssBlock>>(StringComparer.InvariantCultureIgnoreCase);
-                foreach (var blocks in mid.Value)
-                {
-                    var cloneList = new List<CssBlock>();
-                    foreach (var cssBlock in blocks.Value)
-                    {
-                        cloneList.Add(cssBlock.Clone());
-                    }
-                    cloneMid[blocks.Key] = cloneList;
-                }
-                clone._mediaBlocks[mid.Key] = cloneMid;
-            }
-            return clone;
+            CssData cssData = new();
+            cssData.Stylesheets.AddRange(Stylesheets);
+            return cssData;
         }
     }
 }

@@ -10,22 +10,21 @@
 // - Sun Tsu,
 // "The Art of War"
 
+using PeachPDF.Html.Adapters;
+using PeachPDF.Html.Core.Entities;
+using PeachPDF.Html.Core.Utils;
+using SixLabors.ImageSharp;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Threading;
-using PeachPDF.Html.Adapters;
-using PeachPDF.Html.Adapters.Entities;
-using PeachPDF.Html.Core.Entities;
-using PeachPDF.Html.Core.Utils;
+using System.Threading.Tasks;
 
 namespace PeachPDF.Html.Core.Handlers
 {
     /// <summary>
     /// Handler for all loading image logic.<br/>
     /// <p>
-    /// Loading by <see cref="HtmlImageLoadEventArgs"/>.<br/>
     /// Loading by file path.<br/>
     /// Loading by URI.<br/>
     /// </p>
@@ -50,29 +49,9 @@ namespace PeachPDF.Html.Core.Handlers
         private readonly HtmlContainerInt _htmlContainer;
 
         /// <summary>
-        /// callback raised when image load process is complete with image or without
-        /// </summary>
-        private readonly ActionInt<RImage, RRect, bool> _loadCompleteCallback;
-
-        /// <summary>
         /// Must be open as long as the image is in use
         /// </summary>
         private FileStream _imageFileStream;
-
-        /// <summary>
-        /// the image instance of the loaded image
-        /// </summary>
-        private RImage _image;
-
-        /// <summary>
-        /// the image rectangle restriction as returned from image load event
-        /// </summary>
-        private RRect _imageRectangle;
-
-        /// <summary>
-        /// to know if image load event callback was sync or async raised
-        /// </summary>
-        private bool _asyncCallback;
 
         /// <summary>
         /// flag to indicate if to release the image object on box dispose (only if image was loaded by the box)
@@ -91,31 +70,17 @@ namespace PeachPDF.Html.Core.Handlers
         /// Init.
         /// </summary>
         /// <param name="htmlContainer">the container of the html to handle load image for</param>
-        /// <param name="loadCompleteCallback">callback raised when image load process is complete with image or without</param>
-        public ImageLoadHandler(HtmlContainerInt htmlContainer, ActionInt<RImage, RRect, bool> loadCompleteCallback)
+        public ImageLoadHandler(HtmlContainerInt htmlContainer)
         {
             ArgChecker.AssertArgNotNull(htmlContainer, "htmlContainer");
-            ArgChecker.AssertArgNotNull(loadCompleteCallback, "loadCompleteCallback");
 
             _htmlContainer = htmlContainer;
-            _loadCompleteCallback = loadCompleteCallback;
         }
 
         /// <summary>
         /// the image instance of the loaded image
         /// </summary>
-        public RImage Image
-        {
-            get { return _image; }
-        }
-
-        /// <summary>
-        /// the image rectangle restriction as returned from image load event
-        /// </summary>
-        public RRect Rectangle
-        {
-            get { return _imageRectangle; }
-        }
+        public RImage Image { get; private set; }
 
         /// <summary>
         /// Set image of this image box by analyzing the src attribute.<br/>
@@ -131,37 +96,30 @@ namespace PeachPDF.Html.Core.Handlers
         /// <param name="src">the source of the image to load</param>
         /// <param name="attributes">the collection of attributes on the element to use in event</param>
         /// <returns>the image object (null if failed)</returns>
-        public void LoadImage(string src, Dictionary<string, string> attributes)
+        public async ValueTask LoadImage(string src, Dictionary<string, string> attributes)
         {
             try
             {
-                var args = new HtmlImageLoadEventArgs(src, attributes, OnHtmlImageLoadEventCallback);
-                _htmlContainer.RaiseHtmlImageLoadEvent(args);
-                _asyncCallback = !_htmlContainer.AvoidAsyncImagesLoading;
-
-                if (!args.Handled)
+                if (!string.IsNullOrEmpty(src))
                 {
-                    if (!string.IsNullOrEmpty(src))
+                    if (src.StartsWith("data:image", StringComparison.CurrentCultureIgnoreCase))
                     {
-                        if (src.StartsWith("data:image", StringComparison.CurrentCultureIgnoreCase))
-                        {
-                            SetFromInlineData(src);
-                        }
-                        else
-                        {
-                            SetImageFromPath(src);
-                        }
+                        SetFromInlineData(src);
                     }
                     else
                     {
-                        ImageLoadComplete(false);
+                        await SetImageFromPath(src);
                     }
+                }
+                else
+                {
+                    ImageLoadComplete();
                 }
             }
             catch (Exception ex)
             {
                 _htmlContainer.ReportError(HtmlRenderErrorType.Image, "Exception in handling image source", ex);
-                ImageLoadComplete(false);
+                ImageLoadComplete();
             }
         }
 
@@ -178,44 +136,16 @@ namespace PeachPDF.Html.Core.Handlers
         #region Private methods
 
         /// <summary>
-        /// Set the image using callback from load image event, use the given data.
-        /// </summary>
-        /// <param name="path">the path to the image to load (file path or uri)</param>
-        /// <param name="image">the image to load</param>
-        /// <param name="imageRectangle">optional: limit to specific rectangle of the image and not all of it</param>
-        private void OnHtmlImageLoadEventCallback(string path, object image, RRect imageRectangle)
-        {
-            if (!_disposed)
-            {
-                _imageRectangle = imageRectangle;
-
-                if (image != null)
-                {
-                    _image = _htmlContainer.Adapter.ConvertImage(image);
-                    ImageLoadComplete(_asyncCallback);
-                }
-                else if (!string.IsNullOrEmpty(path))
-                {
-                    SetImageFromPath(path);
-                }
-                else
-                {
-                    ImageLoadComplete(_asyncCallback);
-                }
-            }
-        }
-
-        /// <summary>
         /// Load the image from inline base64 encoded string data.
         /// </summary>
         /// <param name="src">the source that has the base64 encoded image</param>
         private void SetFromInlineData(string src)
         {
-            _image = GetImageFromData(src);
-            if (_image == null)
+            Image = GetImageFromData(src);
+            if (Image == null)
                 _htmlContainer.ReportError(HtmlRenderErrorType.Image, "Failed extract image from inline data");
             _releaseImageObject = true;
-            ImageLoadComplete(false);
+            ImageLoadComplete();
         }
 
         /// <summary>
@@ -225,38 +155,36 @@ namespace PeachPDF.Html.Core.Handlers
         /// <returns>image from base64 data string or null if failed</returns>
         private RImage GetImageFromData(string src)
         {
-            var s = src.Substring(src.IndexOf(':') + 1).Split(new[] { ',' }, 2);
-            if (s.Length == 2)
-            {
-                int imagePartsCount = 0, base64PartsCount = 0;
-                foreach (var part in s[0].Split(new[] { ';' }))
-                {
-                    var pPart = part.Trim();
-                    if (pPart.StartsWith("image/", StringComparison.InvariantCultureIgnoreCase))
-                        imagePartsCount++;
-                    if (pPart.Equals("base64", StringComparison.InvariantCultureIgnoreCase))
-                        base64PartsCount++;
-                }
+            var s = src[(src.IndexOf(':') + 1)..].Split([','], 2);
+            if (s.Length != 2) return null;
 
-                if (imagePartsCount > 0)
-                {
-                    byte[] imageData = base64PartsCount > 0 ? Convert.FromBase64String(s[1].Trim()) : new UTF8Encoding().GetBytes(Uri.UnescapeDataString(s[1].Trim()));
-                    return _htmlContainer.Adapter.ImageFromStream(new MemoryStream(imageData));
-                }
+            int imagePartsCount = 0, base64PartsCount = 0;
+            foreach (var part in s[0].Split([';']))
+            {
+                var pPart = part.Trim();
+                if (pPart.StartsWith("image/", StringComparison.InvariantCultureIgnoreCase))
+                    imagePartsCount++;
+                if (pPart.Equals("base64", StringComparison.InvariantCultureIgnoreCase))
+                    base64PartsCount++;
             }
-            return null;
+
+            if (imagePartsCount <= 0) return null;
+
+            byte[] imageData = base64PartsCount > 0 ? Convert.FromBase64String(s[1].Trim()) : new UTF8Encoding().GetBytes(Uri.UnescapeDataString(s[1].Trim()));
+            return LoadImageFromStream(new MemoryStream(imageData));
         }
 
         /// <summary>
         /// Load image from path of image file or URL.
         /// </summary>
         /// <param name="path">the file path or uri to load image from</param>
-        private void SetImageFromPath(string path)
+        private async ValueTask SetImageFromPath(string path)
         {
             var uri = CommonUtils.TryGetUri(path);
+
             if (uri != null && uri.Scheme != "file")
             {
-                SetImageFromUrl(uri);
+                await SetImageFromUrl(uri);
             }
             else
             {
@@ -268,7 +196,7 @@ namespace PeachPDF.Html.Core.Handlers
                 else
                 {
                     _htmlContainer.ReportError(HtmlRenderErrorType.Image, "Failed load image, invalid source: " + path);
-                    ImageLoadComplete(false);
+                    ImageLoadComplete();
                 }
             }
         }
@@ -281,10 +209,7 @@ namespace PeachPDF.Html.Core.Handlers
         {
             if (source.Exists)
             {
-                if (_htmlContainer.AvoidAsyncImagesLoading)
-                    LoadImageFromFile(source.FullName);
-                else
-                    ThreadPool.QueueUserWorkItem(state => LoadImageFromFile(source.FullName));
+                LoadImageFromFile(source.FullName);
             }
             else
             {
@@ -302,13 +227,14 @@ namespace PeachPDF.Html.Core.Handlers
             try
             {
                 var imageFileStream = File.Open(source, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                lock (_loadCompleteCallback)
+                _imageFileStream = imageFileStream;
+
+                if (_disposed is false)
                 {
-                    _imageFileStream = imageFileStream;
-                    if (!_disposed)
-                        _image = _htmlContainer.Adapter.ImageFromStream(_imageFileStream);
+                    LoadImageFromStream(imageFileStream);
                     _releaseImageObject = true;
                 }
+
                 ImageLoadComplete();
             }
             catch (Exception ex)
@@ -318,30 +244,55 @@ namespace PeachPDF.Html.Core.Handlers
             }
         }
 
+        private RImage LoadImageFromStream(Stream stream)
+        {
+            try
+            {
+                Image = _htmlContainer.Adapter.ImageFromStream(stream);
+            }
+            catch (UnknownImageFormatException exception)
+            {
+                Image = _htmlContainer.Adapter.GetLoadingFailedImage();
+            }
+
+            return Image;
+        }
+
         /// <summary>
         /// Load image from the given URI by downloading it.<br/>
         /// Create local file name in temp folder from the URI, if the file already exists use it as it has already been downloaded.
         /// If not download the file.
         /// </summary>
-        private void SetImageFromUrl(Uri source)
+        private async ValueTask SetImageFromUrl(Uri source)
         {
-            var filePath = CommonUtils.GetLocalfileName(source);
-            if (filePath.Exists && filePath.Length > 0)
+            if (source.IsFile)
             {
-                SetImageFromFile(filePath);
+                var filePath = CommonUtils.GetLocalfileName(source);
+
+                if (filePath.Exists && filePath.Length > 0)
+                {
+                    SetImageFromFile(filePath);
+                }
             }
+
+            var stream = await _htmlContainer.Adapter.GetResourceStream(source);
+
+            if (stream is not null)
+            {
+                LoadImageFromStream(stream);
+            }
+
+            ImageLoadComplete();
         }
 
         /// <summary>
         /// Flag image load complete and request refresh for re-layout and invalidate.
         /// </summary>
-        private void ImageLoadComplete(bool async = true)
+        private void ImageLoadComplete()
         {
             // can happen if some operation return after the handler was disposed
             if (_disposed)
                 ReleaseObjects();
-            else
-                _loadCompleteCallback(_image, _imageRectangle, async);
         }
 
         /// <summary>
@@ -349,19 +300,16 @@ namespace PeachPDF.Html.Core.Handlers
         /// </summary>
         private void ReleaseObjects()
         {
-            lock (_loadCompleteCallback)
+            if (_releaseImageObject && Image != null)
             {
-                if (_releaseImageObject && _image != null)
-                {
-                    _image.Dispose();
-                    _image = null;
-                }
-                if (_imageFileStream != null)
-                {
-                    _imageFileStream.Dispose();
-                    _imageFileStream = null;
-                }
+                Image.Dispose();
+                Image = null;
             }
+
+            if (_imageFileStream == null) return;
+
+            _imageFileStream.Dispose();
+            _imageFileStream = null;
         }
 
         #endregion
