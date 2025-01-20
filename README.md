@@ -62,7 +62,7 @@ HttpClient httpClient = new();
 PdfGenerateConfig pdfConfig = new(){
   PageSize = PageSize.Letter,
   PageOrientation = PageOrientation.Portrait
-  NetworkAdapter = new HttpClientNetworkADapter(httpClient, "https://www.example.com")
+  NetworkAdapter = new HttpClientNetworkADapter(httpClient, new Uri("https://www.example.com"))
 };
 
 PdfGenerator generator = new();
