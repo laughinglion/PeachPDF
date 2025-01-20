@@ -188,7 +188,7 @@ namespace PeachPDF.PdfSharpCore.Pdf
         PdfPage _destinationPage;
 
         /// <summary>
-        /// Gets or sets the left postion of the page positioned at the left side of the window.
+        /// Gets or sets the left position of the page positioned at the left side of the window.
         /// Applies only if PageDestinationType is Xyz, FitV, FitR, or FitBV.
         /// </summary>
         public double Left
@@ -199,7 +199,7 @@ namespace PeachPDF.PdfSharpCore.Pdf
         double _left = double.NaN;
 
         /// <summary>
-        /// Gets or sets the top postion of the page positioned at the top side of the window.
+        /// Gets or sets the top position of the page positioned at the top side of the window.
         /// Applies only if PageDestinationType is Xyz, FitH, FitR, ob FitBH.
         /// </summary>
         public double Top
@@ -210,7 +210,7 @@ namespace PeachPDF.PdfSharpCore.Pdf
         double _top = double.NaN;
 
         /// <summary>
-        /// Gets or sets the right postion of the page positioned at the right side of the window.
+        /// Gets or sets the right position of the page positioned at the right side of the window.
         /// Applies only if PageDestinationType is FitR.
         /// </summary>
         public double Right
@@ -221,7 +221,7 @@ namespace PeachPDF.PdfSharpCore.Pdf
         double _right = double.NaN;
 
         /// <summary>
-        /// Gets or sets the bottom postion of the page positioned at the bottom side of the window.
+        /// Gets or sets the bottom position of the page positioned at the bottom side of the window.
         /// Applies only if PageDestinationType is FitR.
         /// </summary>
         public double Bottom
