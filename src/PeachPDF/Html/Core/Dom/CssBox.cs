@@ -663,10 +663,6 @@ namespace PeachPDF.Html.Core.Dom
 
             await CreateListItemBox(g);
 
-            var bgColor = BackgroundColor;
-
-            Console.WriteLine($"{this}: [x: {Location.X}, y: {Location.Y}, w: {Size.Width}, h: {Size.Height}, r: {ActualRight}, b: {ActualBottom}, bg: {bgColor}]");
-
             if (IsFixed) return;
 
             var actualWidth = Math.Max(GetMinimumWidth() + GetWidthMarginDeep(this), Size.Width < 90999 ? ActualRight - HtmlContainer.Root.Location.X : 0);
