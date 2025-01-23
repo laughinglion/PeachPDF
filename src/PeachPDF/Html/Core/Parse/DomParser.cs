@@ -68,7 +68,9 @@ namespace PeachPDF.Html.Core.Parse
             //var media = htmlContainer.GetCssMediaType(cssData.MediaBlocks.Keys);
             var media = "print"; // TODO: fix this
 
-            CascadeApplyStyles(root, cssData, media);
+            var cssValueParser = new CssValueParser(htmlContainer.Adapter);
+
+            CascadeApplyStyles(cssValueParser, root, cssData, media);
 
             CorrectTextBoxes(root);
 
@@ -135,15 +137,16 @@ namespace PeachPDF.Html.Core.Parse
         /// If the html tag has "class" attribute and the class name has style defined apply that style on the tag css box.<br/>
         /// If the html tag has "style" attribute parse it and apply the parsed style on the tag css box.<br/>
         /// </summary>
+        /// <param name="valueParser">the css value parser to use</param>
         /// <param name="box">the box to apply the style to</param>
         /// <param name="cssData">the style data for the html</param>
         /// <param name="media">The media type to apply styles to</param>
-        private void CascadeApplyStyles(CssBox box, CssData cssData, string media)
+        private void CascadeApplyStyles(CssValueParser valueParser, CssBox box, CssData cssData, string media)
         {
             box.InheritStyle();
 
             // try assign style using all wildcard
-            AssignCssBlocks(box, cssData, media);
+            AssignCssBlocks(valueParser, box, cssData, media);
 
             if (box.HtmlTag != null)
             {
@@ -156,8 +159,8 @@ namespace PeachPDF.Html.Core.Parse
                     var stylesheet = "* { " + styleAttributeText + " }";
 
                     var block = _cssParser.ParseStyleSheet(stylesheet);
-                    if (block != null)
-                        AssignCssBlock(box, block.StyleRules.Single());
+                    if (block is not null)
+                        AssignCssBlock(valueParser, box, block.StyleRules.Single());
                 }
             }
 
@@ -180,17 +183,18 @@ namespace PeachPDF.Html.Core.Parse
 
             foreach (var childBox in box.Boxes)
             {
-                CascadeApplyStyles(childBox, cssData, media);
+                CascadeApplyStyles(valueParser, childBox, cssData, media);
             }
         }
 
         /// <summary>
         /// Assigns the given css style blocks to the given css box checking if matching.
         /// </summary>
+        /// <param name="valueParser">the css value parser to use</param>
         /// <param name="box">the css box to assign css to</param>
         /// <param name="cssData">the css data to use to get the matching css blocks</param>
         /// <param name="media">The media type to apply styles for</param>
-        private static void AssignCssBlocks(CssBox box, CssData cssData, string media)
+        private static void AssignCssBlocks(CssValueParser valueParser, CssBox box, CssData cssData,string media)
         {
             var combinedBlocks = new List<IStyleRule>();
             var styleRules = cssData.GetStyleRules(media, box);
@@ -198,16 +202,17 @@ namespace PeachPDF.Html.Core.Parse
 
             foreach (var block in combinedBlocks)
             {
-                AssignCssBlock(box, block);
+                AssignCssBlock(valueParser, box, block);
             }
         }
 
         /// <summary>
         /// Assigns the given css style block properties to the given css box.
         /// </summary>
+        /// <param name="valueParser">the css value parser to use</param>
         /// <param name="box">the css box to assign css to</param>
         /// <param name="stylesheetRule">the stylesheet rule to assign</param>
-        private static void AssignCssBlock(CssBox box, IStyleRule stylesheetRule)
+        private static void AssignCssBlock(CssValueParser valueParser, CssBox box, IStyleRule stylesheetRule)
         {
             foreach (var prop in stylesheetRule.Style)
             {
@@ -217,9 +222,10 @@ namespace PeachPDF.Html.Core.Parse
                 {
                     value = CssUtils.GetPropertyValue(box.ParentBox, prop.Name);
                 }
+
                 if (IsStyleOnElementAllowed(box, prop.Name, value))
                 {
-                    CssUtils.SetPropertyValue(box, prop.Name, value);
+                    CssUtils.SetPropertyValue(valueParser ,box, prop.Name, value);
                 }
             }
         }

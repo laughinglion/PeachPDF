@@ -86,6 +86,7 @@ namespace PeachPDF.Html.Core.Parse
                 if (!char.IsDigit(str[idx + i]))
                     return false;
             }
+
             return true;
         }
 
@@ -96,21 +97,20 @@ namespace PeachPDF.Html.Core.Parse
         /// <returns>true - valid, false - invalid</returns>
         public static bool IsValidLength(string value)
         {
-            if (value.Length > 1)
-            {
-                string number = string.Empty;
-                if (value.EndsWith("%"))
-                {
-                    number = value[..^1];
-                }
-                else if (value.Length > 2)
-                {
-                    number = value[..^2];
-                }
+            if (value.Length <= 1) return false;
 
-                return double.TryParse(number, out _);
+            var number = string.Empty;
+            
+            if (value.EndsWith('%'))
+            {
+                number = value[..^1];
             }
-            return false;
+            else if (value.Length > 2)
+            {
+                number = value[..^2];
+            }
+
+            return double.TryParse(number, out _);
         }
 
         /// <summary>
@@ -303,22 +303,15 @@ namespace PeachPDF.Html.Core.Parse
             {
                 if (!string.IsNullOrEmpty(str))
                 {
-                    if (length > 1 && str[idx] == '#')
+                    return length switch
                     {
-                        return GetColorByHex(str, idx, length, out color);
-                    }
-                    else if (length > 10 && CommonUtils.SubStringEquals(str, idx, 4, "rgb(") && str[length - 1] == ')')
-                    {
-                        return GetColorByRgb(str, idx, length, out color);
-                    }
-                    else if (length > 13 && CommonUtils.SubStringEquals(str, idx, 5, "rgba(") && str[length - 1] == ')')
-                    {
-                        return GetColorByRgba(str, idx, length, out color);
-                    }
-                    else
-                    {
-                        return GetColorByName(str, idx, length, out color);
-                    }
+                        > 1 when str[idx] == '#' => GetColorByHex(str, idx, length, out color),
+                        > 10 when CommonUtils.SubStringEquals(str, idx, 4, "rgb(") && str[length - 1] == ')' =>
+                            GetColorByRgb(str, idx, length, out color),
+                        > 13 when CommonUtils.SubStringEquals(str, idx, 5, "rgba(") && str[length - 1] == ')' =>
+                            GetColorByRgba(str, idx, length, out color),
+                        _ => GetColorByName(str, idx, length, out color)
+                    };
                 }
             }
             catch
@@ -340,19 +333,65 @@ namespace PeachPDF.Html.Core.Parse
                 return GetActualBorderWidth(CssConstants.Medium, b);
             }
 
-            switch (borderValue)
+            return borderValue switch
             {
-                case CssConstants.Thin:
-                    return 1f;
-                case CssConstants.Medium:
-                    return 2f;
-                case CssConstants.Thick:
-                    return 4f;
-                default:
-                    return Math.Abs(ParseLength(borderValue, 1, b));
-            }
+                CssConstants.Thin => 1f,
+                CssConstants.Medium => 2f,
+                CssConstants.Thick => 4f,
+                _ => Math.Abs(ParseLength(borderValue, 1, b))
+            };
         }
 
+        public string GetFontFamilyByName(string propValue)
+        {
+            int start = 0;
+            while (start > -1 && start < propValue.Length)
+            {
+                while (char.IsWhiteSpace(propValue[start]) || propValue[start] == ',' || propValue[start] == '\'' || propValue[start] == '"')
+                    start++;
+                var end = propValue.IndexOf(',', start);
+                if (end < 0)
+                    end = propValue.Length;
+                var adjEnd = end - 1;
+                while (char.IsWhiteSpace(propValue[adjEnd]) || propValue[adjEnd] == '\'' || propValue[adjEnd] == '"')
+                    adjEnd--;
+
+                var font = propValue.Substring(start, adjEnd - start + 1);
+
+                if (_adapter.IsFontExists(font))
+                {
+                    return font;
+                }
+
+                start = end;
+            }
+
+            return CssConstants.Inherit;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="propValue">the value of the property to parse</param>
+        /// <returns>parsed value</returns>
+        public static string GetImagePropertyValue(string propValue)
+        {
+            var startIdx = propValue.IndexOf("url(", StringComparison.InvariantCultureIgnoreCase);
+            if (startIdx <= -1) return propValue;
+            startIdx += 4;
+
+            var endIdx = propValue.IndexOf(')', startIdx);
+            if (endIdx <= -1) return propValue;
+            endIdx -= 1;
+
+            while (startIdx < endIdx && (char.IsWhiteSpace(propValue[startIdx]) || propValue[startIdx] == '\'' || propValue[startIdx] == '"'))
+                startIdx++;
+
+            while (startIdx < endIdx && (char.IsWhiteSpace(propValue[endIdx]) || propValue[endIdx] == '\'' || propValue[endIdx] == '"'))
+                endIdx--;
+
+            return startIdx <= endIdx ? propValue.Substring(startIdx, endIdx - startIdx + 1) : propValue;
+        }
 
         #region Private methods
 

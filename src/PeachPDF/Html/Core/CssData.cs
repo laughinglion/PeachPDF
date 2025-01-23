@@ -205,62 +205,71 @@ namespace PeachPDF.Html.Core
 
         private static bool DoesSelectorMatch(ComplexSelector complexSelector, CssBox box)
         {
-            CssBox matchingAncestor = null;
+            CssBox currentLevel = box;
+            var selectorsInReverse = complexSelector.Reverse();
 
-            foreach (var selector in complexSelector)
+            var isLowestItem = true;
+            var isMatch = false;
+
+            foreach (var selector in selectorsInReverse)
             {
                 if (selector.Selector is not null)
                 {
-                    var currentBox = box;
-                    bool isMatch;
-
-                    if (selector.Delimiter == ">")
+                    if (isLowestItem)
                     {
-                        if (currentBox.ParentBox is null)
-                        {
-                            return false;
-                        }
-
-                        isMatch = DoesSelectorMatch(selector.Selector, currentBox.ParentBox);
-                        matchingAncestor = currentBox.ParentBox;
+                        isMatch = DoesSelectorMatch(selector.Selector, currentLevel);
 
                         if (!isMatch)
                         {
                             return false;
                         }
+
+                        isLowestItem = false;
+                        currentLevel = box.ParentBox;
+                        continue;
                     }
-                    else
+
+                    switch (selector.Delimiter)
                     {
-                        do
-                        {
-                            isMatch = DoesSelectorMatch(selector.Selector, currentBox);
+                        case ">":
+
+                            isMatch = DoesSelectorMatch(selector.Selector, currentLevel);
 
                             if (!isMatch)
                             {
-                                currentBox = currentBox.ParentBox;
+                                return false;
+                            }
+                            break;
+                        case " " or null:
+                        {
+                            do
+                            {
+                                isMatch = DoesSelectorMatch(selector.Selector, currentLevel);
+
+                                if (!isMatch)
+                                {
+                                    currentLevel = currentLevel.ParentBox;
+                                }
+
+                            } while (!isMatch && currentLevel is not null);
+
+                            if (!isMatch)
+                            {
+                                return false;
                             }
 
-                        } while (!isMatch && currentBox is not null && (matchingAncestor is not null && currentBox == matchingAncestor));
-
-                        if (!isMatch)
-                        {
-                            return false;
+                            break;
                         }
-
-                        matchingAncestor = currentBox;
                     }
-
-
                 }
                 else
                 {
-                    throw new NotImplementedException();
+                    return false;
                 }
             }
 
-            return false;
+            return isMatch;
         }
-
 
         public CssData Clone()
         {
