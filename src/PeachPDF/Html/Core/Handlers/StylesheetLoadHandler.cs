@@ -65,7 +65,7 @@ namespace PeachPDF.Html.Core.Handlers
                 baseUrl = baseElement.HtmlTag.TryGetAttribute("href", "");
             }
 
-            var baseUri = string.IsNullOrWhiteSpace(baseUrl) ? null : new Uri(baseUrl);
+            var baseUri = string.IsNullOrWhiteSpace(baseUrl) ? htmlContainer.Adapter.BaseUri : new Uri(baseUrl);
             var href = baseUri is null ? src : new Uri(baseUri, src).AbsoluteUri;
 
             var uri = CommonUtils.TryGetUri(href);

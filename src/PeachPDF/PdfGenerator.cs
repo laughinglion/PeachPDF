@@ -20,6 +20,7 @@ using PeachPDF.PdfSharpCore.Pdf;
 using System;
 using System.Threading.Tasks;
 using PeachPDF.Network;
+using PeachPDF.PdfSharpCore.Pdf.Advanced;
 
 namespace PeachPDF
 {
@@ -214,12 +215,21 @@ namespace PeachPDF
                     {
                         // create link to another page in the document
                         var anchorRect = container.GetElementRectangle(link.AnchorId);
+
                         if (anchorRect.HasValue)
                         {
                             // document links to the same page as the link is not allowed
-                            int anchorPageIdx = (int)(anchorRect.Value.Top / pageSize.Height);
-                            if (i != anchorPageIdx)
-                                document.Pages[i].AddDocumentLink(new PdfRectangle(xRect), anchorPageIdx);
+                            int anchorPageNumber = 0;
+                            var top = anchorRect.Value.Top;
+
+                            while (top > pageSize.Height)
+                            {
+                                top -= pageSize.Height;
+                                anchorPageNumber++;
+                            }
+
+                            document.AddNamedDestination(link.AnchorId, anchorPageNumber, PdfNamedDestinationParameters.CreatePosition(anchorRect.Value.Left, top));
+                            document.Pages[i].AddDocumentLink(new PdfRectangle(xRect), link.AnchorId);
                         }
                     }
                     else

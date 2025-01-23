@@ -180,15 +180,29 @@ namespace PeachPDF.Html.Core.Handlers
         /// <param name="path">the file path or uri to load image from</param>
         private async ValueTask SetImageFromPath(string path)
         {
-            var uri = CommonUtils.TryGetUri(path);
+            var uri = new Uri(path, UriKind.RelativeOrAbsolute);
 
-            if (uri != null && uri.Scheme != "file")
+            if (!uri.IsAbsoluteUri)
+            {
+                var baseElement = DomUtils.GetBoxByTagName(_htmlContainer.Root, "base");
+                var baseUrl = "";
+
+                if (baseElement is not null)
+                {
+                    baseUrl = baseElement.HtmlTag.TryGetAttribute("href", "");
+                }
+
+                var baseUri = string.IsNullOrWhiteSpace(baseUrl) ? _htmlContainer.Adapter.BaseUri : new Uri(baseUrl);
+                uri = baseUri is null ? uri : new Uri(baseUri, uri);
+            }
+
+            if (!uri.IsAbsoluteUri || uri.Scheme != "file")
             {
                 await SetImageFromUrl(uri);
             }
             else
             {
-                var fileInfo = CommonUtils.TryGetFileInfo(uri != null ? uri.AbsolutePath : path);
+                var fileInfo = CommonUtils.TryGetFileInfo(uri.AbsolutePath);
                 if (fileInfo != null)
                 {
                     SetImageFromFile(fileInfo);
@@ -273,6 +287,8 @@ namespace PeachPDF.Html.Core.Handlers
                 {
                     SetImageFromFile(filePath);
                 }
+
+                return;
             }
 
             var stream = await _htmlContainer.Adapter.GetResourceStream(source);

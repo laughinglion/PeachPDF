@@ -156,6 +156,30 @@ namespace PeachPDF.PdfSharpCore.Pdf.Advanced
         PdfOutline _outline;
 
         /// <summary>
+        /// Gets the name dictionary of this document.
+        /// </summary>
+        public PdfNameDictionary Names
+        {
+            get
+            {
+                if (_names == null)
+                {
+                    var dict = Elements.GetDictionary(Keys.Names);
+                    if (dict != null)
+                        _names = new PdfNameDictionary(dict);
+                    else
+                    {
+                        _names = new PdfNameDictionary(Owner);
+                        Owner.Internals.AddObject(_names);
+                        Elements.SetReference(Keys.Names, _names.Reference);
+                    }
+                }
+                return _names;
+            }
+        }
+        PdfNameDictionary? _names;
+
+        /// <summary>
         /// Gets the AcroForm dictionary of this document.
         /// </summary>
         public PdfAcroForm AcroForm

@@ -58,6 +58,8 @@ namespace PeachPDF.Adapters
 
         public RNetworkLoader NetworkLoader { get; set;  } = new DataUriNetworkLoader();
 
+        public override Uri? BaseUri => NetworkLoader.BaseUri;
+
         public override async Task<Stream?> GetResourceStream(Uri uri)
         {
             return await NetworkLoader.GetResourceStream(uri);

@@ -10,5 +10,6 @@ namespace PeachPDF.Network
     {
         public abstract Task<string> GetPrimaryContents();
         public abstract Task<Stream?> GetResourceStream(Uri uri);
+        public abstract Uri? BaseUri { get; }
     }
 }

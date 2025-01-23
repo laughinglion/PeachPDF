@@ -140,7 +140,9 @@ namespace PeachPDF.Html.Core.Parse
 
             if (!isClosing)
             {
-                attributes = token.Attributes.ToDictionary(x => x.Name, x => x.Value);
+                attributes = token.Attributes
+                    .GroupBy(x => x.Name)
+                    .ToDictionary(x => x.Key, x => x.First().Value);
             }
 
             return isClosing;

@@ -227,7 +227,7 @@ namespace PeachPDF
                 baseUrl = baseElement.HtmlTag.TryGetAttribute("href", "");
             }
 
-            Uri baseUri = string.IsNullOrWhiteSpace(baseUrl) ? null : new Uri(baseUrl);
+            var baseUri = string.IsNullOrWhiteSpace(baseUrl) ? HtmlContainerInt.Adapter.BaseUri : new Uri(baseUrl);
 
             foreach (var link in HtmlContainerInt.GetLinks())
             {
@@ -236,16 +236,6 @@ namespace PeachPDF
             }
 
             return linkElements;
-        }
-
-        /// <summary>
-        /// Get css link href at the given x,y location.
-        /// </summary>
-        /// <param name="location">the location to find the link at</param>
-        /// <returns>css link href if exists or null</returns>
-        public string GetLinkAt(XPoint location)
-        {
-            return _htmlContainerInt.GetLinkAt(Utils.Convert(location));
         }
 
         /// <summary>

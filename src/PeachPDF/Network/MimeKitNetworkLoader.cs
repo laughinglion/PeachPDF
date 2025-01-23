@@ -13,6 +13,8 @@ namespace PeachPDF.Network
         private readonly Task<MimeMessage> _messageTask;
         private MimeMessage? _message = null;
 
+        public override Uri? BaseUri => null;
+
         public MimeKitNetworkLoader(Stream stream)
         {
             MimeParser parser = new(stream);

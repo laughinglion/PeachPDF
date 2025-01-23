@@ -680,7 +680,8 @@ namespace PeachPDF.Html.Core.Dom
             if (BackgroundImage != CssConstants.None && _imageLoadHandler == null)
             {
                 _imageLoadHandler = new ImageLoadHandler(HtmlContainer);
-                await _imageLoadHandler.LoadImage(BackgroundImage, HtmlTag?.Attributes);
+                var backgroundImageUrl = CssUtils.ExtractCssUrl(BackgroundImage);
+                await _imageLoadHandler.LoadImage(backgroundImageUrl.OriginalString, HtmlTag?.Attributes);
             }
 
             MeasureWordSpacing(g);

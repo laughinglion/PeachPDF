@@ -30,6 +30,7 @@
 using System;
 using PeachPDF.PdfSharpCore.Pdf.IO;
 using PeachPDF.PdfSharpCore.Pdf.Internal;
+using PeachPDF.PdfSharpCore.Pdf.Actions;
 
 namespace PeachPDF.PdfSharpCore.Pdf.Annotations
 {
@@ -41,7 +42,7 @@ namespace PeachPDF.PdfSharpCore.Pdf.Annotations
         // Just a hack to make MigraDoc work with this code.
         enum LinkType
         {
-            None, Document, Web, File
+            None, Document, NamedDestination, Web, File
         }
 
         /// <summary>
@@ -82,6 +83,24 @@ namespace PeachPDF.PdfSharpCore.Pdf.Annotations
         int _destPage;
         LinkType _linkType;
         string _url;
+
+        /// <summary>
+        /// Creates a link within the current document using a named destination.
+        /// </summary>
+        /// <param name="rect">The link area in default page coordinates.</param>
+        /// <param name="destinationName">The named destination’s name.</param>
+        public static PdfLinkAnnotation CreateDocumentLink(PdfRectangle rect, string destinationName)
+        {
+            var link = new PdfLinkAnnotation
+            {
+                _linkType = LinkType.NamedDestination,
+                Rectangle = rect,
+                _action = PdfGoToAction.CreateGoToAction(destinationName)
+            };
+            return link;
+        }
+
+        PdfAction _action = default!;
 
         /// <summary>
         /// Creates a link to the web.
@@ -142,6 +161,10 @@ namespace PeachPDF.PdfSharpCore.Pdf.Annotations
                     dest = Owner.Pages[destIndex];
                     //pdf.AppendFormat("/Dest[{0} 0 R/XYZ null null 0]\n", dest.ObjectID);
                     Elements[Keys.Dest] = new PdfLiteral("[{0} 0 R/XYZ null null 0]", dest.ObjectNumber);
+                    break;
+
+                case LinkType.NamedDestination:
+                    Elements[PdfAnnotation.Keys.A] = _action;
                     break;
 
                 case LinkType.Web:

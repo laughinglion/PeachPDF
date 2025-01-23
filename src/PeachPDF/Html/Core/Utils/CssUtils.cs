@@ -38,6 +38,43 @@ namespace PeachPDF.Html.Core.Utils
             return w;
         }
 
+        public static Uri ExtractCssUrl(string cssValue)
+        {
+            var span = cssValue.AsSpan();
+
+            if (span.StartsWith("url("))
+            {
+                span = span[4..];
+            }
+
+            if (span.EndsWith(")"))
+            {
+                span = span[..^1];
+            }
+
+            if (span.StartsWith("'"))
+            {
+                span = span[1..];
+            }
+
+            if (span.EndsWith("'"))
+            {
+                span = span[..^1];
+            }
+
+            if (span.StartsWith("\""))
+            {
+                span = span[1..];
+            }
+
+            if (span.EndsWith("\""))
+            {
+                span = span[..^1];
+            }
+
+            return new Uri(span.ToString(), UriKind.RelativeOrAbsolute);
+        }
+
         /// <summary>
         /// Get CSS box property value by the CSS name.<br/>
         /// Used as a mapping between CSS property and the class property.

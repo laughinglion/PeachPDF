@@ -8,6 +8,8 @@ namespace PeachPDF.Network
 {
     public class DataUriNetworkLoader : RNetworkLoader
     {
+        public override Uri? BaseUri => null;
+
         public override Task<string> GetPrimaryContents()
         {
             return null!;

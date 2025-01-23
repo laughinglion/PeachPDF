@@ -90,6 +90,8 @@ namespace PeachPDF.Html.Adapters
             get { return _defaultCssData ??= CssData.Parse(this, CssDefaults.DefaultStyleSheet, false); }
         }
 
+        public abstract Uri? BaseUri { get; }
+
         /// <summary>
         /// Resolve color value from given color name.
         /// </summary>
