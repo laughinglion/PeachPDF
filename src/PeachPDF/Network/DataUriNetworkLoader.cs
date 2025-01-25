@@ -28,6 +28,8 @@ namespace PeachPDF.Network
                 uriDataComponents[1] = uriDataComponents[1][7..];
             }
 
+            uriDataComponents[1] = Uri.UnescapeDataString(uriDataComponents[1]);
+
             var contents = Convert.FromBase64String(uriDataComponents[1]);
 
             return Task.FromResult<Stream?>(new MemoryStream(contents));

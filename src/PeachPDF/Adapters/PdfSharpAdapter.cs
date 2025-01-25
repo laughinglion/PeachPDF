@@ -62,7 +62,18 @@ namespace PeachPDF.Adapters
 
         public override async Task<Stream?> GetResourceStream(Uri uri)
         {
-            return await NetworkLoader.GetResourceStream(uri);
+            if (uri.Scheme is not "data") return await NetworkLoader.GetResourceStream(uri);
+
+            if (NetworkLoader is DataUriNetworkLoader dataUriNetworkLoader)
+            {
+                return await dataUriNetworkLoader.GetResourceStream(uri);
+            }
+            else
+            {
+                var loader = new DataUriNetworkLoader();
+                return await loader.GetResourceStream(uri);
+            }
+
         }
 
         public override string GetCssMediaType(IEnumerable<string> mediaTypesAvailable)

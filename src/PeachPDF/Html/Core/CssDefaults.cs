@@ -10,6 +10,9 @@
 // - Sun Tsu,
 // "The Art of War"
 
+using PeachPDF.Html.Core.Utils;
+using System.Collections.Generic;
+
 namespace PeachPDF.Html.Core
 {
     internal static class CssDefaults
@@ -126,5 +129,38 @@ namespace PeachPDF.Html.Core
                 Font: 9pt Tahoma;
             }
         """;
+
+        public static Dictionary<string, string> InitialValues = new()
+        {
+            { "background-attachment", CssConstants.Scroll },
+            { "background-clip", CssConstants.BorderBox },
+            { "background-color", CssConstants.Transparent },
+            { "background-image", CssConstants.None },
+            { "background-origin", CssConstants.PaddingBox },
+            { "background-position", "0% 0%"},
+            { "background-repeat", CssConstants.Repeat },
+            { "background-size", $"{CssConstants.Auto} {CssConstants.Auto}"},
+            { "border-bottom-color", CssConstants.CurrentColor },
+            { "border-bottom-style", CssConstants.None },
+            { "border-bottom-width", CssConstants.Medium },
+            { "border-left-color", CssConstants.CurrentColor },
+            { "border-left-style", CssConstants.None },
+            { "border-left-width", CssConstants.Medium },
+            { "border-right-color", CssConstants.CurrentColor },
+            { "border-right-style", CssConstants.None },
+            { "border-right-width", CssConstants.Medium },
+            { "border-top-color", CssConstants.CurrentColor },
+            { "border-top-style", CssConstants.None },
+            { "border-top-width", CssConstants.Medium },
+            { "font-stretch", CssConstants.Normal },
+            { "font-style", CssConstants.Normal },
+            { "font-variant", CssConstants.Normal },
+            { "font-weight", CssConstants.Normal },
+            { "line-height", CssConstants.Normal },
+            { "list-style-image", CssConstants.None },
+            { "list-style-position", CssConstants.Outside },
+            { "text-decoration-color", CssConstants.CurrentColor },
+            { "text-decoration-style", CssConstants.Solid }
+        };
     }
 }

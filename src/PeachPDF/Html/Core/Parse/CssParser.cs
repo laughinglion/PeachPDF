@@ -48,6 +48,8 @@ namespace PeachPDF.Html.Core.Parse
             _adapter = adapter;
         }
 
+        public CssData DefaultCssData => _adapter.DefaultCssData.Clone();
+
         /// <summary>
         /// Parse the given stylesheet source to CSS blocks dictionary.<br/>
         /// The CSS blocks are organized into two level buckets of media type and class name.<br/>
@@ -61,7 +63,7 @@ namespace PeachPDF.Html.Core.Parse
         /// <returns>the CSS data with parsed CSS objects (never null)</returns>
         public CssData ParseStyleSheet(string stylesheet, bool combineWithDefault)
         {
-            var cssData = combineWithDefault ? _adapter.DefaultCssData : new CssData();
+            var cssData = combineWithDefault ? DefaultCssData : new CssData();
             
             if (!string.IsNullOrEmpty(stylesheet))
             {

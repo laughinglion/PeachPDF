@@ -41,26 +41,18 @@ namespace PeachPDF.Html.Core.Dom
         private string _color = "black";
         private string _cornerRadius = "0";
         private string _fontSize = "medium";
-        private string _left = "auto";
-        private string _lineHeight = "normal";
         private string _paddingLeft = "0";
         private string _paddingBottom = "0";
         private string _paddingRight = "0";
         private string _paddingTop = "0";
         private string _right;
         private string _textIndent = "0";
-        private string _top = "auto";
         private string _wordSpacing = "normal";
 
         #endregion
 
 
         #region Fields
-
-        /// <summary>
-        /// Gets or sets the location of the box
-        /// </summary>
-        private RPoint _location;
 
         private double _actualCornerNw = double.NaN;
         private double _actualCornerNe = double.NaN;
@@ -295,33 +287,9 @@ namespace PeachPDF.Html.Core.Dom
         public string PageBreakBefore { get; set; } = CssConstants.Auto;
         public string PageBreakInside { get; set; } = CssConstants.Auto;
 
-        public string Left
-        {
-            get => _left;
-            set
-            {
-                _left = value;
+        public string Left { get; set; } = "auto";
 
-                if (Position == CssConstants.Fixed)
-                {
-                    _location = GetActualLocation(Left, Top);
-                }
-            }
-        }
-
-        public string Top
-        {
-            get => _top;
-            set {
-                _top = value;
-
-                if (Position == CssConstants.Fixed)
-                {
-                    _location = GetActualLocation(Left, Top);
-                }
-
-            }
-        }
+        public string Top { get; set; } = "auto";
 
         public string Width { get; set; } = "auto";
 
@@ -364,11 +332,7 @@ namespace PeachPDF.Html.Core.Dom
 
         public string Position { get; set; } = "static";
 
-        public string LineHeight
-        {
-            get => _lineHeight;
-            set => _lineHeight = string.Format(NumberFormatInfo.InvariantInfo, "{0}px", CssValueParser.ParseLength(value, Size.Height, this, CssConstants.Em));
-        }
+        public string LineHeight { get; set; } = "normal";
 
         public string VerticalAlign { get; set; } = "baseline";
 
@@ -457,16 +421,7 @@ namespace PeachPDF.Html.Core.Dom
         /// <summary>
         /// Gets or sets the location of the box
         /// </summary>
-        public RPoint Location
-        {
-            get {
-                if (!_location.IsEmpty || Position != CssConstants.Fixed) return _location;
-
-                _location = GetActualLocation(Left, Top);
-                return _location;
-            }
-            set => _location = value;
-        }
+        public RPoint Location { get; set; }
 
         /// <summary>
         /// Gets or sets the size of the box
@@ -1221,7 +1176,7 @@ namespace PeachPDF.Html.Core.Dom
             ListStylePosition = p.ListStylePosition;
             ListStyleType = p.ListStyleType;
             ListStyle = p.ListStyle;
-            _lineHeight = p._lineHeight;
+            LineHeight = p.LineHeight;
             WordBreak = p.WordBreak;
             Direction = p.Direction;
 
@@ -1258,8 +1213,8 @@ namespace PeachPDF.Html.Core.Dom
             MarginLeft = p.MarginLeft;
             MarginRight = p.MarginRight;
             MarginTop = p.MarginTop;
-            _left = p._left;
-            _lineHeight = p._lineHeight;
+            Left = p.Left;
+            LineHeight = p.LineHeight;
             Overflow = p.Overflow;
             _paddingLeft = p._paddingLeft;
             _paddingBottom = p._paddingBottom;
@@ -1270,7 +1225,7 @@ namespace PeachPDF.Html.Core.Dom
             TextDecorationLine = p.TextDecorationLine;
             TextDecorationStyle = p.TextDecorationStyle;
             TextDecorationColor = p.TextDecorationColor;
-            _top = p._top;
+            Top = p.Top;
             Position = p.Position;
             Width = p.Width;
             MaxWidth = p.MaxWidth;

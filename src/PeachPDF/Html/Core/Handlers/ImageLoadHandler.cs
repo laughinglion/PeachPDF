@@ -102,14 +102,7 @@ namespace PeachPDF.Html.Core.Handlers
             {
                 if (!string.IsNullOrEmpty(src))
                 {
-                    if (src.StartsWith("data:image", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        SetFromInlineData(src);
-                    }
-                    else
-                    {
-                        await SetImageFromPath(src);
-                    }
+                    await SetImageFromPath(src);
                 }
                 else
                 {
@@ -134,45 +127,6 @@ namespace PeachPDF.Html.Core.Handlers
 
 
         #region Private methods
-
-        /// <summary>
-        /// Load the image from inline base64 encoded string data.
-        /// </summary>
-        /// <param name="src">the source that has the base64 encoded image</param>
-        private void SetFromInlineData(string src)
-        {
-            Image = GetImageFromData(src);
-            if (Image == null)
-                _htmlContainer.ReportError(HtmlRenderErrorType.Image, "Failed extract image from inline data");
-            _releaseImageObject = true;
-            ImageLoadComplete();
-        }
-
-        /// <summary>
-        /// Extract image object from inline base64 encoded data in the src of the html img element.
-        /// </summary>
-        /// <param name="src">the source that has the base64 encoded image</param>
-        /// <returns>image from base64 data string or null if failed</returns>
-        private RImage GetImageFromData(string src)
-        {
-            var s = src[(src.IndexOf(':') + 1)..].Split([','], 2);
-            if (s.Length != 2) return null;
-
-            int imagePartsCount = 0, base64PartsCount = 0;
-            foreach (var part in s[0].Split([';']))
-            {
-                var pPart = part.Trim();
-                if (pPart.StartsWith("image/", StringComparison.InvariantCultureIgnoreCase))
-                    imagePartsCount++;
-                if (pPart.Equals("base64", StringComparison.InvariantCultureIgnoreCase))
-                    base64PartsCount++;
-            }
-
-            if (imagePartsCount <= 0) return null;
-
-            byte[] imageData = base64PartsCount > 0 ? Convert.FromBase64String(s[1].Trim()) : new UTF8Encoding().GetBytes(Uri.UnescapeDataString(s[1].Trim()));
-            return LoadImageFromStream(new MemoryStream(imageData));
-        }
 
         /// <summary>
         /// Load image from path of image file or URL.

@@ -99,6 +99,7 @@ namespace PeachPDF.Html.Core
                 IdSelector idSelector => DoesSelectorMatch(idSelector, box),
                 AttrAvailableSelector attrAvailableSelector => DoesSelectorMatch(attrAvailableSelector, box),
                 AttrContainsSelector attrContainsSelector => DoesSelectorMatch(attrContainsSelector, box),
+                AttrListSelector attrListSelector => DoesSelectorMatch(attrListSelector, box),
                 _ => false
             };
         }
@@ -174,6 +175,26 @@ namespace PeachPDF.Html.Core
             return false;
         }
 
+        private static bool DoesSelectorMatch(AttrListSelector attrListSelector, CssBox box)
+        {
+            if (box.HtmlTag is null)
+            {
+                return false;
+            }
+
+            foreach (var attribute in box.HtmlTag.Attributes)
+            {
+                if (attribute.Key.Equals(attrListSelector.Attribute, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    var attributeValues = attribute.Value.Split(' ');
+
+                    return attributeValues.Any(value => value.Equals(attrListSelector.Value, StringComparison.InvariantCultureIgnoreCase));
+                }
+            }
+
+            return false;
+        }
+
         private static bool DoesSelectorMatch(AttrContainsSelector attrContainsSelector, CssBox box)
         {
             if (box.HtmlTag is null)
@@ -227,6 +248,11 @@ namespace PeachPDF.Html.Core
                         isLowestItem = false;
                         currentLevel = box.ParentBox;
                         continue;
+                    }
+
+                    if (currentLevel is null)
+                    {
+                        return false;
                     }
 
                     switch (selector.Delimiter)

@@ -621,6 +621,13 @@ namespace PeachPDF.Html.Core.Dom
 
                         Location = new RPoint(left, top);
                     }
+
+                    if (Position is CssConstants.Fixed)
+                    {
+                        var left = CssValueParser.ParseLength(Left, HtmlContainer.ScrollOffset.X, this);
+                        var top = CssValueParser.ParseLength(Top, HtmlContainer.ScrollOffset.Y, this);
+                        Location = new RPoint(left, top);
+                    }
                 }
 
                 //If we're talking about a table here...

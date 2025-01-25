@@ -188,7 +188,7 @@ namespace PeachPDF.Html.Core.Parse
                 return 0f;
 
             //If percentage, use ParseNumber
-            if (length.EndsWith("%"))
+            if (length.EndsWith('%'))
                 return ParseNumber(length, hundredPercent);
 
             //Get units of the length

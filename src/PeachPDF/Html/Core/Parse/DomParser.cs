@@ -143,6 +143,12 @@ namespace PeachPDF.Html.Core.Parse
         /// <param name="media">The media type to apply styles to</param>
         private void CascadeApplyStyles(CssValueParser valueParser, CssBox box, CssData cssData, string media)
         {
+            // Set initial styles
+            foreach (var style in CssDefaults.InitialValues)
+            {
+                CssUtils.SetPropertyValue(valueParser, box, style.Key, style.Value);
+            }
+
             box.InheritStyle();
 
             // try assign style using all wildcard
@@ -160,7 +166,7 @@ namespace PeachPDF.Html.Core.Parse
 
                     var block = _cssParser.ParseStyleSheet(stylesheet);
                     if (block is not null)
-                        AssignCssBlock(valueParser, box, block.StyleRules.Single());
+                        AssignCssBlock(valueParser, box, block.StyleRules.Single(), media);
                 }
             }
 
@@ -194,7 +200,7 @@ namespace PeachPDF.Html.Core.Parse
         /// <param name="box">the css box to assign css to</param>
         /// <param name="cssData">the css data to use to get the matching css blocks</param>
         /// <param name="media">The media type to apply styles for</param>
-        private static void AssignCssBlocks(CssValueParser valueParser, CssBox box, CssData cssData,string media)
+        private void AssignCssBlocks(CssValueParser valueParser, CssBox box, CssData cssData,string media)
         {
             var combinedBlocks = new List<IStyleRule>();
             var styleRules = cssData.GetStyleRules(media, box);
@@ -202,7 +208,7 @@ namespace PeachPDF.Html.Core.Parse
 
             foreach (var block in combinedBlocks)
             {
-                AssignCssBlock(valueParser, box, block);
+                AssignCssBlock(valueParser, box, block, media);
             }
         }
 
@@ -212,16 +218,16 @@ namespace PeachPDF.Html.Core.Parse
         /// <param name="valueParser">the css value parser to use</param>
         /// <param name="box">the css box to assign css to</param>
         /// <param name="stylesheetRule">the stylesheet rule to assign</param>
-        private static void AssignCssBlock(CssValueParser valueParser, CssBox box, IStyleRule stylesheetRule)
+        private void AssignCssBlock(CssValueParser valueParser, CssBox box, IStyleRule stylesheetRule, string media)
         {
             foreach (var prop in stylesheetRule.Style)
             {
-                var value = prop.Value;
-
-                if (prop.Value == CssConstants.Inherit && box.ParentBox != null)
+                var value = prop.Value switch
                 {
-                    value = CssUtils.GetPropertyValue(box.ParentBox, prop.Name);
-                }
+                    CssConstants.Inherit when box.ParentBox != null => CssUtils.GetPropertyValue(box.ParentBox, prop.Name),
+                    CssConstants.Initial => CssDefaults.InitialValues[prop.Name],
+                    _ => prop.Value
+                };
 
                 if (IsStyleOnElementAllowed(box, prop.Name, value))
                 {
