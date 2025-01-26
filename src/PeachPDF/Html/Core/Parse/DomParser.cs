@@ -152,7 +152,7 @@ namespace PeachPDF.Html.Core.Parse
             box.InheritStyle();
 
             // try assign style using all wildcard
-            AssignCssBlocks(valueParser, box, cssData, media);
+            var importantPropertyNames = AssignCssBlocks(valueParser, box, cssData, media);
 
             if (box.HtmlTag != null)
             {
@@ -165,7 +165,7 @@ namespace PeachPDF.Html.Core.Parse
                     var stylesheet = "* { " + styleAttributeText + " }";
 
                     var block = CssParser.ParseStyleSheet(stylesheet);
-                    AssignCssBlock(valueParser, box, block.StyleRules.Single());
+                    AssignCssBlock(valueParser, box, block.StyleRules.Single(), importantPropertyNames);
                 }
             }
 
@@ -199,16 +199,21 @@ namespace PeachPDF.Html.Core.Parse
         /// <param name="box">the css box to assign css to</param>
         /// <param name="cssData">the css data to use to get the matching css blocks</param>
         /// <param name="media">The media type to apply styles for</param>
-        private static void AssignCssBlocks(CssValueParser valueParser, CssBox box, CssData cssData,string media)
+        /// <returns>The list of applied important property names</returns>
+        private static ISet<string> AssignCssBlocks(CssValueParser valueParser, CssBox box, CssData cssData,string media)
         {
             var combinedBlocks = new List<IStyleRule>();
             var styleRules = cssData.GetStyleRules(media, box);
             combinedBlocks.AddRange(styleRules);
 
+            HashSet<string> importantPropertyNames = [];
+
             foreach (var block in combinedBlocks)
             {
-                AssignCssBlock(valueParser, box, block);
+                AssignCssBlock(valueParser, box, block, importantPropertyNames);
             }
+
+            return importantPropertyNames;
         }
 
         /// <summary>
@@ -217,7 +222,8 @@ namespace PeachPDF.Html.Core.Parse
         /// <param name="valueParser">the css value parser to use</param>
         /// <param name="box">the css box to assign css to</param>
         /// <param name="stylesheetRule">the stylesheet rule to assign</param>
-        private static void AssignCssBlock(CssValueParser valueParser, CssBox box, IStyleRule stylesheetRule)
+        /// <param name="importantPropertyNames">Carries the property names that have been marked important so they don't get re-applied</param>
+        private static void AssignCssBlock(CssValueParser valueParser, CssBox box, IStyleRule stylesheetRule, ISet<string> importantPropertyNames)
         {
             foreach (var prop in stylesheetRule.Style)
             {
@@ -227,6 +233,16 @@ namespace PeachPDF.Html.Core.Parse
                     CssConstants.Initial => CssDefaults.InitialValues[prop.Name],
                     _ => prop.Value
                 };
+
+                if (importantPropertyNames.Contains(prop.Name.ToLowerInvariant()))
+                {
+                    continue;
+                }
+
+                if (prop.IsImportant)
+                {
+                    importantPropertyNames.Add(prop.Name.ToLowerInvariant());
+                }
 
                 if (IsStyleOnElementAllowed(box, prop.Name, value))
                 {
