@@ -26,6 +26,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using PeachPDF.Network;
+using PeachPDF.PdfSharpCore.Fonts;
 
 namespace PeachPDF.Adapters
 {
@@ -34,6 +35,8 @@ namespace PeachPDF.Adapters
     /// </summary>
     internal sealed class PdfSharpAdapter : RAdapter
     {
+        private readonly FontCollection _fontCollection;
+
         /// <summary>
         /// Init color resolve.
         /// </summary>
@@ -45,13 +48,13 @@ namespace PeachPDF.Adapters
             AddFontFamilyMapping("Helvetica", "Arial");
 
             var fonts = FontResolver.SupportedFonts;
-            
-            var fontCollection = new FontCollection();
-            fontCollection.AddSystemFonts();
+
+            _fontCollection = new FontCollection();
+            _fontCollection.AddSystemFonts();
 
             foreach(var fontPath in fonts)
             {
-                var font = fontCollection.Add(fontPath);
+                var font = _fontCollection.Add(fontPath);
                 AddFontFamily(new FontFamilyAdapter(new XFontFamily(font.Name)));
             }
         }
@@ -79,6 +82,21 @@ namespace PeachPDF.Adapters
         public override string GetCssMediaType(IEnumerable<string> mediaTypesAvailable)
         {
             return mediaTypesAvailable.Contains("print") ? "print" : "all";
+        }
+
+        public void AddFont(Stream stream)
+        {
+            var memoryStream = new MemoryStream();
+            stream.CopyTo(memoryStream);
+
+            memoryStream.Seek(0, SeekOrigin.Begin);
+
+            var font = _fontCollection.Add(memoryStream);
+            AddFontFamily(new FontFamilyAdapter(new XFontFamily(font.Name)));
+
+            memoryStream.Seek(0, SeekOrigin.Begin);
+
+            FontResolver.AddFont(memoryStream);
         }
 
         protected override RColor GetColorInt(string colorName)

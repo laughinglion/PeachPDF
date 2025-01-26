@@ -12,15 +12,14 @@
 
 using PeachPDF.Adapters;
 using PeachPDF.Html.Core;
-using PeachPDF.Html.Core.Entities;
 using PeachPDF.Html.Core.Utils;
+using PeachPDF.Network;
 using PeachPDF.PdfSharpCore;
 using PeachPDF.PdfSharpCore.Drawing;
 using PeachPDF.PdfSharpCore.Pdf;
-using System;
-using System.Threading.Tasks;
-using PeachPDF.Network;
 using PeachPDF.PdfSharpCore.Pdf.Advanced;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace PeachPDF
 {
@@ -47,6 +46,15 @@ namespace PeachPDF
             ArgChecker.AssertArgNotNullOrEmpty(toFamily, "toFamily");
 
             _pdfSharpAdapter.AddFontFamilyMapping(fromFamily, toFamily);
+        }
+
+        /// <summary>
+        /// Add a font to be rendered
+        /// </summary>
+        /// <param name="stream">Font stream</param>
+        public void AddFontFromStream(Stream stream)
+        {
+            _pdfSharpAdapter.AddFont(stream);
         }
 
         /// <summary>

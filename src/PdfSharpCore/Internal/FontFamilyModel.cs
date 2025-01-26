@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
-using PeachPDF.PdfSharpCore.Drawing;
+﻿using PeachPDF.PdfSharpCore.Drawing;
+using SixLabors.Fonts;
+using System.Collections.Generic;
 
 namespace PeachPDF.PdfSharpCore.Internal
 {
@@ -7,7 +8,7 @@ namespace PeachPDF.PdfSharpCore.Internal
     {
         public string Name { get; set; }
 
-        public Dictionary<XFontStyle, string> FontFiles = new Dictionary<XFontStyle, string>();
+        public Dictionary<XFontStyle, FontDescription> FontFiles = new();
 
         public bool IsStyleAvailable(XFontStyle fontStyle)
         {

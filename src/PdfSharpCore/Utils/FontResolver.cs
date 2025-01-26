@@ -1,9 +1,12 @@
 ﻿
+using System;
 using System.Linq;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Collections.Generic;
-
+using System.Globalization;
+using System.IO;
+using System.Reflection;
 using PeachPDF.PdfSharpCore.Internal;
 using PeachPDF.PdfSharpCore.Drawing;
 using PeachPDF.PdfSharpCore.Fonts;
@@ -15,14 +18,15 @@ namespace PeachPDF.PdfSharpCore.Utils
 {
 
 
-    public class FontResolver 
-        : IFontResolver
+    public class FontResolver : IFontResolver
     {
         public string DefaultFontName => "Arial";
 
-        private static readonly Dictionary<string, FontFamilyModel> InstalledFonts = new Dictionary<string, FontFamilyModel>();
+        private static readonly Dictionary<string, FontFamilyModel> InstalledFonts = new();
 
         private static readonly string[] SSupportedFonts;
+        private static readonly Dictionary<string, byte[]> _CustomFonts = new();
+        private static readonly Dictionary<string, string> _SystemFontPaths = new();
 
         public static string[] SupportedFonts => SSupportedFonts;
 
@@ -74,13 +78,10 @@ namespace PeachPDF.PdfSharpCore.Utils
 
         private readonly struct FontFileInfo
         {
-            private FontFileInfo(string path, FontDescription fontDescription)
+            private FontFileInfo(FontDescription fontDescription)
             {
-                this.Path = path;
                 this.FontDescription = fontDescription;
             }
-
-            public string Path { get; }
 
             public FontDescription FontDescription { get; }
 
@@ -89,37 +90,71 @@ namespace PeachPDF.PdfSharpCore.Utils
 
             public XFontStyle GuessFontStyle()
             {
-                switch (this.FontDescription.Style)
+                return this.FontDescription.Style switch
                 {
-                    case FontStyle.Bold:
-                        return XFontStyle.Bold;
-                    case FontStyle.Italic:
-                        return XFontStyle.Italic;
-                    case FontStyle.BoldItalic:
-                        return XFontStyle.BoldItalic;
-                    default:
-                        return XFontStyle.Regular;
-                }
+                    FontStyle.Bold => XFontStyle.Bold,
+                    FontStyle.Italic => XFontStyle.Italic,
+                    FontStyle.BoldItalic => XFontStyle.BoldItalic,
+                    _ => XFontStyle.Regular
+                };
             }
 
             public static FontFileInfo Load(string path)
             {
-                FontDescription fontDescription = FontDescription.LoadDescription(path);
-                return new FontFileInfo(path, fontDescription);
+                var fontDescription = FontDescription.LoadDescription(path);
+                return new FontFileInfo(fontDescription);
+            }
+
+            public static FontFileInfo Load(Stream stream)
+            {
+                var memoryStream = new MemoryStream();
+                stream.CopyTo(memoryStream);
+
+                var fontBytes = memoryStream.ToArray();
+                memoryStream.Seek(0, SeekOrigin.Begin);
+
+                var fontDescription = FontDescription.LoadDescription(memoryStream);
+                return new FontFileInfo(fontDescription);
             }
         }
 
 
+        public static void AddFont(Stream stream)
+        {
+            var memoryStream = new MemoryStream();
+            stream.CopyTo(memoryStream);
+
+            var fontBytes = memoryStream.ToArray();
+            memoryStream.Seek(0, SeekOrigin.Begin);
+
+            var fontFileInfo = FontFileInfo.Load(memoryStream);
+            var familyName = fontFileInfo.FamilyName;
+
+            if (InstalledFonts.TryGetValue(familyName.ToLower(), out var family))
+            {
+                family.FontFiles[fontFileInfo.GuessFontStyle()] = fontFileInfo.FontDescription;
+            }
+            else
+            {
+                var fontFamilyModel = DeserializeFontFamily(familyName.ToLower(), [fontFileInfo]);
+                InstalledFonts.Add(familyName.ToLower(), fontFamilyModel);
+            }
+
+            _CustomFonts[fontFileInfo.FontDescription.FontNameInvariantCulture] = fontBytes;
+        }
+
         public static void SetupFontsFiles(string[] sSupportedFonts)
         {
-            List<FontFileInfo> tempFontInfoList = new List<FontFileInfo>();
-            foreach (string fontPathFile in sSupportedFonts)
+            var tempFontInfoList = new List<FontFileInfo>();
+
+            foreach (var fontPathFile in sSupportedFonts)
             {
                 try
                 {
-                    FontFileInfo fontInfo = FontFileInfo.Load(fontPathFile);
+                    var fontInfo = FontFileInfo.Load(fontPathFile);
                     Debug.WriteLine(fontPathFile);
                     tempFontInfoList.Add(fontInfo);
+                    _SystemFontPaths.Add(fontInfo.FontDescription.FontNameInvariantCulture, fontPathFile);
                 }
                 catch (System.Exception e)
                 {
@@ -130,11 +165,11 @@ namespace PeachPDF.PdfSharpCore.Utils
             }
 
             // Deserialize all font families
-            foreach (IGrouping<string, FontFileInfo> familyGroup in tempFontInfoList.GroupBy(info => info.FamilyName))
+            foreach (var familyGroup in tempFontInfoList.GroupBy(info => info.FamilyName))
                 try
                 {
-                    string familyName = familyGroup.Key;
-                    FontFamilyModel family = DeserializeFontFamily(familyName, familyGroup);
+                    var familyName = familyGroup.Key;
+                    var family = DeserializeFontFamily(familyName, familyGroup);
                     InstalledFonts.Add(familyName.ToLower(), family);
                 }
                 catch (System.Exception e)
@@ -149,48 +184,37 @@ namespace PeachPDF.PdfSharpCore.Utils
         [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         private static FontFamilyModel DeserializeFontFamily(string fontFamilyName, IEnumerable<FontFileInfo> fontList)
         {
-            FontFamilyModel font = new FontFamilyModel { Name = fontFamilyName };
+            var font = new FontFamilyModel { Name = fontFamilyName };
 
             // there is only one font
             if (fontList.Count() == 1)
-                font.FontFiles.Add(XFontStyle.Regular, fontList.First().Path);
+                font.FontFiles.Add(XFontStyle.Regular, fontList.First().FontDescription);
             else
             {
-                foreach (FontFileInfo info in fontList)
+                foreach (var info in fontList)
                 {
-                    XFontStyle style = info.GuessFontStyle();
+                    var style = info.GuessFontStyle();
                     if (!font.FontFiles.ContainsKey(style))
-                        font.FontFiles.Add(style, info.Path);
+                        font.FontFiles.Add(style, info.FontDescription);
                 }
             }
 
             return font;
         }
 
-        public virtual byte[] GetFont(string faceFileName)
+        public virtual byte[] GetFont(string fontFaceName)
         {
-            using (System.IO.MemoryStream ms = new System.IO.MemoryStream())
+            if (_CustomFonts.TryGetValue(fontFaceName, out var fontBytes))
             {
-                string ttfPathFile = "";
-                try
-                {
-                    ttfPathFile = SSupportedFonts.ToList().First(x => x.ToLower().Contains(
-                        System.IO.Path.GetFileName(faceFileName).ToLower())
-                    );
-
-                    using (System.IO.Stream ttf = System.IO.File.OpenRead(ttfPathFile))
-                    {
-                        ttf.CopyTo(ms);
-                        ms.Position = 0;
-                        return ms.ToArray();
-                    }
-                }
-                catch (System.Exception e)
-                {
-                    System.Console.WriteLine(e);
-                    throw new System.Exception("No Font File Found - " + faceFileName + " - " + ttfPathFile);
-                }
+                return fontBytes;
             }
+
+            if (_SystemFontPaths.TryGetValue(fontFaceName, out var fontPath))
+            {
+                return File.ReadAllBytes(fontPath);
+            }
+
+            throw new ArgumentOutOfRangeException(nameof(fontFaceName), "Unknown Font Face Name");
         }
 
         public bool NullIfFontNotFound { get; set; } = false;
@@ -200,35 +224,41 @@ namespace PeachPDF.PdfSharpCore.Utils
             if (InstalledFonts.Count == 0)
                 throw new System.IO.FileNotFoundException("No Fonts installed on this device!");
 
-            if (InstalledFonts.TryGetValue(familyName.ToLower(), out FontFamilyModel family))
+            if (InstalledFonts.TryGetValue(familyName.ToLower(), out var family))
             {
-                if (isBold && isItalic)
+                switch (isBold)
                 {
-                    if (family.FontFiles.TryGetValue(XFontStyle.BoldItalic, out string boldItalicFile))
-                        return new FontResolverInfo(System.IO.Path.GetFileName(boldItalicFile));
-                }
-                else if (isBold)
-                {
-                    if (family.FontFiles.TryGetValue(XFontStyle.Bold, out string boldFile))
-                        return new FontResolverInfo(System.IO.Path.GetFileName(boldFile));
-                }
-                else if (isItalic)
-                {
-                    if (family.FontFiles.TryGetValue(XFontStyle.Italic, out string italicFile))
-                        return new FontResolverInfo(System.IO.Path.GetFileName(italicFile));
+                    case true when isItalic && family.FontFiles.TryGetValue(XFontStyle.BoldItalic, out var boldItalicFile):
+                        return new FontResolverInfo(boldItalicFile.FontNameInvariantCulture);
+                    case true:
+                    {
+                        if (family.FontFiles.TryGetValue(XFontStyle.Bold, out var boldFile))
+                            return new FontResolverInfo(boldFile.FontNameInvariantCulture);
+                        break;
+                    }
+                    default:
+                    {
+                        if (isItalic)
+                        {
+                            if (family.FontFiles.TryGetValue(XFontStyle.Italic, out var italicFile))
+                                return new FontResolverInfo(italicFile.FontNameInvariantCulture);
+                        }
+
+                        break;
+                    }
                 }
 
-                if (family.FontFiles.TryGetValue(XFontStyle.Regular, out string regularFile))
-                    return new FontResolverInfo(System.IO.Path.GetFileName(regularFile));
+                if (family.FontFiles.TryGetValue(XFontStyle.Regular, out var regularFile))
+                    return new FontResolverInfo(regularFile.FontNameInvariantCulture);
 
-                return new FontResolverInfo(System.IO.Path.GetFileName(family.FontFiles.First().Value));
+                return new FontResolverInfo(family.FontFiles.First().Value.FontNameInvariantCulture);
             }
 
             if (NullIfFontNotFound)
                 return null;
 
-            string ttfFile = InstalledFonts.First().Value.FontFiles.First().Value;
-            return new FontResolverInfo(System.IO.Path.GetFileName(ttfFile));
+            var description = InstalledFonts.First().Value.FontFiles.First().Value;
+            return new FontResolverInfo(description.FontNameInvariantCulture);
         }
     }
 }
