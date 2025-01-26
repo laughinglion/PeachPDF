@@ -2,7 +2,7 @@
 using PeachPDF;
 using PeachPDF.PdfSharpCore;
 
-var html = File.ReadAllText("acid2.html");
+var html = File.ReadAllText("rfc2324.html");
 
 PdfGenerateConfig pdfConfig = new()
 {
@@ -10,10 +10,16 @@ PdfGenerateConfig pdfConfig = new()
     PageOrientation = PageOrientation.Portrait
 };
 
+var fontStream = File.OpenRead("LiberationMono-Regular.ttf");
+
 var stream = new MemoryStream();
 
-var document = PdfGenerator.GeneratePdf(html, pdfConfig);
+PdfGenerator generator = new();
+generator.AddFontFromStream(fontStream);
+generator.AddFontFamilyMapping("monospace","Liberation Mono");
+
+var document = await generator.GeneratePdf(html, pdfConfig);
 document.Save(stream);
 
-File.Delete("acid2.pdf");
-File.WriteAllBytes("acid2.pdf", stream.ToArray());
+File.Delete("rfc2324.pdf");
+File.WriteAllBytes("rfc2324.pdf", stream.ToArray());
