@@ -258,14 +258,9 @@ namespace PeachPDF.Html.Core.Dom
         internal List<CssLineBox> LineBoxes { get; } = [];
 
         /// <summary>
-        /// Gets the linebox(es) that contains words of this box (if inline)
-        /// </summary>
-        internal List<CssLineBox> ParentLineBoxes { get; } = [];
-
-        /// <summary>
         /// Gets the rectangles where this box should be painted
         /// </summary>
-        internal Dictionary<CssLineBox, RRect> Rectangles { get; } = new();
+        internal Dictionary<CssLineBox, RRect> Rectangles { get; } = [];
 
         /// <summary>
         /// Gets the BoxWords of text in the box
@@ -339,9 +334,10 @@ namespace PeachPDF.Html.Core.Dom
         /// <returns>the new block box</returns>
         public static CssBox CreateBlock()
         {
-            var box = new CssBox(null, null);
-            box.Display = CssConstants.Block;
-            return box;
+            return new CssBox(null, null)
+            {
+                Display = CssConstants.Block
+            };
         }
 
         /// <summary>
@@ -389,7 +385,7 @@ namespace PeachPDF.Html.Core.Dom
         /// Paints the fragment
         /// </summary>
         /// <param name="g">Device context to use</param>
-        public void Paint(RGraphics g)
+        public async ValueTask Paint(RGraphics g)
         {
             try
             {
@@ -421,7 +417,7 @@ namespace PeachPDF.Html.Core.Dom
                 }
 
                 if (visible)
-                    PaintImp(g);
+                    await PaintImp(g);
 
                 // Restore clips
                 if (this.Position == CssConstants.Fixed)
@@ -712,7 +708,7 @@ namespace PeachPDF.Html.Core.Dom
             if (BackgroundImage != CssConstants.None && _imageLoadHandler == null)
             {
                 _imageLoadHandler = new ImageLoadHandler(HtmlContainer);
-                await _imageLoadHandler.LoadImage(BackgroundImage, HtmlTag?.Attributes);
+                await _imageLoadHandler.LoadImage(BackgroundImage);
             }
 
             MeasureWordSpacing(g);
@@ -829,37 +825,37 @@ namespace PeachPDF.Html.Core.Dom
         /// <param name="b"></param>
         /// <param name="line"> </param>
         /// <returns></returns>
-        internal CssRect FirstWordOccurence(CssBox b, CssLineBox line)
+        internal static CssRect FirstWordOccurence(CssBox b, CssLineBox line)
         {
-            if (b.Words.Count == 0 && b.Boxes.Count == 0)
+            switch (b.Words.Count)
             {
-                return null;
-            }
-
-            if (b.Words.Count > 0)
-            {
-                foreach (CssRect word in b.Words)
+                case 0 when b.Boxes.Count == 0:
+                    return null;
+                case > 0:
                 {
-                    if (line.Words.Contains(word))
+                    foreach (CssRect word in b.Words)
                     {
-                        return word;
+                        if (line.Words.Contains(word))
+                        {
+                            return word;
+                        }
                     }
+                    return null;
                 }
-                return null;
-            }
-            else
-            {
-                foreach (CssBox bb in b.Boxes)
+                default:
                 {
-                    CssRect w = FirstWordOccurence(bb, line);
-
-                    if (w != null)
+                    foreach (CssBox bb in b.Boxes)
                     {
-                        return w;
-                    }
-                }
+                        CssRect w = FirstWordOccurence(bb, line);
 
-                return null;
+                        if (w != null)
+                        {
+                            return w;
+                        }
+                    }
+
+                    return null;
+                }
             }
         }
 
@@ -962,7 +958,7 @@ namespace PeachPDF.Html.Core.Dom
         /// <param name="startBox"></param>
         /// <param name="currentMaxBottom"></param>
         /// <returns></returns>
-        internal double GetMaximumBottom(CssBox startBox, double currentMaxBottom)
+        internal static double GetMaximumBottom(CssBox startBox, double currentMaxBottom)
         {
             foreach (var line in startBox.Rectangles.Keys)
             {
@@ -1222,10 +1218,10 @@ namespace PeachPDF.Html.Core.Dom
         /// Paints the fragment
         /// </summary>
         /// <param name="g">the device to draw to</param>
-        protected virtual ValueTask PaintImp(RGraphics g)
+        protected virtual async ValueTask PaintImp(RGraphics g)
         {
             if (Display == CssConstants.None ||
-                (Display == CssConstants.TableCell && EmptyCells == CssConstants.Hide && IsSpaceOrEmpty)) return ValueTask.CompletedTask;
+                (Display == CssConstants.TableCell && EmptyCells == CssConstants.Hide && IsSpaceOrEmpty)) return;
 
             var clipped = RenderUtils.ClipGraphicsByOverflow(g, this);
 
@@ -1246,7 +1242,7 @@ namespace PeachPDF.Html.Core.Dom
 
                 if (!IsRectVisible(actualRect, clip)) continue;
 
-                PaintBackground(g, actualRect, i == 0, i == rects.Length - 1);
+                PaintBackground(g, actualRect, i == 0);
                 BordersDrawHandler.DrawBoxBorders(g, this, actualRect, i == 0, i == rects.Length - 1);
             }
 
@@ -1267,39 +1263,37 @@ namespace PeachPDF.Html.Core.Dom
             foreach (var b in Boxes)
             {
                 if (b.Position != CssConstants.Absolute && !b.IsFixed)
-                    b.Paint(g);
+                    await b.Paint(g);
             }
 
             foreach (var b in Boxes)
             {
                 if (b.Position == CssConstants.Absolute)
-                    b.Paint(g);
+                    await b.Paint(g);
             }
 
             foreach (var b in Boxes)
             {
                 if (b.IsFixed)
-                    b.Paint(g);
+                    await b.Paint(g);
             }
 
             if (clipped)
                 g.PopClip();
 
-            _listItemBox?.Paint(g);
-
-            return ValueTask.CompletedTask;
+            if (_listItemBox is not null)
+            {
+                await _listItemBox.Paint(g);
+            }
         }
 
-        private bool IsRectVisible(RRect rect, RRect clip)
+        private static bool IsRectVisible(RRect rect, RRect clip)
         {
             rect.X -= 2;
             rect.Width += 2;
             clip.Intersect(rect);
 
-            if (clip != RRect.Empty)
-                return true;
-
-            return false;
+            return clip != RRect.Empty;
         }
 
         /// <summary>
@@ -1308,8 +1302,7 @@ namespace PeachPDF.Html.Core.Dom
         /// <param name="g">the device to draw into</param>
         /// <param name="rect">the bounding rectangle to draw in</param>
         /// <param name="isFirst">is it the first rectangle of the element</param>
-        /// <param name="isLast">is it the last rectangle of the element</param>
-        protected void PaintBackground(RGraphics g, RRect rect, bool isFirst, bool isLast)
+        protected void PaintBackground(RGraphics g, RRect rect, bool isFirst)
         {
             if (rect is { Width: > 0, Height: > 0 })
             {

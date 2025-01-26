@@ -110,7 +110,7 @@ namespace PeachPDF.Html.Core.Parse
                     CloneCssData(ref cssData, ref cssDataChanged);
                     var stylesheet = await StylesheetLoadHandler.LoadStylesheet(htmlContainer, box.GetAttribute("href", string.Empty), box.HtmlTag.Attributes);
                     if (stylesheet != null)
-                        _cssParser.ParseStyleSheet(cssData, stylesheet);
+                        await _cssParser.ParseStyleSheet(cssData, stylesheet);
                 }
 
                 // Check for the <style> tag
@@ -118,7 +118,7 @@ namespace PeachPDF.Html.Core.Parse
                 {
                     CloneCssData(ref cssData, ref cssDataChanged);
                     foreach (var child in box.Boxes)
-                        _cssParser.ParseStyleSheet(cssData, child.Text);
+                        await _cssParser.ParseStyleSheet(cssData, child.Text);
                 }
             }
 
@@ -141,7 +141,7 @@ namespace PeachPDF.Html.Core.Parse
         /// <param name="box">the box to apply the style to</param>
         /// <param name="cssData">the style data for the html</param>
         /// <param name="media">The media type to apply styles to</param>
-        private void CascadeApplyStyles(CssValueParser valueParser, CssBox box, CssData cssData, string media)
+        private static void CascadeApplyStyles(CssValueParser valueParser, CssBox box, CssData cssData, string media)
         {
             // Set initial styles
             foreach (var style in CssDefaults.InitialValues)
@@ -164,9 +164,8 @@ namespace PeachPDF.Html.Core.Parse
                     var styleAttributeText = box.HtmlTag.TryGetAttribute("style");
                     var stylesheet = "* { " + styleAttributeText + " }";
 
-                    var block = _cssParser.ParseStyleSheet(stylesheet);
-                    if (block is not null)
-                        AssignCssBlock(valueParser, box, block.StyleRules.Single(), media);
+                    var block = CssParser.ParseStyleSheet(stylesheet);
+                    AssignCssBlock(valueParser, box, block.StyleRules.Single());
                 }
             }
 
@@ -200,7 +199,7 @@ namespace PeachPDF.Html.Core.Parse
         /// <param name="box">the css box to assign css to</param>
         /// <param name="cssData">the css data to use to get the matching css blocks</param>
         /// <param name="media">The media type to apply styles for</param>
-        private void AssignCssBlocks(CssValueParser valueParser, CssBox box, CssData cssData,string media)
+        private static void AssignCssBlocks(CssValueParser valueParser, CssBox box, CssData cssData,string media)
         {
             var combinedBlocks = new List<IStyleRule>();
             var styleRules = cssData.GetStyleRules(media, box);
@@ -208,7 +207,7 @@ namespace PeachPDF.Html.Core.Parse
 
             foreach (var block in combinedBlocks)
             {
-                AssignCssBlock(valueParser, box, block, media);
+                AssignCssBlock(valueParser, box, block);
             }
         }
 
@@ -218,7 +217,7 @@ namespace PeachPDF.Html.Core.Parse
         /// <param name="valueParser">the css value parser to use</param>
         /// <param name="box">the css box to assign css to</param>
         /// <param name="stylesheetRule">the stylesheet rule to assign</param>
-        private void AssignCssBlock(CssValueParser valueParser, CssBox box, IStyleRule stylesheetRule, string media)
+        private static void AssignCssBlock(CssValueParser valueParser, CssBox box, IStyleRule stylesheetRule)
         {
             foreach (var prop in stylesheetRule.Style)
             {
@@ -285,7 +284,7 @@ namespace PeachPDF.Html.Core.Parse
         /// </summary>
         /// <param name="tag"></param>
         /// <param name="box"></param>
-        private void TranslateAttributes(HtmlTag tag, CssBox box)
+        private static void TranslateAttributes(HtmlTag tag, CssBox box)
         {
             if (!tag.HasAttributes()) return;
 
@@ -340,7 +339,6 @@ namespace PeachPDF.Html.Core.Parse
                     case HtmlConstants.Face:
                         //box.FontFamily = _cssParser.ParseFontFamily(value);
                         throw new NotImplementedException();
-                        break;
                     case HtmlConstants.Height:
                         box.Height = TranslateLength(value);
                         break;

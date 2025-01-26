@@ -53,20 +53,6 @@ namespace PeachPDF
         internal HtmlContainerInt HtmlContainerInt => _htmlContainerInt;
 
         /// <summary>
-        /// the parsed stylesheet data used for handling the html
-        /// </summary>
-        public CssData CssData => _htmlContainerInt.CssData;
-
-        /// <summary>
-        /// Gets or sets a value indicating if anti-aliasing should be avoided for geometry like backgrounds and borders (default - false).
-        /// </summary>
-        public bool AvoidGeometryAntialias
-        {
-            get => _htmlContainerInt.AvoidGeometryAntialias;
-            set => _htmlContainerInt.AvoidGeometryAntialias = value;
-        }
-
-        /// <summary>
         /// The scroll offset of the html.<br/>
         /// This will adjust the rendered html by the given offset so the content will be "scrolled".<br/>
         /// </summary>
@@ -170,16 +156,6 @@ namespace PeachPDF
         }
 
         /// <summary>
-        /// Set all 4 margins to the given value.
-        /// </summary>
-        /// <param name="value"></param>
-        public void SetMargins(int value)
-        {
-            if (value > -1)
-                _htmlContainerInt.SetMargins(value);
-        }
-
-        /// <summary>
         /// Init with optional document and stylesheet.
         /// </summary>
         /// <param name="htmlSource">the html to init with, init empty if not given</param>
@@ -187,28 +163,6 @@ namespace PeachPDF
         public async Task SetHtml(string htmlSource, CssData baseCssData = null)
         {
             await _htmlContainerInt.SetHtml(htmlSource, baseCssData);
-        }
-
-        /// <summary>
-        /// Get html from the current DOM tree with style if requested.
-        /// </summary>
-        /// <param name="styleGen">Optional: controls the way styles are generated when html is generated (default: <see cref="HtmlGenerationStyle.Inline"/>)</param>
-        /// <returns>generated html</returns>
-        public string GetHtml(HtmlGenerationStyle styleGen = HtmlGenerationStyle.Inline)
-        {
-            return _htmlContainerInt.GetHtml(styleGen);
-        }
-
-        /// <summary>
-        /// Get attribute value of element at the given x,y location by given key.<br/>
-        /// If more than one element exist with the attribute at the location the inner most is returned.
-        /// </summary>
-        /// <param name="location">the location to find the attribute at</param>
-        /// <param name="attribute">the attribute key to get value by</param>
-        /// <returns>found attribute value or null if not found</returns>
-        public string GetAttributeAt(XPoint location, string attribute)
-        {
-            return _htmlContainerInt.GetAttributeAt(Utils.Convert(location), attribute);
         }
 
         /// <summary>

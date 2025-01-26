@@ -22,11 +22,11 @@ namespace PeachPDF.PdfSharpCore.Utils
     {
         public string DefaultFontName => "Arial";
 
-        private static readonly Dictionary<string, FontFamilyModel> InstalledFonts = new();
+        private static readonly Dictionary<string, FontFamilyModel> InstalledFonts = [];
 
         private static readonly string[] SSupportedFonts;
-        private static readonly Dictionary<string, byte[]> _CustomFonts = new();
-        private static readonly Dictionary<string, string> _SystemFontPaths = new();
+        private static readonly Dictionary<string, byte[]> _CustomFonts = [];
+        private static readonly Dictionary<string, string> _SystemFontPaths = [];
 
         public static string[] SupportedFonts => SSupportedFonts;
 
@@ -57,13 +57,13 @@ namespace PeachPDF.PdfSharpCore.Utils
                 fontDir = System.Environment.ExpandEnvironmentVariables(@"%SystemRoot%\Fonts");
                 var fontPaths = new List<string>();
 
-                var systemFontPaths = System.IO.Directory.GetFiles(fontDir, "*.ttf", System.IO.SearchOption.AllDirectories);
+                var systemFontPaths = System.IO.Directory.GetFiles(fontDir, "*.ttf", SearchOption.AllDirectories);
                 fontPaths.AddRange(systemFontPaths);
 
                 var appdataFontDir = System.Environment.ExpandEnvironmentVariables(@"%LOCALAPPDATA%\Microsoft\Windows\Fonts");
                 if(System.IO.Directory.Exists(appdataFontDir))
                 {
-                    var appdataFontPaths = System.IO.Directory.GetFiles(appdataFontDir, "*.ttf", System.IO.SearchOption.AllDirectories);
+                    var appdataFontPaths = System.IO.Directory.GetFiles(appdataFontDir, "*.ttf", SearchOption.AllDirectories);
                     fontPaths.AddRange(appdataFontPaths);
                 }
 
@@ -107,13 +107,7 @@ namespace PeachPDF.PdfSharpCore.Utils
 
             public static FontFileInfo Load(Stream stream)
             {
-                var memoryStream = new MemoryStream();
-                stream.CopyTo(memoryStream);
-
-                var fontBytes = memoryStream.ToArray();
-                memoryStream.Seek(0, SeekOrigin.Begin);
-
-                var fontDescription = FontDescription.LoadDescription(memoryStream);
+                var fontDescription = FontDescription.LoadDescription(stream);
                 return new FontFileInfo(fontDescription);
             }
         }

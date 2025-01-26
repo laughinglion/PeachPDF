@@ -107,6 +107,15 @@ namespace PeachPDF.Html.Core.Parse
             }
             else if (!string.IsNullOrEmpty(tagName))
             {
+                // Close <p> tags per https://html.spec.whatwg.org/dev/grouping-content.html#the-p-element
+                if (curBox.HtmlTag?.Name is "p")
+                {
+                    if (HtmlUtils.ShouldTagCloseParagraph(tagName))
+                    {
+                        curBox = DomUtils.FindParent(curBox.ParentBox, tagName, curBox);
+                    }
+                }
+
                 var isSingle = HtmlUtils.IsSingleTag(tagName) || token.IsEmptyElement;
                 var tag = new HtmlTag(tagName, isSingle, tagAttributes);
 

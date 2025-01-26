@@ -10,10 +10,15 @@
 // - Sun Tsu,
 // "The Art of War"
 
+#nullable enable
+
 using ExCSS;
 using PeachPDF.Html.Adapters;
 using PeachPDF.Html.Adapters.Entities;
+using PeachPDF.Html.Core.Handlers;
 using PeachPDF.Html.Core.Utils;
+using System.Threading.Tasks;
+using PeachPDF.Html.Core.Entities;
 
 namespace PeachPDF.Html.Core.Parse
 {
@@ -34,21 +39,22 @@ namespace PeachPDF.Html.Core.Parse
         /// </summary>
         private readonly CssValueParser _valueParser;
 
+        private readonly HtmlContainerInt? _htmlContainer;
+
         #endregion
 
 
         /// <summary>
         /// Init.
         /// </summary>
-        public CssParser(RAdapter adapter)
+        public CssParser(RAdapter adapter, HtmlContainerInt? htmlContainer)
         {
             ArgChecker.AssertArgNotNull(adapter, "global");
 
             _valueParser = new CssValueParser(adapter);
             _adapter = adapter;
+            _htmlContainer = htmlContainer;
         }
-
-        public CssData DefaultCssData => _adapter.DefaultCssData.Clone();
 
         /// <summary>
         /// Parse the given stylesheet source to CSS blocks dictionary.<br/>
@@ -61,19 +67,19 @@ namespace PeachPDF.Html.Core.Parse
         /// <param name="stylesheet">raw css stylesheet to parse</param>
         /// <param name="combineWithDefault">true - combine the parsed css data with default css data, false - return only the parsed css data</param>
         /// <returns>the CSS data with parsed CSS objects (never null)</returns>
-        public CssData ParseStyleSheet(string stylesheet, bool combineWithDefault)
+        public async Task<CssData> ParseStyleSheet(string stylesheet, bool combineWithDefault)
         {
-            var cssData = combineWithDefault ? DefaultCssData : new CssData();
+            var cssData = combineWithDefault ? await _adapter.GetDefaultCssData() : new CssData();
             
             if (!string.IsNullOrEmpty(stylesheet))
             {
-                ParseStyleSheet(cssData, stylesheet);
+                await ParseStyleSheet(cssData, stylesheet);
             }
 
             return cssData;
         }
 
-        public Stylesheet ParseStyleSheet(string stylesheet)
+        public static Stylesheet ParseStyleSheet(string stylesheet)
         {
             StylesheetParser parser = new();
             return parser.Parse(stylesheet);
@@ -87,11 +93,11 @@ namespace PeachPDF.Html.Core.Parse
         /// </summary>
         /// <param name="cssData">the CSS data to fill with parsed CSS objects</param>
         /// <param name="stylesheet">raw css stylesheet to parse</param>
-        public void ParseStyleSheet(CssData cssData, string stylesheet)
+        public async Task ParseStyleSheet(CssData cssData, string stylesheet)
         {
             if (!string.IsNullOrEmpty(stylesheet))
             {
-                ParseExCssStyle(cssData, stylesheet);
+                await ParseExCssStyle(cssData, stylesheet);
             }
         }
 
@@ -110,10 +116,32 @@ namespace PeachPDF.Html.Core.Parse
             return _valueParser.IsColorValid(colorValue);
         }
 
-        private static void ParseExCssStyle(CssData data, string stylesheetText)
+        private async Task ParseExCssStyle(CssData data, string stylesheetText)
         {
-            StylesheetParser parser = new();
-            var stylesheet = parser.Parse(stylesheetText);
+            var stylesheet = ParseStyleSheet(stylesheetText);
+
+            var hasReachedNonImportRules = false;
+
+            foreach (var rule in stylesheet.Children)
+            {
+                if (rule is IImportRule importRule && !hasReachedNonImportRules)
+                {
+                    if (importRule.Href == null) continue;
+
+                    if (_htmlContainer is null)
+                    {
+                        throw new HtmlRenderException("Cannot import stylesheet without html container", HtmlRenderErrorType.CssParsing);
+                    }
+
+                    var importedStylesheet = await StylesheetLoadHandler.LoadStylesheet(_htmlContainer, importRule.Href, []);
+                    await ParseExCssStyle(data, importedStylesheet);
+                }
+                else
+                {
+                    hasReachedNonImportRules = true;
+                }
+            }
+
             data.Stylesheets.Add(stylesheet);
         }
     }

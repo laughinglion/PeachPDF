@@ -65,7 +65,7 @@ namespace PeachPDF.Adapters
 
         public override async Task<Stream?> GetResourceStream(Uri uri)
         {
-            if (uri.Scheme is not "data") return await NetworkLoader.GetResourceStream(uri);
+            if (!uri.IsAbsoluteUri || uri.Scheme is not "data") return await NetworkLoader.GetResourceStream(uri);
 
             if (NetworkLoader is DataUriNetworkLoader dataUriNetworkLoader)
             {

@@ -17,6 +17,7 @@ using PeachPDF.Html.Core.Parse;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace PeachPDF.Html.Core
 {
@@ -47,10 +48,10 @@ namespace PeachPDF.Html.Core
         /// <param name="stylesheet">the stylesheet source to parse</param>
         /// <param name="combineWithDefault">true - combine the parsed css data with default css data, false - return only the parsed css data</param>
         /// <returns>the parsed css data</returns>
-        public static CssData Parse(RAdapter adapter, string stylesheet, bool combineWithDefault = true)
+        public static async Task<CssData> Parse(RAdapter adapter, string stylesheet, bool combineWithDefault = true)
         {
-            var parser = new CssParser(adapter);
-            return parser.ParseStyleSheet(stylesheet, combineWithDefault);
+            var parser = new CssParser(adapter, null);
+            return await parser.ParseStyleSheet(stylesheet, combineWithDefault);
         }
 
         internal IEnumerable<IStyleRule> GetStyleRules(string media, CssBox box)
@@ -92,7 +93,7 @@ namespace PeachPDF.Html.Core
                 TypeSelector typeSelector => DoesSelectorMatch(typeSelector, box),
                 ComplexSelector complexSelector => DoesSelectorMatch(complexSelector, box),
                 CompoundSelector compoundSelector => DoesSelectorMatch(compoundSelector, box),
-                PseudoElementSelector pseudoElementSelector => DoesSelectorMatch(pseudoElementSelector, box),
+                PseudoElementSelector => false,
                 PseudoClassSelector pseudoClassSelector => DoesSelectorMatch(pseudoClassSelector, box),
                 AttrMatchSelector attrMatchSelector => DoesSelectorMatch(attrMatchSelector, box),
                 ClassSelector classSelector => DoesSelectorMatch(classSelector, box),
@@ -210,12 +211,6 @@ namespace PeachPDF.Html.Core
                 }
             }
 
-            return false;
-        }
-
-        private static bool DoesSelectorMatch(PseudoElementSelector pseudoElementSelector, CssBox box)
-        {
-            // TODO: implement this
             return false;
         }
 

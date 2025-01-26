@@ -66,9 +66,9 @@ namespace PeachPDF
         /// <param name="stylesheet">the stylesheet source to parse</param>
         /// <param name="combineWithDefault">true - combine the parsed css data with default css data, false - return only the parsed css data</param>
         /// <returns>the parsed css data</returns>
-        public CssData ParseStyleSheet(string stylesheet, bool combineWithDefault = true)
+        public async Task<CssData> ParseStyleSheet(string stylesheet, bool combineWithDefault = true)
         {
-            return CssData.Parse(_pdfSharpAdapter, stylesheet, combineWithDefault);
+            return await CssData.Parse(_pdfSharpAdapter, stylesheet, combineWithDefault);
         }
 
         /// <summary>
@@ -78,8 +78,6 @@ namespace PeachPDF
         /// <param name="pageSize">the page size to use for each page in the generated pdf </param>
         /// <param name="margin">the margin to use between the HTML and the edges of each page</param>
         /// <param name="cssData">optional: the style to use for html rendering (default - use W3 default style)</param>
-        /// <param name="stylesheetLoad">optional: can be used to overwrite stylesheet resolution logic</param>
-        /// <param name="imageLoad">optional: can be used to overwrite image resolution logic</param>
         /// <returns>the generated image of the html</returns>
         public async Task<PdfDocument> GeneratePdf(string html, PageSize pageSize, int margin = 20, CssData cssData = null)
         {

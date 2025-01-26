@@ -71,7 +71,7 @@ namespace PeachPDF.Html.Core.Dom
             if (_imageLoadHandler == null)
             {
                 _imageLoadHandler = new ImageLoadHandler(HtmlContainer);
-                await _imageLoadHandler.LoadImage(GetAttribute("src"), HtmlTag?.Attributes);
+                await _imageLoadHandler.LoadImage(GetAttribute("src"));
                 OnLoadImageComplete(_imageLoadHandler.Image);
             }
 
@@ -85,7 +85,7 @@ namespace PeachPDF.Html.Core.Dom
 
             var clipped = RenderUtils.ClipGraphicsByOverflow(g, this);
 
-            PaintBackground(g, rect, true, true);
+            PaintBackground(g, rect, true);
             BordersDrawHandler.DrawBoxBorders(g, this, rect, true, true);
 
             RRect r = _imageWord.Rectangle;
@@ -135,9 +135,9 @@ namespace PeachPDF.Html.Core.Dom
                     _imageLoadHandler = new ImageLoadHandler(HtmlContainer);
 
                     if (this.Content != null && this.Content != CssConstants.Normal)
-                        await _imageLoadHandler.LoadImage(this.Content, HtmlTag?.Attributes);
+                        await _imageLoadHandler.LoadImage(this.Content);
                     else
-                        await _imageLoadHandler.LoadImage(GetAttribute("src"), HtmlTag?.Attributes);
+                        await _imageLoadHandler.LoadImage(GetAttribute("src"));
 
                     OnLoadImageComplete(_imageLoadHandler.Image);
                 }

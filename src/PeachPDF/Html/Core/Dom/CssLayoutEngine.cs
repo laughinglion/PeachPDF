@@ -10,15 +10,16 @@
 // - Sun Tsu,
 // "The Art of War"
 
-using System;
-using System.Collections.Generic;
-using System.Data.Common;
-using System.Linq;
-using System.Threading.Tasks;
+#nullable enable
+
 using PeachPDF.Html.Adapters;
 using PeachPDF.Html.Adapters.Entities;
 using PeachPDF.Html.Core.Entities;
 using PeachPDF.Html.Core.Utils;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace PeachPDF.Html.Core.Dom
 {
@@ -155,10 +156,10 @@ namespace PeachPDF.Html.Core.Dom
             //Gets the rectangles for each line-box
             foreach (var lineBox in blockBox.LineBoxes)
             {
-                ApplyHorizontalAlignment(g, lineBox);
+                ApplyHorizontalAlignment(lineBox);
                 ApplyRightToLeft(blockBox, lineBox);
                 BubbleRectangles(blockBox, lineBox);
-                ApplyVerticalAlignment(g, lineBox);
+                ApplyVerticalAlignment(lineBox);
                 lineBox.AssignRectanglesToBoxes();
             }
 
@@ -185,7 +186,7 @@ namespace PeachPDF.Html.Core.Dom
                 return;
 
             var cellBottom = cell.ClientBottom;
-            var bottom = cell.GetMaximumBottom(cell, 0f);
+            var bottom = CssBox.GetMaximumBottom(cell, 0f);
 
             var dist = cell.VerticalAlign switch
             {
@@ -202,7 +203,7 @@ namespace PeachPDF.Html.Core.Dom
 
         public static void FloatBox(CssBox box)
         {
-            if (box.Float is CssConstants.None && box.Clear is CssConstants.None)
+            if (box is { Float: CssConstants.None, Clear: CssConstants.None })
             {
                 return;
             }
@@ -219,12 +220,12 @@ namespace PeachPDF.Html.Core.Dom
 
             if (box.Float is CssConstants.Left)
             {
-                FloatBoxLeft(box, startX, startY, limitRight, currentBoxIdx, containingBox);
+                FloatBoxLeft(box, startX, startY, limitRight);
             }
 
             if (box.Float is CssConstants.Right)
             {
-                FloatBoxRight(box, startX, startY, limitRight, currentBoxIdx, containingBox);
+                FloatBoxRight(box, startX, startY, limitRight);
             }
 
             if (box.Clear is not CssConstants.None)
@@ -290,83 +291,92 @@ namespace PeachPDF.Html.Core.Dom
             return clearance;
         }
 
-        private static void FloatBoxLeft(CssBox box, double startX, double startY, double limitRight, double currentBoxIdx, CssBox containingBox)
+        private static void FloatBoxLeft(CssBox box, double startX, double startY, double limitRight)
         {
-            var startPositionX = startX + box.ActualMarginLeft;
-            var startPositionY = startY;
-
-            var siblingMaxBottom = startPositionY;
-
-            for (var i = 0; i < currentBoxIdx; i++)
+            CssFloatCoordinates coordinates = new()
             {
-                var siblingBox = containingBox.Boxes[i];
+                Left = startX + box.ActualMarginLeft,
+                Right = limitRight,
+                Top = startY,
+                MaxBottom = startY,
+                MarginLeft = box.ActualMarginLeft,
+                MarginRight = box.ActualMarginRight,
+                ReferenceWidth = box.ActualBoxSizingWidth
+            };
 
-                if (!siblingBox.IsFloated) continue;
+            do
+            {
+                var intersectingFloat = DomUtils.GetFirstIntersectingFloatBox(box, coordinates, box.Float);
 
-                switch (siblingBox.Float)
+                if (intersectingFloat is null) break;
+
+                switch (intersectingFloat.Float)
                 {
                     case CssConstants.Left:
-                        startPositionX = siblingBox.ActualRight + box.ActualMarginLeft;
+                        coordinates.Left = intersectingFloat.ActualRight + intersectingFloat.ActualMarginRight + box.ActualMarginLeft;
                         break;
                     case CssConstants.Right:
-                        limitRight = siblingBox.Location.X;
+                        coordinates.Right = intersectingFloat.Location.X - intersectingFloat.ActualMarginLeft;
                         break;
                 }
 
-                if (siblingBox.ActualBottom > siblingMaxBottom)
+                if (intersectingFloat.ActualBottom > coordinates.MaxBottom)
                 {
-                    siblingMaxBottom = siblingBox.ActualBottom;
+                    coordinates.MaxBottom = intersectingFloat.ActualBottom;
                 }
 
-                if (startPositionX + box.ActualWidth > limitRight)
+                if (coordinates.Left + box.ActualWidth > coordinates.Right)
                 {
-                    startPositionY = siblingMaxBottom;
-                    startPositionX = startX + box.ActualMarginLeft;
+                    coordinates.Top = coordinates.MaxBottom + box.ActualMarginTop;
+                    coordinates.Left = startX + box.ActualMarginLeft;
                 }
-            }
+            } while (true);
 
-            box.Location = new RPoint(startPositionX, startPositionY);
+            box.Location = new RPoint(coordinates.Left, coordinates.Top);
+
         }
 
-        private static void FloatBoxRight(CssBox box, double startX, double startY, double limitRight, double currentBoxIdx, CssBox containingBox)
+        private static void FloatBoxRight(CssBox box, double startX, double startY, double limitRight)
         {
-            var limitLeft = startX;
-            var startPositionX = limitRight - box.ActualWidth - box.ActualMarginLeft;
-            var startPositionY = startY;
-
-            var siblingMaxBottom = startPositionY;
-
-            for (var i = 0; i < currentBoxIdx; i++)
+            CssFloatCoordinates coordinates = new()
             {
-                var siblingBox = containingBox.Boxes[i];
+                Left = startX,
+                Right = limitRight - box.ActualMarginRight,
+                Top = startY,
+                MaxBottom = startY,
+                MarginLeft = box.ActualMarginLeft,
+                MarginRight = box.ActualMarginRight,
+                ReferenceWidth = box.ActualBoxSizingWidth
+            };
 
-                if (!siblingBox.IsFloated) continue;
+            do
+            {
+                var intersectingFloat = DomUtils.GetFirstIntersectingFloatBox(box, coordinates, box.Float);
 
-                switch (siblingBox.Float)
+                if (intersectingFloat is null) break;
+
+                switch (intersectingFloat.Float)
                 {
                     case CssConstants.Left:
-                        limitLeft = siblingBox.ActualRight;
+                        coordinates.Left = intersectingFloat.ActualRight;
                         break;
                     case CssConstants.Right:
-                        limitRight = siblingBox.Location.X;
+                        coordinates.Right = intersectingFloat.Location.X;
                         break;
                 }
-
-                startPositionX = limitRight - box.ActualWidth - box.ActualMarginLeft;
-
-                if (siblingBox.ActualBottom > siblingMaxBottom)
+                if (intersectingFloat.ActualBottom > coordinates.MaxBottom)
                 {
-                    siblingMaxBottom = siblingBox.ActualBottom;
+                    coordinates.MaxBottom = intersectingFloat.ActualBottom;
                 }
 
-                if (limitLeft > startPositionX)
+                if (coordinates.Left > coordinates.FloatRightStartX)
                 {
-                    startPositionY = siblingMaxBottom;
-                    startPositionX = limitRight;
+                    coordinates.Right = limitRight - box.ActualMarginRight;
+                    coordinates.Top = coordinates.MaxBottom;
                 }
-            }
+            } while (true);
 
-            box.Location = new RPoint(startPositionX, startPositionY);
+            box.Location = new RPoint(coordinates.FloatRightStartX, coordinates.Top);
         }
 
         /// <summary>
@@ -526,23 +536,19 @@ namespace PeachPDF.Html.Core.Dom
         /// <summary>
         /// Applies vertical and horizontal alignment to words in line-boxes
         /// </summary>
-        /// <param name="g"></param>
         /// <param name="lineBox"></param>
-        private static void ApplyHorizontalAlignment(RGraphics g, CssLineBox lineBox)
+        private static void ApplyHorizontalAlignment(CssLineBox lineBox)
         {
             switch (lineBox.OwnerBox.TextAlign)
             {
                 case CssConstants.Right:
-                    ApplyRightAlignment(g, lineBox);
+                    ApplyRightAlignment(lineBox);
                     break;
                 case CssConstants.Center:
-                    ApplyCenterAlignment(g, lineBox);
+                    ApplyCenterAlignment(lineBox);
                     break;
                 case CssConstants.Justify:
-                    ApplyJustifyAlignment(g, lineBox);
-                    break;
-                default:
-                    ApplyLeftAlignment(g, lineBox);
+                    ApplyJustifyAlignment(lineBox);
                     break;
             }
         }
@@ -626,7 +632,7 @@ namespace PeachPDF.Html.Core.Dom
         /// </summary>
         /// <param name="g"></param>
         /// <param name="lineBox"></param>
-        private static void ApplyVerticalAlignment(RGraphics g, CssLineBox lineBox)
+        private static void ApplyVerticalAlignment(CssLineBox lineBox)
         {
             var baseline = double.MinValue;
 
@@ -643,10 +649,10 @@ namespace PeachPDF.Html.Core.Dom
                 switch (box.VerticalAlign)
                 {
                     case CssConstants.Sub:
-                        lineBox.SetBaseLine(g, box, baseline + lineBox.Rectangles[box].Height * .5f);
+                        lineBox.SetBaseLine(box, baseline + lineBox.Rectangles[box].Height * .5f);
                         break;
                     case CssConstants.Super:
-                        lineBox.SetBaseLine(g, box, baseline - lineBox.Rectangles[box].Height * .2f);
+                        lineBox.SetBaseLine(box, baseline - lineBox.Rectangles[box].Height * .2f);
                         break;
                     case CssConstants.TextTop:
                     case CssConstants.TextBottom:
@@ -657,7 +663,7 @@ namespace PeachPDF.Html.Core.Dom
                         break;
                     default:
                         //case: baseline
-                        lineBox.SetBaseLine(g, box, baseline);
+                        lineBox.SetBaseLine(box, baseline);
                         break;
                 }
             }
@@ -666,9 +672,8 @@ namespace PeachPDF.Html.Core.Dom
         /// <summary>
         /// Applies centered alignment to the text on the line-box
         /// </summary>
-        /// <param name="g"></param>
         /// <param name="lineBox"></param>
-        private static void ApplyJustifyAlignment(RGraphics g, CssLineBox lineBox)
+        private static void ApplyJustifyAlignment(CssLineBox lineBox)
         {
             if (lineBox.Equals(lineBox.OwnerBox.LineBoxes[^1]))
                 return;
@@ -708,7 +713,7 @@ namespace PeachPDF.Html.Core.Dom
         /// </summary>
         /// <param name="g"></param>
         /// <param name="line"></param>
-        private static void ApplyCenterAlignment(RGraphics g, CssLineBox line)
+        private static void ApplyCenterAlignment(CssLineBox line)
         {
             if (line.Words.Count == 0)
                 return;
@@ -739,7 +744,7 @@ namespace PeachPDF.Html.Core.Dom
         /// </summary>
         /// <param name="g"></param>
         /// <param name="line"></param>
-        private static void ApplyRightAlignment(RGraphics g, CssLineBox line)
+        private static void ApplyRightAlignment(CssLineBox line)
         {
             if (line.Words.Count == 0)
                 return;
@@ -764,17 +769,6 @@ namespace PeachPDF.Html.Core.Dom
                 line.Rectangles[b] = new RRect(r.X + diff, r.Y, r.Width, r.Height);
             }
         }
-
-        /// <summary>
-        /// Simplest alignment, just arrange words.
-        /// </summary>
-        /// <param name="g"></param>
-        /// <param name="line"></param>
-        private static void ApplyLeftAlignment(RGraphics g, CssLineBox line)
-        {
-
-        }
-
         #endregion
     }
 }

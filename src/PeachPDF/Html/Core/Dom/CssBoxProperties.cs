@@ -372,12 +372,12 @@ namespace PeachPDF.Html.Core.Dom
             get => _fontSize;
             set
             {
-                string length = RegexParserUtils.Search(RegexParserUtils.CssLengthRegex(), value);
+                var length = RegexParserUtils.Search(RegexParserUtils.CssLengthRegex(), value);
 
                 if (length != null)
                 {
                     string computedValue;
-                    CssLength len = new CssLength(length);
+                    CssLength len = new(length);
 
                     if (len.HasError)
                     {
