@@ -141,7 +141,7 @@ namespace PeachPDF.Html.Core.Dom
         /// <summary>
         /// Is the css box clickable (by default only "a" element is clickable)
         /// </summary>
-        public virtual bool IsClickable => HtmlTag is { Name: HtmlConstants.A } && !HtmlTag.HasAttribute("id");
+        public virtual bool IsClickable => HtmlTag is { Name: HtmlConstants.A } && !HtmlTag.HasAttribute("id") && !HtmlTag.HasAttribute("name");
 
         /// <summary>
         /// Gets a value indicating whether this instance or one of its parents has Position = fixed.
@@ -689,8 +689,9 @@ namespace PeachPDF.Html.Core.Dom
 
             await CreateListItemBox(g);
 
+#if DEBUG
             Console.WriteLine($"{ToString()} [x: {Location.X}, y: {Location.Y}, b: {ActualBottom}, r: {ActualRight}, h: {Size.Height}, w: {Size.Width}]");
-
+#endif
             if (IsFixed) return;
 
             var actualWidth = Math.Max(GetMinimumWidth() + GetWidthMarginDeep(this), Size.Width < 90999 ? ActualRight - HtmlContainer.Root.Location.X : 0);

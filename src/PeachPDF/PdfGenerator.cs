@@ -191,7 +191,7 @@ namespace PeachPDF
                 g.IntersectClip(new XRect(0, 0, page.Width, page.Height));
 
                 container.ScrollOffset = new XPoint(0, scrollOffset);
-                container.PerformPaint(g);
+                await container.PerformPaint(g);
                 scrollOffset -= pageSize.Height;
             }
 

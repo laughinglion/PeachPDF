@@ -133,7 +133,7 @@ namespace PeachPDF.Html.Core.Parse
                         throw new HtmlRenderException("Cannot import stylesheet without html container", HtmlRenderErrorType.CssParsing);
                     }
 
-                    var importedStylesheet = await StylesheetLoadHandler.LoadStylesheet(_htmlContainer, importRule.Href, []);
+                    var importedStylesheet = await StylesheetLoadHandler.LoadStylesheet(_htmlContainer, importRule.Href);
                     await ParseExCssStyle(data, importedStylesheet);
                 }
                 else

@@ -108,7 +108,7 @@ namespace PeachPDF.Html.Core.Parse
                     box.GetAttribute("rel", string.Empty).Equals("stylesheet", StringComparison.CurrentCultureIgnoreCase))
                 {
                     CloneCssData(ref cssData, ref cssDataChanged);
-                    var stylesheet = await StylesheetLoadHandler.LoadStylesheet(htmlContainer, box.GetAttribute("href", string.Empty), box.HtmlTag.Attributes);
+                    var stylesheet = await StylesheetLoadHandler.LoadStylesheet(htmlContainer, box.GetAttribute("href", string.Empty));
                     if (stylesheet != null)
                         await _cssParser.ParseStyleSheet(cssData, stylesheet);
                 }
