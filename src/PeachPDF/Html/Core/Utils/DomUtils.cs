@@ -94,23 +94,20 @@ namespace PeachPDF.Html.Core.Utils
         /// <returns>Box before this one on the tree. Null if its the first</returns>
         public static CssBox GetPreviousSibling(CssBox b)
         {
-            if (b.ParentBox != null)
+            if (b.ParentBox == null) return null;
+
+            var index = b.ParentBox.Boxes.IndexOf(b);
+            if (index <= 0) return null;
+            var diff = 1;
+            var sib = b.ParentBox.Boxes[index - diff];
+
+            while ((sib.Display == CssConstants.None || sib.Position == CssConstants.Absolute || sib.Position == CssConstants.Fixed) && index - diff - 1 >= 0)
             {
-                int index = b.ParentBox.Boxes.IndexOf(b);
-                if (index > 0)
-                {
-                    int diff = 1;
-                    CssBox sib = b.ParentBox.Boxes[index - diff];
-
-                    while ((sib.Display == CssConstants.None || sib.Position == CssConstants.Absolute || sib.Position == CssConstants.Fixed) && index - diff - 1 >= 0)
-                    {
-                        sib = b.ParentBox.Boxes[index - ++diff];
-                    }
-
-                    return (sib.Display == CssConstants.None || sib.Position == CssConstants.Fixed) ? null : sib;
-                }
+                sib = b.ParentBox.Boxes[index - ++diff];
             }
-            return null;
+
+            return (sib.Display == CssConstants.None || sib.Position == CssConstants.Fixed) ? null : sib;
+
         }
 
         /// <summary>
@@ -164,19 +161,18 @@ namespace PeachPDF.Html.Core.Utils
         public static CssBox GetNextSibling(CssBox b)
         {
             CssBox sib = null;
-            if (b.ParentBox != null)
+            if (b.ParentBox == null) return sib;
+
+            var index = b.ParentBox.Boxes.IndexOf(b) + 1;
+            while (index <= b.ParentBox.Boxes.Count - 1)
             {
-                var index = b.ParentBox.Boxes.IndexOf(b) + 1;
-                while (index <= b.ParentBox.Boxes.Count - 1)
+                var pSib = b.ParentBox.Boxes[index];
+                if (pSib.Display != CssConstants.None && pSib.Position != CssConstants.Absolute && pSib.Position != CssConstants.Fixed)
                 {
-                    var pSib = b.ParentBox.Boxes[index];
-                    if (pSib.Display != CssConstants.None && pSib.Position != CssConstants.Absolute && pSib.Position != CssConstants.Fixed)
-                    {
-                        sib = pSib;
-                        break;
-                    }
-                    index++;
+                    sib = pSib;
+                    break;
                 }
+                index++;
             }
             return sib;
         }

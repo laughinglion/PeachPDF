@@ -15,6 +15,8 @@ using PeachPDF.Html.Adapters.Entities;
 using PeachPDF.Html.Core.Parse;
 using PeachPDF.Html.Core.Utils;
 using System.Globalization;
+using Org.BouncyCastle.Bcpg.OpenPgp;
+using PeachPDF.Html.Core.Entities;
 
 namespace PeachPDF.Html.Core.Dom
 {
@@ -60,8 +62,6 @@ namespace PeachPDF.Html.Core.Dom
         private double _actualCornerSe = double.NaN;
         private RColor _actualColor = RColor.Empty;
         private double _actualBackgroundGradientAngle = double.NaN;
-        private double _actualHeight = double.NaN;
-        private double _actualWidth = double.NaN;
         private double _actualPaddingTop = double.NaN;
         private double _actualPaddingBottom = double.NaN;
         private double _actualPaddingRight = double.NaN;
@@ -79,8 +79,6 @@ namespace PeachPDF.Html.Core.Dom
         /// <summary>
         /// the width of whitespace between words
         /// </summary>
-        private double _actualLineHeight = double.NaN;
-
         private double _actualWordSpacing = double.NaN;
         private double _actualTextIndent = double.NaN;
         private double _actualBorderSpacingHorizontal = double.NaN;
@@ -189,6 +187,7 @@ namespace PeachPDF.Html.Core.Dom
         public string BorderSpacing { get; set; } = "0";
 
         public string BorderCollapse { get; set; } = "separate";
+        public string BoxSizing { get; set; }
 
         public string CornerRadius
         {
@@ -330,6 +329,8 @@ namespace PeachPDF.Html.Core.Dom
 
         public string Float { get; set; } = "none";
 
+        public string Clear { get; set; } = CssConstants.None;
+
         public string Position { get; set; } = "static";
 
         public string LineHeight { get; set; } = "normal";
@@ -431,20 +432,58 @@ namespace PeachPDF.Html.Core.Dom
         /// <summary>
         /// Gets the bounds of the box
         /// </summary>
-        public RRect Bounds => new(Location, Size);
+        public RRect Bounds
+        {
+            get
+            {
+                var boundingBoxSize = new RSize(ActualBoxSizingWidth, ActualBoxSizingHeight);
+
+                return new RRect(Location, boundingBoxSize);
+            }
+        }
 
         /// <summary>
         /// Gets the width available on the box, counting padding and margin.
         /// </summary>
-        public double AvailableWidth => Size.Width - ActualBorderLeftWidth - ActualPaddingLeft - ActualPaddingRight - ActualBorderRightWidth;
+        public double AvailableWidth => ActualBoxSizingWidth - ActualBorderLeftWidth - ActualPaddingLeft - ActualPaddingRight - ActualBorderRightWidth;
+
+        public double ActualBoxSizeIncludedWidth
+        {
+            get
+            {
+                return BoxSizing switch
+                {
+                    CssConstants.ContentBox => ActualPaddingLeft + ActualPaddingRight + ActualBorderLeftWidth + ActualBorderRightWidth,
+                    CssConstants.BorderBox => 0,
+                    _ => throw new HtmlRenderException("Unknown box sizing", HtmlRenderErrorType.Layout)
+                };
+            }
+        }
+
+        public double ActualBoxSizingWidth => Size.Width + ActualBoxSizeIncludedWidth;
+
+        public double ActualBoxSizeIncludedHeight
+        {
+            get
+            {
+                return BoxSizing switch
+                {
+                    CssConstants.ContentBox => ActualPaddingTop + ActualPaddingBottom + ActualBorderTopWidth + ActualBorderBottomWidth,
+                    CssConstants.BorderBox => 0,
+                    _ => throw new HtmlRenderException("Unknown box sizing", HtmlRenderErrorType.Layout)
+                };
+            }
+        }
+
+        public double ActualBoxSizingHeight => Size.Height + ActualBoxSizeIncludedHeight;
 
         /// <summary>
         /// Gets the right of the box. When setting, it will affect only the width of the box.
         /// </summary>
         public double ActualRight
         {
-            get => Location.X + Size.Width;
-            set => Size = new RSize(value - Location.X, Size.Height);
+            get => Location.X + ActualBoxSizingWidth;
+            set => Size = new RSize(value - ActualBoxSizeIncludedWidth - Location.X, Size.Height);
         }
 
         /// <summary>
@@ -453,8 +492,8 @@ namespace PeachPDF.Html.Core.Dom
         /// </summary>
         public double ActualBottom
         {
-            get => Location.Y + Size.Height;
-            set => Size = new RSize(Size.Width, value - Location.Y);
+            get => Location.Y + ActualBoxSizingHeight;
+            set => Size = new RSize(Size.Width, value - ActualBoxSizeIncludedHeight - Location.Y);
         }
 
         /// <summary>
@@ -485,42 +524,12 @@ namespace PeachPDF.Html.Core.Dom
         /// <summary>
         /// Gets the actual height
         /// </summary>
-        public double ActualHeight
-        {
-            get
-            {
-                if (double.IsNaN(_actualHeight))
-                {
-                    _actualHeight = CssValueParser.ParseLength(Height, Size.Height, this);
-
-                    if (CssValueParser.IsValidLength(MinHeight))
-                    {
-                        var minHeight = CssValueParser.ParseLength(MinHeight, Size.Height, this);
-                        
-                        if (_actualHeight < minHeight)
-                        {
-                            _actualHeight = minHeight;
-                        }
-                    }
-                }
-                return _actualHeight;
-            }
-        }
+        public double ActualHeight => ActualBoxSizingHeight;
 
         /// <summary>
         /// Gets the actual height
         /// </summary>
-        public double ActualWidth
-        {
-            get
-            {
-                if (double.IsNaN(_actualWidth))
-                {
-                    _actualWidth = CssValueParser.ParseLength(Width, Size.Width, this);
-                }
-                return _actualWidth;
-            }
-        }
+        public double ActualWidth => ActualBoxSizingWidth;
 
         /// <summary>
         /// Gets the actual top's padding
@@ -1012,17 +1021,7 @@ namespace PeachPDF.Html.Core.Dom
         /// <summary>
         /// Gets the line height
         /// </summary>
-        public double ActualLineHeight
-        {
-            get
-            {
-                if (double.IsNaN(_actualLineHeight))
-                {
-                    _actualLineHeight = .9f * CssValueParser.ParseLength(LineHeight, Size.Height, this);
-                }
-                return _actualLineHeight;
-            }
-        }
+        public double ActualLineHeight => LineHeight is CssConstants.Normal ? 1.2 * GetEmHeight() : CssValueParser.ParseLength(LineHeight, Size.Height, this);
 
         /// <summary>
         /// Gets the text indentation (on first line only)
@@ -1179,6 +1178,7 @@ namespace PeachPDF.Html.Core.Dom
             LineHeight = p.LineHeight;
             WordBreak = p.WordBreak;
             Direction = p.Direction;
+            BoxSizing = p.BoxSizing;
 
             if (!everything) return;
 

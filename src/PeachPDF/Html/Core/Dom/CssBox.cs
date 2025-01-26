@@ -19,6 +19,7 @@ using PeachPDF.Html.Core.Utils;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace PeachPDF.Html.Core.Dom
@@ -134,6 +135,8 @@ namespace PeachPDF.Html.Core.Dom
         /// is the box "Display" is "Block", is this is a block box and not inline.
         /// </summary>
         public bool IsBlock => Display == CssConstants.Block;
+
+        public bool IsFloated => Float is CssConstants.Left or CssConstants.Right;
 
         /// <summary>
         /// Is the css box clickable (by default only "a" element is clickable)
@@ -569,22 +572,14 @@ namespace PeachPDF.Html.Core.Dom
                 // Because their width and height are set by CssTable
                 if (Display != CssConstants.TableCell && Display != CssConstants.Table)
                 {
-                    double width = ContainingBlock.Size.Width
-                                   - ContainingBlock.ActualPaddingLeft - ContainingBlock.ActualPaddingRight
-                                   - ContainingBlock.ActualBorderLeftWidth - ContainingBlock.ActualBorderRightWidth;
+                    var width = ContainingBlock.ClientRight - ContainingBlock.ClientLeft;
 
                     if (Width != CssConstants.Auto && !string.IsNullOrEmpty(Width))
                     {
                         width = CssValueParser.ParseLength(Width, width, this);
                     }
 
-                    Size = new RSize(width, Size.Height)
-                    {
-                        Width = width - ActualMarginLeft - ActualMarginRight
-                    };
-                    
-                    // must be separate because the margin can be calculated by percentage of the width
-                    //Size = new RSize(width - ActualMarginLeft - ActualMarginRight, Size.Height);
+                    ActualRight = Location.X + width + ActualBoxSizeIncludedWidth;
                 }
 
                 if (Display != CssConstants.TableCell)
@@ -598,6 +593,8 @@ namespace PeachPDF.Html.Core.Dom
                         
                         Location = new RPoint(left, top);
                         ActualBottom = top;
+
+                        CssLayoutEngine.FloatBox(this);
                     }
 
                     if (Position is CssConstants.Relative)
@@ -651,7 +648,11 @@ namespace PeachPDF.Html.Core.Dom
                         }
 
                         ActualRight = CalculateActualRight();
-                        ActualBottom = MarginBottomCollapse();
+
+                        if (Boxes.Any(b => !b.IsFloated))
+                        {
+                            ActualBottom = MarginBottomCollapse();
+                        }
                     }
                 }
             }
@@ -666,9 +667,33 @@ namespace PeachPDF.Html.Core.Dom
                 }
             }
 
-            ActualBottom = Math.Max(ActualBottom, Location.Y + ActualHeight);
+            var height = ActualBoxSizingHeight;
+
+            if (CssValueParser.IsValidLength(MinHeight))
+            {
+                var minHeight = CssValueParser.ParseLength(MinHeight, ParentBox?.Size.Height ?? Size.Height, this) + ActualBoxSizeIncludedHeight;
+
+                if (minHeight > height)
+                {
+                    height = minHeight;
+                }
+            }
+
+            if (CssValueParser.IsValidLength(Height))
+            {
+                var cssHeight = CssValueParser.ParseLength(Height, ParentBox?.Size.Height ?? Size.Height, this) + ActualBoxSizeIncludedHeight;
+
+                if (cssHeight > height)
+                {
+                    height = cssHeight;
+                }
+            }
+
+            ActualBottom = Math.Max(ActualBottom, Location.Y + height);
 
             await CreateListItemBox(g);
+
+            Console.WriteLine($"{ToString()} [x: {Location.X}, y: {Location.Y}, b: {ActualBottom}, r: {ActualRight}, h: {Size.Height}, w: {Size.Width}]");
 
             if (IsFixed) return;
 
@@ -1114,19 +1139,33 @@ namespace PeachPDF.Html.Core.Dom
         /// <returns>the calculated actual right value</returns>
         private double CalculateActualRight()
         {
-            if (ActualRight > 90999)
-            {
-                var maxRight = 0d;
-                foreach (var box in Boxes)
+            if (!(ActualRight > 90999)) return ActualRight;
+
+            var maxRight = 0d;
+
+            double additionalMarginRight;
+
+            foreach (var box in Boxes)
+            { 
+                additionalMarginRight = box.BoxSizing switch
                 {
-                    maxRight = Math.Max(maxRight, box.ActualRight + box.ActualMarginRight);
-                }
-                return maxRight + ActualPaddingRight + ActualMarginRight + ActualBorderRightWidth;
+                    CssConstants.ContentBox => 0,
+                    CssConstants.BorderBox => box.ActualMarginRight,
+                    _ => throw new HtmlRenderException("Unknown BoxSizing", HtmlRenderErrorType.Layout)
+                };
+
+                maxRight = Math.Max(maxRight, box.ActualRight + additionalMarginRight);
             }
-            else
+
+            additionalMarginRight = BoxSizing switch
             {
-                return ActualRight;
-            }
+                CssConstants.ContentBox => 0,
+                CssConstants.BorderBox => ActualMarginRight,
+                _ => throw new HtmlRenderException("Unknown BoxSizing", HtmlRenderErrorType.Layout)
+            };
+
+            return maxRight + ActualPaddingRight + additionalMarginRight + ActualBorderRightWidth;
+
         }
 
         /// <summary>
@@ -1135,15 +1174,17 @@ namespace PeachPDF.Html.Core.Dom
         /// <returns>Resulting bottom margin</returns>
         private double MarginBottomCollapse()
         {
+            var lastNonFloatingBox = Boxes.Last(b => !b.IsFloated);
+
             double margin = 0;
             if (ParentBox == null || ParentBox.Boxes.IndexOf(this) != ParentBox.Boxes.Count - 1 ||
                 !(_parentBox.ActualMarginBottom < 0.1))
                 return Math.Max(ActualBottom,
-                    Boxes[^1].ActualBottom + margin + ActualPaddingBottom + ActualBorderBottomWidth);
+                    lastNonFloatingBox.ActualBottom + margin + ActualPaddingBottom + ActualBorderBottomWidth);
 
-            var lastChildBottomMargin = Boxes[^1].ActualMarginBottom;
+            var lastChildBottomMargin = lastNonFloatingBox.ActualMarginBottom;
             margin = Height == "auto" ? Math.Max(ActualMarginBottom, lastChildBottomMargin) : lastChildBottomMargin;
-            return Math.Max(ActualBottom, Boxes[^1].ActualBottom + margin + ActualPaddingBottom + ActualBorderBottomWidth);
+            return Math.Max(ActualBottom, lastNonFloatingBox.ActualBottom + margin + ActualPaddingBottom + ActualBorderBottomWidth);
         }
 
         /// <summary>
@@ -1190,28 +1231,28 @@ namespace PeachPDF.Html.Core.Dom
 
             var areas = Rectangles.Count == 0 ? new List<RRect>([Bounds]) : new List<RRect>(Rectangles.Values);
             var clip = g.GetClip();
-            RRect[] rects = areas.ToArray();
-            RPoint offset = RPoint.Empty;
+            var rects = areas.ToArray();
+            var offset = RPoint.Empty;
+
             if (!IsFixed)
             {
                 offset = HtmlContainer.ScrollOffset;
             }
 
-            for (int i = 0; i < rects.Length; i++)
+            for (var i = 0; i < rects.Length; i++)
             {
                 var actualRect = rects[i];
                 actualRect.Offset(offset);
 
-                if (IsRectVisible(actualRect, clip))
-                {
-                    PaintBackground(g, actualRect, i == 0, i == rects.Length - 1);
-                    BordersDrawHandler.DrawBoxBorders(g, this, actualRect, i == 0, i == rects.Length - 1);
-                }
+                if (!IsRectVisible(actualRect, clip)) continue;
+
+                PaintBackground(g, actualRect, i == 0, i == rects.Length - 1);
+                BordersDrawHandler.DrawBoxBorders(g, this, actualRect, i == 0, i == rects.Length - 1);
             }
 
             PaintWords(g, offset);
 
-            for (int i = 0; i < rects.Length; i++)
+            for (var i = 0; i < rects.Length; i++)
             {
                 var actualRect = rects[i];
                 actualRect.Offset(offset);
@@ -1223,19 +1264,19 @@ namespace PeachPDF.Html.Core.Dom
             }
 
             // split paint to handle z-order
-            foreach (CssBox b in Boxes)
+            foreach (var b in Boxes)
             {
                 if (b.Position != CssConstants.Absolute && !b.IsFixed)
                     b.Paint(g);
             }
 
-            foreach (CssBox b in Boxes)
+            foreach (var b in Boxes)
             {
                 if (b.Position == CssConstants.Absolute)
                     b.Paint(g);
             }
 
-            foreach (CssBox b in Boxes)
+            foreach (var b in Boxes)
             {
                 if (b.IsFixed)
                     b.Paint(g);

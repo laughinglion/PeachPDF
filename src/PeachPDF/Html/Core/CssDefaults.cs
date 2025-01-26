@@ -152,6 +152,7 @@ namespace PeachPDF.Html.Core
             { "border-top-color", CssConstants.CurrentColor },
             { "border-top-style", CssConstants.None },
             { "border-top-width", CssConstants.Medium },
+            { "box-sizing", CssConstants.ContentBox },
             { "font-stretch", CssConstants.Normal },
             { "font-style", CssConstants.Normal },
             { "font-variant", CssConstants.Normal },
