@@ -10,6 +10,8 @@
 // - Sun Tsu,
 // "The Art of War"
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -30,10 +32,11 @@ namespace PeachPDF.Html.Core.Parse
         /// Parses the source html to css boxes tree structure.
         /// </summary>
         /// <param name="source">the html source to parse</param>
+        /// <param name="root">the root box (null for document root)</param>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
-        public static CssBox ParseDocument(string source)
+        public static CssBox ParseDocument(string source, CssBox? root = null)
         {
-            var root = CssBox.CreateBlock();
+            root ??= CssBox.CreateBlock();
             var curBox = root;
 
             using var sourceReader = new StringReader(source);
@@ -52,8 +55,18 @@ namespace PeachPDF.Html.Core.Parse
                     case HtmlTokenKind.Data:
                     {
                         var text = (HtmlDataToken)token;
-                        AddTextBox(text, ref curBox);
+
+                        if (curBox.HtmlTag?.Name is HtmlConstants.NoScript)
+                        {
+                            curBox = ParseDocument(text.Data, curBox.ParentBox);
+                        }
+                        else
+                        {
+                            AddTextBox(text, ref curBox);
+                        }
+
                         break;
+
                     }
                     case HtmlTokenKind.CData:
                     case HtmlTokenKind.Comment:

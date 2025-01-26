@@ -94,7 +94,7 @@ namespace PeachPDF.Html.Core
             center          { text-align: center }
             :link, :visited { text-decoration: underline }
             :focus          { outline: thin dotted invert }
-
+            
             /* Begin bidirectionality settings (do not change) */
             BDO[DIR="ltr"]  { direction: ltr; unicode-bidi: bidi-override }
             BDO[DIR="rtl"]  { direction: rtl; unicode-bidi: bidi-override }

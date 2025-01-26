@@ -221,7 +221,7 @@ namespace PeachPDF.Html.Core
 
         private static bool DoesSelectorMatch(ComplexSelector complexSelector, CssBox box)
         {
-            CssBox currentLevel = box;
+            var currentLevel = box;
             var selectorsInReverse = complexSelector.Reverse();
 
             var isLowestItem = true;
@@ -260,6 +260,7 @@ namespace PeachPDF.Html.Core
                             {
                                 return false;
                             }
+
                             break;
                         case " " or null:
                         {

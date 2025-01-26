@@ -38,6 +38,10 @@ namespace PeachPDF.Html.Core.Dom
     {
         #region Fields and Consts
 
+        private uint _id = 0;
+
+        private static uint _idCounter = 0;
+
         /// <summary>
         /// the parent css box of this css box in the hierarchy
         /// </summary>
@@ -84,6 +88,8 @@ namespace PeachPDF.Html.Core.Dom
                 _parentBox = parentBox;
                 _parentBox.Boxes.Add(this);
             }
+
+            _id = ++_idCounter;
             HtmlTag = tag;
         }
 
@@ -387,18 +393,22 @@ namespace PeachPDF.Html.Core.Dom
         /// <param name="g">Device context to use</param>
         public async ValueTask Paint(RGraphics g)
         {
+#if DEBUG
+            Console.WriteLine($"paint: {ToString()}");
+#endif
+
             try
             {
                 if (Display == CssConstants.None || Visibility != CssConstants.Visible) return;
 
-                // use initial clip to draw blocks with Position = fixed. I.e. ignrore page margins
-                if (this.Position == CssConstants.Fixed)
+                // use initial clip to draw blocks with Position = fixed. I.e. ignore page margins
+                if (Position == CssConstants.Fixed)
                 {
                     g.SuspendClipping();
                 }
 
                 // don't call paint if the rectangle of the box is not in visible rectangle
-                bool visible = Rectangles.Count == 0;
+                var visible = Rectangles.Count == 0;
                 if (!visible)
                 {
                     var clip = g.GetClip();
@@ -420,7 +430,7 @@ namespace PeachPDF.Html.Core.Dom
                     await PaintImp(g);
 
                 // Restore clips
-                if (this.Position == CssConstants.Fixed)
+                if (Position == CssConstants.Fixed)
                 {
                     g.ResumeClipping();
                 }
@@ -582,10 +592,10 @@ namespace PeachPDF.Html.Core.Dom
                 {
                     if (Position is CssConstants.Static or CssConstants.Relative)
                     {
-                        var prevSibling = DomUtils.GetPreviousSibling(this);
+                        var prevSibling = DomUtils.GetPreviousSibling(this, false);
 
-                        var left = ContainingBlock.Location.X + ContainingBlock.ActualPaddingLeft + ActualMarginLeft + ContainingBlock.ActualBorderLeftWidth;
-                        var top = (prevSibling == null && ParentBox != null ? ParentBox.ClientTop : ParentBox == null ? Location.Y : 0) + MarginTopCollapse(prevSibling) + (prevSibling != null ? prevSibling.ActualBottom + prevSibling.ActualBorderBottomWidth : 0);
+                        var left = ContainingBlock.ClientLeft;
+                        var top = (prevSibling == null && ContainingBlock != null ? ContainingBlock.ClientTop : ParentBox == null ? Location.Y : 0) + MarginTopCollapse(prevSibling) + (prevSibling != null ? prevSibling.ActualBottom + prevSibling.ActualBorderBottomWidth : 0);
                         
                         Location = new RPoint(left, top);
                         ActualBottom = top;
@@ -654,7 +664,7 @@ namespace PeachPDF.Html.Core.Dom
             }
             else
             {
-                var prevSibling = DomUtils.GetPreviousSibling(this);
+                var prevSibling = DomUtils.GetPreviousSibling(this, false);
                 if (prevSibling != null)
                 {
                     if (Location == RPoint.Empty)
@@ -1543,11 +1553,21 @@ namespace PeachPDF.Html.Core.Dom
         /// <returns></returns>
         public override string ToString()
         {
-            var tag = HtmlTag != null ? $"<{HtmlTag.Name}>" : "anon";
+            var tag = HtmlTag != null ? $"<{HtmlTag.Name}#{_id}>" : "anon";
 
             if (HtmlTag?.Attributes?.ContainsKey("class") ?? false)
             {
                 tag = $"{tag}, Class: {HtmlTag.Attributes["class"]}";
+            }
+
+            if (HtmlTag?.Attributes?.ContainsKey("id") ?? false)
+            {
+                tag = $"{tag}, Id: {HtmlTag.Attributes["id"]}";
+            }
+
+            if (HtmlTag?.Attributes?.ContainsKey("src") ?? false)
+            {
+                tag = $"{tag}, Src: {HtmlTag.Attributes["src"]}";
             }
 
             if (Text is not null)

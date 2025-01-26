@@ -10,12 +10,12 @@
 // - Sun Tsu,
 // "The Art of War"
 
-using System;
-using System.Threading.Tasks;
 using PeachPDF.Html.Adapters;
 using PeachPDF.Html.Adapters.Entities;
 using PeachPDF.Html.Core.Handlers;
 using PeachPDF.Html.Core.Utils;
+using System;
+using System.Threading.Tasks;
 
 namespace PeachPDF.Html.Core.Dom
 {
@@ -61,6 +61,21 @@ namespace PeachPDF.Html.Core.Dom
         /// </summary>
         public RImage Image => _imageWord.Image;
 
+        public string ImageSource
+        {
+            get
+            {
+                var source = GetAttribute("src");
+
+                if (source.Length is 0)
+                {
+                    source = GetAttribute("data-cfsrc");
+                }
+
+                return source;
+            }
+        }
+
         /// <summary>
         /// Paints the fragment
         /// </summary>
@@ -71,12 +86,12 @@ namespace PeachPDF.Html.Core.Dom
             if (_imageLoadHandler == null)
             {
                 _imageLoadHandler = new ImageLoadHandler(HtmlContainer);
-                await _imageLoadHandler.LoadImage(GetAttribute("src"));
+                await _imageLoadHandler.LoadImage(ImageSource);
                 OnLoadImageComplete(_imageLoadHandler.Image);
             }
 
             var rect = CommonUtils.GetFirstValueOrDefault(Rectangles);
-            RPoint offset = RPoint.Empty;
+            var offset = RPoint.Empty;
 
             if (!IsFixed)
                 offset = HtmlContainer.ScrollOffset;
@@ -88,7 +103,7 @@ namespace PeachPDF.Html.Core.Dom
             PaintBackground(g, rect, true);
             BordersDrawHandler.DrawBoxBorders(g, this, rect, true, true);
 
-            RRect r = _imageWord.Rectangle;
+            var r = _imageWord.Rectangle;
             r.Offset(offset);
             r.Height -= ActualBorderTopWidth + ActualBorderBottomWidth + ActualPaddingTop + ActualPaddingBottom;
             r.Y += ActualBorderTopWidth + ActualPaddingTop;
@@ -137,7 +152,7 @@ namespace PeachPDF.Html.Core.Dom
                     if (this.Content != null && this.Content != CssConstants.Normal)
                         await _imageLoadHandler.LoadImage(this.Content);
                     else
-                        await _imageLoadHandler.LoadImage(GetAttribute("src"));
+                        await _imageLoadHandler.LoadImage(ImageSource);
 
                     OnLoadImageComplete(_imageLoadHandler.Image);
                 }

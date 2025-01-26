@@ -95,7 +95,7 @@ namespace PeachPDF.Html.Core.Utils
         /// Gets the previous sibling of this box.
         /// </summary>
         /// <returns>Box before this one on the tree. Null if its the first</returns>
-        public static CssBox? GetPreviousSibling(CssBox b)
+        public static CssBox? GetPreviousSibling(CssBox b, bool includeFloats = true)
         {
             if (b.ParentBox == null) return null;
 
@@ -104,13 +104,14 @@ namespace PeachPDF.Html.Core.Utils
             var diff = 1;
             var sib = b.ParentBox.Boxes[index - diff];
 
-            while ((sib.Display == CssConstants.None || sib.Position == CssConstants.Absolute || sib.Position == CssConstants.Fixed) && index - diff - 1 >= 0)
+            while ((sib.Display == CssConstants.None || sib.Position == CssConstants.Absolute || sib.Position == CssConstants.Fixed || (!includeFloats && sib.IsFloated)) && index - diff - 1 >= 0)
             {
                 sib = b.ParentBox.Boxes[index - ++diff];
             }
 
-            return (sib.Display == CssConstants.None || sib.Position == CssConstants.Fixed) ? null : sib;
+            sib = sib.Display == CssConstants.None || sib.Position == CssConstants.Fixed || (!includeFloats && sib.IsFloated) ? null : sib;
 
+            return sib;
         }
 
         /// <summary>
@@ -151,25 +152,6 @@ namespace PeachPDF.Html.Core.Utils
             var sib = GetPreviousContainingBlockSibling(box);
 
             return sib is { IsInline: true };
-        }
-
-        /// <summary>
-        /// Get attribute value by given key starting search from given box, search up the tree until
-        /// attribute found or root.
-        /// </summary>
-        /// <param name="box">the box to start lookup at</param>
-        /// <param name="attribute">the attribute to get</param>
-        /// <returns>the value of the attribute or null if not found</returns>
-        public static string? GetAttribute(CssBox box, string attribute)
-        {
-            string? value = null;
-
-            while (box != null && value == null)
-            {
-                value = box.GetAttribute(attribute, null);
-                box = box.ParentBox;
-            }
-            return value;
         }
 
         /// <summary>
@@ -436,7 +418,73 @@ namespace PeachPDF.Html.Core.Utils
                 }
             }
 
-            return null;
+            return GetFirstIntersectingFloatBox(reference.ParentBox, coordinates, floatProp);
+        }
+
+        public static CssBox? GetLastLeftIntersectingFloatBox(CssBox box, CssLineBoxCoordinates coordinates)
+        {
+            var left = coordinates.CurrentX;
+            CssBox? lastIntersectingFloat = null;
+
+            do
+            {
+                CssFloatCoordinates floatCoordinates = new()
+                {
+                    Left = left,
+                    Top = coordinates.CurrentY,
+                    MarginLeft = box.ActualMarginLeft,
+                    MarginRight = box.ActualMarginRight,
+                    MaxBottom = coordinates.MaxBottom,
+                    ReferenceWidth = 0,
+                    Right = coordinates.MaxRight
+                };
+
+                var intersectingFloat = GetFirstIntersectingFloatBox(box, floatCoordinates, CssConstants.Left);
+
+                if (intersectingFloat is null)
+                {
+                    break;
+                }
+
+                left = intersectingFloat.ActualRight + intersectingFloat.ActualMarginRight;
+                lastIntersectingFloat = intersectingFloat;
+
+            } while (true);
+
+            return lastIntersectingFloat;
+        }
+
+        public static CssBox? GetLastRightIntersectingFloatBox(CssBox box, CssLineBoxCoordinates coordinates, double referenceWidth)
+        {
+            var left = coordinates.CurrentX;
+            CssBox? lastIntersectingFloat = null;
+
+            do
+            {
+                CssFloatCoordinates floatCoordinates = new()
+                {
+                    Left = left,
+                    Top = coordinates.CurrentY,
+                    MarginLeft = box.ActualMarginLeft,
+                    MarginRight = box.ActualMarginRight,
+                    MaxBottom = coordinates.MaxBottom,
+                    ReferenceWidth = referenceWidth,
+                    Right = left + referenceWidth
+                };
+
+                var intersectingFloat = GetFirstIntersectingFloatBox(box, floatCoordinates, CssConstants.Left);
+
+                if (intersectingFloat is null)
+                {
+                    break;
+                }
+
+                left = intersectingFloat.ActualRight + intersectingFloat.ActualMarginRight;
+                lastIntersectingFloat = intersectingFloat;
+
+            } while (true);
+
+            return lastIntersectingFloat;
         }
 
         private static CssBox? GetNextIntersectingFloatBox(CssBox box, CssFloatCoordinates coordinates, string floatProp)
@@ -462,15 +510,26 @@ namespace PeachPDF.Html.Core.Utils
         {
             if (!targetBox.IsFloated) return false;
 
-            if (floatProp is CssConstants.Left && targetBox.ActualRight + targetBox.ActualMarginRight + coordinates.MarginLeft > coordinates.Left && coordinates.Top < targetBox.ActualBottom && targetBox.Location.Y >= coordinates.Top)
+            // vertical conflict
+            if (coordinates.Top < targetBox.ActualBottom && targetBox.Location.Y <= coordinates.Top)
             {
-                return true;
+                var targetRight = targetBox.ActualRight + targetBox.ActualMarginRight;
+                var targetLeft = targetBox.Location.X - targetBox.ActualMarginLeft;
+
+                var currentLeft = coordinates.Left - coordinates.MarginLeft;
+
+                if (floatProp is CssConstants.Left && targetRight > currentLeft && targetLeft <= currentLeft)
+                {
+                    return true;
+                }
+
+                if (floatProp is CssConstants.Right && targetLeft > coordinates.FloatRightStartX + coordinates.MarginLeft + coordinates.ReferenceWidth + coordinates.MarginRight)
+                {
+                    return true;
+                }
             }
 
-            if (floatProp is CssConstants.Right && targetBox.Location.X - coordinates.MarginLeft > coordinates.FloatRightStartX + coordinates.MarginLeft + coordinates.ReferenceWidth + coordinates.MarginRight && coordinates.Top < targetBox.ActualBottom && targetBox.Location.Y >= coordinates.Top)
-            {
-                return true;
-            }
+
 
             return false;
         }

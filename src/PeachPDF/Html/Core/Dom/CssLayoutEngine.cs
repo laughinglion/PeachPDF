@@ -41,15 +41,15 @@ namespace PeachPDF.Html.Core.Dom
             var width = new CssLength(imageWord.OwnerBox.Width);
             var height = new CssLength(imageWord.OwnerBox.Height);
 
-            var hasImageTagWidth = width.Number > 0 && width.Unit == CssUnit.Pixels;
-            var hasImageTagHeight = height.Number > 0 && height.Unit == CssUnit.Pixels;
+            var hasImageTagWidth = width is { Number: > 0, Unit: CssUnit.Pixels };
+            var hasImageTagHeight = height is { Number: > 0, Unit: CssUnit.Pixels };
             var scaleImageHeight = false;
 
             if (hasImageTagWidth)
             {
                 imageWord.Width = width.Number;
             }
-            else if (width.Number > 0 && width.IsPercentage)
+            else if (width is { Number: > 0, IsPercentage: true })
             {
                 imageWord.Width = width.Number * imageWord.OwnerBox.ContainingBlock.Size.Width;
                 scaleImageHeight = true;
@@ -395,7 +395,14 @@ namespace PeachPDF.Html.Core.Dom
             var startY = coordinates.CurrentY;
             box.FirstHostingLineBox = coordinates.Line;
 
-            foreach (var b in box.Boxes)
+            var boxes = box.Boxes;
+
+            if (boxes.Count is 0 && box.Words.Count > 0)
+            {
+                boxes = [box];
+            }
+
+            foreach (var b in boxes)
             {
                 var leftSpacing = (b.Position != CssConstants.Absolute && b.Position != CssConstants.Fixed) ? b.ActualMarginLeft + b.ActualBorderLeftWidth + b.ActualPaddingLeft : 0;
                 var rightSpacing = (b.Position != CssConstants.Absolute && b.Position != CssConstants.Fixed) ? b.ActualMarginRight + b.ActualBorderRightWidth + b.ActualPaddingRight : 0;
@@ -405,14 +412,24 @@ namespace PeachPDF.Html.Core.Dom
 
                 coordinates.CurrentX += leftSpacing;
 
+                var lastLeftIntersectingFloatBox = DomUtils.GetLastLeftIntersectingFloatBox(box, coordinates);
+
+                if (lastLeftIntersectingFloatBox is not null)
+                {
+                    coordinates.CurrentX = lastLeftIntersectingFloatBox.ActualRight + lastLeftIntersectingFloatBox.ActualMarginRight + leftSpacing;
+                }
+
                 if (b.Words.Count > 0)
                 {
                     var wrapNoWrapBox = false;
+
                     if (b.WhiteSpace == CssConstants.NoWrap && coordinates.CurrentX > lineStartX)
                     {
                         var boxRight = coordinates.CurrentX;
+
                         foreach (var word in b.Words)
                             boxRight += word.FullWidth;
+
                         if (boxRight > limitRight)
                             wrapNoWrapBox = true;
                     }
@@ -425,13 +442,29 @@ namespace PeachPDF.Html.Core.Dom
                         if (coordinates.MaxBottom - coordinates.CurrentY < box.ActualLineHeight)
                             coordinates.MaxBottom += box.ActualLineHeight - (coordinates.MaxBottom - coordinates.CurrentY);
 
-                        if ((b.WhiteSpace != CssConstants.NoWrap && b.WhiteSpace != CssConstants.Pre && coordinates.CurrentX + word.Width + rightSpacing > limitRight
+                        var actualLimitRight = limitRight;
+                        var lastRightIntersectingFloatBox = DomUtils.GetLastRightIntersectingFloatBox(box, coordinates, word.FullWidth);
+
+                        if (lastRightIntersectingFloatBox is not null)
+                        {
+                            actualLimitRight = lastRightIntersectingFloatBox.Location.X -
+                                               lastRightIntersectingFloatBox.ActualMarginLeft - rightSpacing;
+                        }
+
+                        if ((b.WhiteSpace != CssConstants.NoWrap && b.WhiteSpace != CssConstants.Pre && coordinates.CurrentX + word.Width + rightSpacing > actualLimitRight
                              && (b.WhiteSpace != CssConstants.PreWrap || !word.IsSpaces))
                             || word.IsLineBreak || wrapNoWrapBox)
                         {
                             wrapNoWrapBox = false;
                             coordinates.CurrentX = lineStartX;
                             coordinates.CurrentY = coordinates.MaxBottom + lineSpacing;
+
+                            lastLeftIntersectingFloatBox = DomUtils.GetLastLeftIntersectingFloatBox(b, coordinates);
+
+                            if (lastLeftIntersectingFloatBox is not null)
+                            {
+                                coordinates.CurrentX = lastLeftIntersectingFloatBox.ActualRight + lastLeftIntersectingFloatBox.ActualMarginRight + leftSpacing;
+                            }
 
                             coordinates.Line = new CssLineBox(blockBox);
 
@@ -442,6 +475,13 @@ namespace PeachPDF.Html.Core.Dom
                         }
 
                         coordinates.Line.ReportExistanceOf(word);
+
+                        lastLeftIntersectingFloatBox = DomUtils.GetLastLeftIntersectingFloatBox(box, coordinates);
+
+                        if (lastLeftIntersectingFloatBox is not null)
+                        {
+                            coordinates.CurrentX = lastLeftIntersectingFloatBox.ActualRight + lastLeftIntersectingFloatBox.ActualMarginRight + leftSpacing;
+                        }
 
                         word.Left = coordinates.CurrentX;
                         word.Top = coordinates.CurrentY;

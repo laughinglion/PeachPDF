@@ -12,11 +12,10 @@
 
 using PeachPDF.Html.Adapters;
 using PeachPDF.Html.Adapters.Entities;
+using PeachPDF.Html.Core.Entities;
 using PeachPDF.Html.Core.Parse;
 using PeachPDF.Html.Core.Utils;
 using System.Globalization;
-using Org.BouncyCastle.Bcpg.OpenPgp;
-using PeachPDF.Html.Core.Entities;
 
 namespace PeachPDF.Html.Core.Dom
 {
@@ -90,6 +89,7 @@ namespace PeachPDF.Html.Core.Dom
         private RColor _actualBorderRightColor = RColor.Empty;
         private RColor _actualBackgroundColor = RColor.Empty;
         private RFont _actualFont;
+        private string _display = "inline";
 
         #endregion
 
@@ -321,7 +321,35 @@ namespace PeachPDF.Html.Core.Dom
 
         public string Content { get; set; } = "normal";
 
-        public string Display { get; set; } = "inline";
+        public string Display
+        {
+            get
+            {
+                if (Float is not CssConstants.None)
+                {
+                    return _display switch
+                    {
+                        "inline" => "block",
+                        "inline-block" => "block",
+                        "inline-table" => "table",
+                        "table-row" => "block",
+                        "table-row-group" => "block",
+                        "table-column" => "block",
+                        "table-column-group" => "block",
+                        "table-cell" => "block",
+                        "table-caption" => "block",
+                        "table-header-group" => "block",
+                        "table-footer-group" => "block",
+                        "inline-flex" => "flex",
+                        "inline-grid" => "grid",
+                        _ => _display
+                    };
+                }
+
+                return _display;
+            } 
+            set => _display = value;
+        }
 
         public string Direction { get; set; } = "ltr";
 
