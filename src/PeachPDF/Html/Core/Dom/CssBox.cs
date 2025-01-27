@@ -582,7 +582,7 @@ namespace PeachPDF.Html.Core.Dom
                 // Because their width and height are set by CssTable
                 if (Display != CssConstants.TableCell && Display != CssConstants.Table)
                 {
-                    var width = ContainingBlock.ClientRight - ContainingBlock.ClientLeft;
+                    var width = ContainingBlock.ClientRight - ContainingBlock.ClientLeft - ActualMarginLeft - ActualMarginRight;
 
                     if (Words.Count > 0)
                     {
@@ -606,7 +606,7 @@ namespace PeachPDF.Html.Core.Dom
                         var left = ContainingBlock.ClientLeft;
                         var top = (prevSibling == null && ContainingBlock != null ? ContainingBlock.ClientTop : ParentBox == null ? Location.Y : 0) + MarginTopCollapse(prevSibling) + (prevSibling != null ? prevSibling.ActualBottom + prevSibling.ActualBorderBottomWidth : 0);
                         
-                        Location = new RPoint(left, top);
+                        Location = new RPoint(left + ActualMarginLeft, top);
                         ActualBottom = top;
 
                         CssLayoutEngine.FloatBox(this);
