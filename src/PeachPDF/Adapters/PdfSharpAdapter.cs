@@ -45,7 +45,9 @@ namespace PeachPDF.Adapters
             AddFontFamilyMapping("monospace", "Courier New");
             AddFontFamilyMapping("serif", "Times New Roman");
             AddFontFamilyMapping("sans-serif", "Arial");
+            AddFontFamilyMapping("fantasy", "Impact");
             AddFontFamilyMapping("Helvetica", "Arial");
+
 
             var fonts = FontResolver.SupportedFonts;
 
