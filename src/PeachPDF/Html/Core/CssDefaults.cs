@@ -94,7 +94,7 @@ namespace PeachPDF.Html.Core
             center          { text-align: center }
             :link, :visited { text-decoration: underline }
             :focus          { outline: thin dotted invert }
-
+            
             /* Begin bidirectionality settings (do not change) */
             BDO[DIR="ltr"]  { direction: ltr; unicode-bidi: bidi-override }
             BDO[DIR="rtl"]  { direction: rtl; unicode-bidi: bidi-override }
@@ -152,6 +152,7 @@ namespace PeachPDF.Html.Core
             { "border-top-color", CssConstants.CurrentColor },
             { "border-top-style", CssConstants.None },
             { "border-top-width", CssConstants.Medium },
+            { "box-sizing", CssConstants.ContentBox },
             { "font-stretch", CssConstants.Normal },
             { "font-style", CssConstants.Normal },
             { "font-variant", CssConstants.Normal },

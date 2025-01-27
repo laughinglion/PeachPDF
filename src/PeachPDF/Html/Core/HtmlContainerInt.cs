@@ -18,6 +18,7 @@ using PeachPDF.Html.Core.Parse;
 using PeachPDF.Html.Core.Utils;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 
 namespace PeachPDF.Html.Core
@@ -112,7 +113,7 @@ namespace PeachPDF.Html.Core
             ArgChecker.AssertArgNotNull(adapter, "global");
 
             Adapter = adapter;
-            CssParser = new CssParser(adapter);
+            CssParser = new CssParser(adapter,this);
         }
 
         /// <summary>
@@ -244,7 +245,7 @@ namespace PeachPDF.Html.Core
             Clear();
             if (string.IsNullOrEmpty(htmlSource)) return;
 
-            CssData = baseCssData ?? Adapter.DefaultCssData;
+            CssData = baseCssData ?? await Adapter.GetDefaultCssData();
 
             DomParser parser = new(CssParser);
             (Root,CssData) = await parser.GenerateCssTree(htmlSource, this, CssData);
@@ -259,31 +260,6 @@ namespace PeachPDF.Html.Core
 
             Root.Dispose();
             Root = null;
-        }
-
-        /// <summary>
-        /// Get html from the current DOM tree with style if requested.
-        /// </summary>
-        /// <param name="styleGen">Optional: controls the way styles are generated when html is generated (default: <see cref="HtmlGenerationStyle.Inline"/>)</param>
-        /// <returns>generated html</returns>
-        public string GetHtml(HtmlGenerationStyle styleGen = HtmlGenerationStyle.Inline)
-        {
-            return DomUtils.GenerateHtml(Root, styleGen);
-        }
-
-        /// <summary>
-        /// Get attribute value of element at the given x,y location by given key.<br/>
-        /// If more than one element exist with the attribute at the location the inner most is returned.
-        /// </summary>
-        /// <param name="location">the location to find the attribute at</param>
-        /// <param name="attribute">the attribute key to get value by</param>
-        /// <returns>found attribute value or null if not found</returns>
-        public string GetAttributeAt(RPoint location, string attribute)
-        {
-            ArgChecker.AssertArgNotNullOrEmpty(attribute, "attribute");
-
-            var cssBox = DomUtils.GetCssBox(Root, OffsetByScroll(location));
-            return cssBox != null ? DomUtils.GetAttribute(cssBox, attribute) : null;
         }
 
         /// <summary>
@@ -358,7 +334,7 @@ namespace PeachPDF.Html.Core
         /// Render the html using the given device.
         /// </summary>
         /// <param name="g">the device to use to render</param>
-        public void PerformPaint(RGraphics g)
+        public async ValueTask PerformPaint(RGraphics g)
         {
             ArgChecker.AssertArgNotNull(g, "g");
 
@@ -367,7 +343,10 @@ namespace PeachPDF.Html.Core
                     Math.Min(MaxSize.Height, PageSize.Height))
                 : new RRect(MarginLeft, MarginTop, PageSize.Width, PageSize.Height));
 
-            Root?.Paint(g);
+            if (Root is not null)
+            {
+                await Root.Paint(g);
+            }
 
             g.PopClip();
         }
@@ -388,6 +367,7 @@ namespace PeachPDF.Html.Core
         /// <param name="type">the type of error to report</param>
         /// <param name="message">the error message</param>
         /// <param name="exception">optional: the exception that occured</param>
+        [DoesNotReturn]
         internal void ReportError(HtmlRenderErrorType type, string message, Exception exception = null)
         {
             throw new HtmlRenderException(message, type, exception);

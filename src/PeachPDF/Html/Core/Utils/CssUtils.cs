@@ -102,6 +102,7 @@ namespace PeachPDF.Html.Core.Utils
                 "direction" => cssBox.Direction,
                 "empty-cells" => cssBox.EmptyCells,
                 "float" => cssBox.Float,
+                "clear" => cssBox.Clear,
                 "position" => cssBox.Position,
                 "line-height" => cssBox.LineHeight,
                 "vertical-align" => cssBox.VerticalAlign,
@@ -255,6 +256,13 @@ namespace PeachPDF.Html.Core.Utils
                 case "border-collapse":
                     cssBox.BorderCollapse = value;
                     break;
+                case "box-sizing":
+                    if (IsValidBoxSizing(value))
+                    {
+                        cssBox.BoxSizing = value;
+                    }
+
+                    break;
                 case "corner-radius":
                     cssBox.CornerRadius = value;
                     break;
@@ -384,6 +392,9 @@ namespace PeachPDF.Html.Core.Utils
                 case "float":
                     cssBox.Float = value;
                     break;
+                case "clear":
+                    cssBox.Clear = value;
+                    break;
                 case "position":
                     cssBox.Position = value;
                     break;
@@ -495,6 +506,11 @@ namespace PeachPDF.Html.Core.Utils
                 CssConstants.Outset => true,
                 _ => false
             };
+        }
+
+        public static bool IsValidBoxSizing(string propValue)
+        {
+            return propValue is CssConstants.BorderBox or CssConstants.ContentBox;
         }
 
         private static void SetFontPropertyValue(CssValueParser valueParser, CssBox box, string propValue)

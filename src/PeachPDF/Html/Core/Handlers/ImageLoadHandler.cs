@@ -94,9 +94,8 @@ namespace PeachPDF.Html.Core.Handlers
         /// on the main thread and not thread-pool.
         /// </remarks>
         /// <param name="src">the source of the image to load</param>
-        /// <param name="attributes">the collection of attributes on the element to use in event</param>
         /// <returns>the image object (null if failed)</returns>
-        public async ValueTask LoadImage(string src, Dictionary<string, string> attributes)
+        public async ValueTask LoadImage(string src)
         {
             try
             {
@@ -218,7 +217,7 @@ namespace PeachPDF.Html.Core.Handlers
             {
                 Image = _htmlContainer.Adapter.ImageFromStream(stream);
             }
-            catch (UnknownImageFormatException exception)
+            catch (UnknownImageFormatException)
             {
                 Image = _htmlContainer.Adapter.GetLoadingFailedImage();
             }
@@ -233,7 +232,7 @@ namespace PeachPDF.Html.Core.Handlers
         /// </summary>
         private async ValueTask SetImageFromUrl(Uri source)
         {
-            if (source.IsFile)
+            if (source.IsAbsoluteUri && source.IsFile)
             {
                 var filePath = CommonUtils.GetLocalfileName(source);
 

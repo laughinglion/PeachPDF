@@ -10,6 +10,8 @@
 // - Sun Tsu,
 // "The Art of War"
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -30,10 +32,11 @@ namespace PeachPDF.Html.Core.Parse
         /// Parses the source html to css boxes tree structure.
         /// </summary>
         /// <param name="source">the html source to parse</param>
+        /// <param name="root">the root box (null for document root)</param>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
-        public static CssBox ParseDocument(string source)
+        public static CssBox ParseDocument(string source, CssBox? root = null)
         {
-            var root = CssBox.CreateBlock();
+            root ??= CssBox.CreateBlock();
             var curBox = root;
 
             using var sourceReader = new StringReader(source);
@@ -41,6 +44,10 @@ namespace PeachPDF.Html.Core.Parse
 
             while (tokenizer.ReadNextToken(out var token))
             {
+#if DEBUG
+                Console.WriteLine($"parse token start : current box: {curBox}; tag: {token}");
+#endif
+
                 switch (token.Kind)
                 {
                     case HtmlTokenKind.Tag:
@@ -52,8 +59,18 @@ namespace PeachPDF.Html.Core.Parse
                     case HtmlTokenKind.Data:
                     {
                         var text = (HtmlDataToken)token;
-                        AddTextBox(text, ref curBox);
+
+                        if (curBox.HtmlTag?.Name is HtmlConstants.NoScript)
+                        {
+                            curBox = ParseDocument(text.Data, curBox);
+                        }
+                        else
+                        {
+                            AddTextBox(text, ref curBox);
+                        }
+
                         break;
+
                     }
                     case HtmlTokenKind.CData:
                     case HtmlTokenKind.Comment:
@@ -107,6 +124,15 @@ namespace PeachPDF.Html.Core.Parse
             }
             else if (!string.IsNullOrEmpty(tagName))
             {
+                // Close <p> tags per https://html.spec.whatwg.org/dev/grouping-content.html#the-p-element
+                if (curBox.HtmlTag?.Name is "p")
+                {
+                    if (HtmlUtils.ShouldTagCloseParagraph(tagName))
+                    {
+                        curBox = DomUtils.FindParent(curBox.ParentBox, tagName, curBox);
+                    }
+                }
+
                 var isSingle = HtmlUtils.IsSingleTag(tagName) || token.IsEmptyElement;
                 var tag = new HtmlTag(tagName, isSingle, tagAttributes);
 

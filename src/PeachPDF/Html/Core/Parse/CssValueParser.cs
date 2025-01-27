@@ -127,7 +127,7 @@ namespace PeachPDF.Html.Core.Parse
             }
 
             string toParse = number;
-            bool isPercent = number.EndsWith("%");
+            bool isPercent = number.EndsWith('%');
 
             if (isPercent)
                 toParse = number[..^1];

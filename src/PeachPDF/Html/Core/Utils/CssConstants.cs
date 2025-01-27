@@ -28,11 +28,13 @@ namespace PeachPDF.Html.Core.Utils
         public const string Bold = "bold";
         public const string Bolder = "bolder";
         public const string BorderBox = "border-box";
+        public const string Both = "both";
         public const string Bottom = "bottom";
         public const string BreakAll = "break-all";
         public const string KeepAll = "keep-all";
         public const string Center = "center";
         public const string Collapse = "collapse";
+        public const string ContentBox = "content-box";
         public const string CurrentColor = "currentcolor";
         public const string Cursive = "cursive";
         public const string Circle = "circle";

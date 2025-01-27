@@ -45,7 +45,9 @@ namespace PeachPDF.Adapters
             AddFontFamilyMapping("monospace", "Courier New");
             AddFontFamilyMapping("serif", "Times New Roman");
             AddFontFamilyMapping("sans-serif", "Arial");
+            AddFontFamilyMapping("fantasy", "Impact");
             AddFontFamilyMapping("Helvetica", "Arial");
+
 
             var fonts = FontResolver.SupportedFonts;
 
@@ -65,7 +67,7 @@ namespace PeachPDF.Adapters
 
         public override async Task<Stream?> GetResourceStream(Uri uri)
         {
-            if (uri.Scheme is not "data") return await NetworkLoader.GetResourceStream(uri);
+            if (!uri.IsAbsoluteUri || uri.Scheme is not "data") return await NetworkLoader.GetResourceStream(uri);
 
             if (NetworkLoader is DataUriNetworkLoader dataUriNetworkLoader)
             {

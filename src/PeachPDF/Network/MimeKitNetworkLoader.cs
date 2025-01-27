@@ -36,7 +36,7 @@ namespace PeachPDF.Network
 
             part = _message.BodyParts
                 .OfType<MimePart>()
-                .FirstOrDefault(x => x.ContentLocation == uri);
+                .FirstOrDefault(x => x.ContentLocation == uri || x.Headers["Content-Location"] == uri.OriginalString);
 
             return part?.Content.Open();
         }

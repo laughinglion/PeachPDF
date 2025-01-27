@@ -26,17 +26,12 @@ namespace PeachPDF.Html.Core.Dom
     /// </remarks>
     internal sealed class CssLineBox
     {
-        #region Fields and Consts
-
-        #endregion
-
-
         /// <summary>
         /// Creates a new LineBox
         /// </summary>
         public CssLineBox(CssBox ownerBox)
         {
-            Rectangles = new Dictionary<CssBox, RRect>();
+            Rectangles = [];
             RelatedBoxes = [];
             Words = [];
             OwnerBox = ownerBox;
@@ -139,36 +134,34 @@ namespace PeachPDF.Html.Core.Dom
         /// <param name="b"></param>
         internal void UpdateRectangle(CssBox box, double x, double y, double r, double b)
         {
-            double leftspacing = box.ActualBorderLeftWidth + box.ActualPaddingLeft;
-            double rightspacing = box.ActualBorderRightWidth + box.ActualPaddingRight;
-            double topspacing = box.ActualBorderTopWidth + box.ActualPaddingTop;
-            double bottomspacing = box.ActualBorderBottomWidth + box.ActualPaddingTop;
+            var leftSpacing = box.ActualBorderLeftWidth + box.ActualPaddingLeft;
+            var rightSpacing = box.ActualBorderRightWidth + box.ActualPaddingRight;
+            var topSpacing = box.ActualBorderTopWidth + box.ActualPaddingTop;
+            var bottomSpacing = box.ActualBorderBottomWidth + box.ActualPaddingTop;
 
             if ((box.FirstHostingLineBox != null && box.FirstHostingLineBox.Equals(this)) || box.IsImage)
-                x -= leftspacing;
+                x -= leftSpacing;
             if ((box.LastHostingLineBox != null && box.LastHostingLineBox.Equals(this)) || box.IsImage)
-                r += rightspacing;
+                r += rightSpacing;
 
             if (!box.IsImage)
             {
-                y -= topspacing;
-                b += bottomspacing;
+                y -= topSpacing;
+                b += bottomSpacing;
             }
 
-
-            if (!Rectangles.ContainsKey(box))
+            if (Rectangles.TryGetValue(box, out var f))
             {
-                Rectangles.Add(box, RRect.FromLTRB(x, y, r, b));
-            }
-            else
-            {
-                RRect f = Rectangles[box];
                 Rectangles[box] = RRect.FromLTRB(
                     Math.Min(f.X, x), Math.Min(f.Y, y),
                     Math.Max(f.Right, r), Math.Max(f.Bottom, b));
             }
+            else
+            {
+                Rectangles.Add(box, RRect.FromLTRB(x, y, r, b));
+            }
 
-            if (box.ParentBox != null && box.ParentBox.IsInline)
+            if (box.ParentBox is { IsInline: true })
             {
                 UpdateRectangle(box.ParentBox, x, y, r, b);
             }
@@ -179,7 +172,7 @@ namespace PeachPDF.Html.Core.Dom
         /// </summary>
         internal void AssignRectanglesToBoxes()
         {
-            foreach (CssBox b in Rectangles.Keys)
+            foreach (var b in Rectangles.Keys)
             {
                 b.Rectangles.Add(this, Rectangles[b]);
             }
@@ -191,7 +184,7 @@ namespace PeachPDF.Html.Core.Dom
         /// <param name="g">Device info</param>
         /// <param name="b">box to check words</param>
         /// <param name="baseline">baseline</param>
-        internal void SetBaseLine(RGraphics g, CssBox b, double baseline)
+        internal void SetBaseLine(CssBox b, double baseline)
         {
             //TODO: Aqui me quede, checar poniendo "by the" con un font-size de 3em
             List<CssRect> ws = WordsOf(b);
@@ -208,7 +201,7 @@ namespace PeachPDF.Html.Core.Dom
             }
             else
             {
-                CssRect firstw = b.FirstWordOccurence(b, this);
+                var firstw = CssBox.FirstWordOccurence(b, this);
 
                 if (firstw != null)
                 {

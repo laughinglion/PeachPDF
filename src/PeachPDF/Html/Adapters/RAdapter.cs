@@ -12,15 +12,14 @@
 
 #nullable enable
 
+using PeachPDF.Html.Adapters.Entities;
+using PeachPDF.Html.Core;
+using PeachPDF.Html.Core.Handlers;
+using PeachPDF.Html.Core.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using PeachPDF.Html.Adapters.Entities;
-using PeachPDF.Html.Core;
-using PeachPDF.Html.Core.Entities;
-using PeachPDF.Html.Core.Handlers;
-using PeachPDF.Html.Core.Utils;
 
 namespace PeachPDF.Html.Adapters
 {
@@ -44,12 +43,12 @@ namespace PeachPDF.Html.Adapters
         /// <summary>
         /// cache of brush color to brush instance
         /// </summary>
-        private readonly Dictionary<RColor, RBrush> _brushesCache = new();
+        private readonly Dictionary<RColor, RBrush> _brushesCache = [];
 
         /// <summary>
         /// cache of pen color to pen instance
         /// </summary>
-        private readonly Dictionary<RColor, RPen> _penCache = new();
+        private readonly Dictionary<RColor, RPen> _penCache = [];
 
         /// <summary>
         /// cache of all the font used not to create same font again and again
@@ -85,10 +84,7 @@ namespace PeachPDF.Html.Adapters
         /// <summary>
         /// Get the default CSS stylesheet data.
         /// </summary>
-        public CssData DefaultCssData
-        {
-            get { return _defaultCssData ??= CssData.Parse(this, CssDefaults.DefaultStyleSheet, false); }
-        }
+        public async Task<CssData> GetDefaultCssData() => _defaultCssData ??= await CssData.Parse(this, CssDefaults.DefaultStyleSheet, false);
 
         public abstract Uri? BaseUri { get; }
 
