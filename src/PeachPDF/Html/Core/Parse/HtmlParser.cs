@@ -44,6 +44,10 @@ namespace PeachPDF.Html.Core.Parse
 
             while (tokenizer.ReadNextToken(out var token))
             {
+#if DEBUG
+                Console.WriteLine($"parse token start : current box: {curBox}; tag: {token}");
+#endif
+
                 switch (token.Kind)
                 {
                     case HtmlTokenKind.Tag:
@@ -58,7 +62,7 @@ namespace PeachPDF.Html.Core.Parse
 
                         if (curBox.HtmlTag?.Name is HtmlConstants.NoScript)
                         {
-                            curBox = ParseDocument(text.Data, curBox.ParentBox);
+                            curBox = ParseDocument(text.Data, curBox);
                         }
                         else
                         {

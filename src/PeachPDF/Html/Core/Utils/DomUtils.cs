@@ -12,14 +12,12 @@
 
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using PeachPDF.Html.Adapters.Entities;
 using PeachPDF.Html.Core.Dom;
 using PeachPDF.Html.Core.Entities;
-using PeachPDF.Html.Core.Parse;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace PeachPDF.Html.Core.Utils
 {
@@ -59,15 +57,7 @@ namespace PeachPDF.Html.Core.Utils
         /// <returns>true - only inline child boxes, false - otherwise</returns>
         public static bool ContainsInlinesOnly(CssBox box)
         {
-            foreach (CssBox b in box.Boxes)
-            {
-                if (!b.IsInline)
-                {
-                    return false;
-                }
-            }
-
-            return true;
+            return box.Boxes.All(b => b.IsInline);
         }
 
         /// <summary>
@@ -78,17 +68,20 @@ namespace PeachPDF.Html.Core.Utils
         /// <param name="box"></param>
         public static CssBox FindParent(CssBox root, string tagName, CssBox? box)
         {
-            if (box is null)
+            while (true)
             {
-                return root;
-            }
+                if (box is null)
+                {
+                    return root;
+                }
 
-            if (box.HtmlTag != null && box.HtmlTag.Name.Equals(tagName, StringComparison.CurrentCultureIgnoreCase))
-            {
-                return box.ParentBox ?? root;
-            }
+                if (box.HtmlTag != null && box.HtmlTag.Name.Equals(tagName, StringComparison.CurrentCultureIgnoreCase))
+                {
+                    return box.ParentBox ?? root;
+                }
 
-            return FindParent(root, tagName, box.ParentBox);
+                box = box.ParentBox;
+            }
         }
 
         /// <summary>
@@ -130,8 +123,8 @@ namespace PeachPDF.Html.Core.Utils
             conBlock = conBlock.ParentBox;
 
             if (conBlock == null || index <= 0) return null;
-            int diff = 1;
-            CssBox sib = conBlock.Boxes[index - diff];
+            var diff = 1;
+            var sib = conBlock.Boxes[index - diff];
 
             while ((sib.Display == CssConstants.None || sib.Position == CssConstants.Absolute || sib.Position == CssConstants.Fixed) && index - diff - 1 >= 0)
             {
@@ -187,11 +180,13 @@ namespace PeachPDF.Html.Core.Utils
         /// <param name="linkBoxes">collection to add all link boxes to</param>
         public static void GetAllLinkBoxes(CssBox? box, List<CssBox> linkBoxes)
         {
-            if (box == null) return;
-
-            if (box is { IsClickable: true, Visibility: CssConstants.Visible })
+            switch (box)
             {
-                linkBoxes.Add(box);
+                case null:
+                    return;
+                case { IsClickable: true, Visibility: CssConstants.Visible }:
+                    linkBoxes.Add(box);
+                    break;
             }
 
             foreach (var childBox in box.Boxes)
@@ -401,24 +396,27 @@ namespace PeachPDF.Html.Core.Utils
 
         public static CssBox? GetFirstIntersectingFloatBox(CssBox reference, CssFloatCoordinates coordinates, string floatProp)
         {
-            if (reference.ParentBox is null)
+            while (true)
             {
-                return null;
-            }
-
-            var currentBoxIdx = reference.ParentBox.Boxes.IndexOf(reference);
-
-            for(var i = 0; i < currentBoxIdx; i++)
-            {
-                var next = GetNextIntersectingFloatBox(reference.ParentBox.Boxes[i], coordinates, floatProp);
-
-                if (next is not null)
+                if (reference.ParentBox is null)
                 {
-                    return next;
+                    return null;
                 }
-            }
 
-            return GetFirstIntersectingFloatBox(reference.ParentBox, coordinates, floatProp);
+                var currentBoxIdx = reference.ParentBox.Boxes.IndexOf(reference);
+
+                for (var i = 0; i < currentBoxIdx; i++)
+                {
+                    var next = GetNextIntersectingFloatBox(reference.ParentBox.Boxes[i], coordinates, floatProp);
+
+                    if (next is not null)
+                    {
+                        return next;
+                    }
+                }
+
+                reference = reference.ParentBox;
+            }
         }
 
         public static CssBox? GetLastLeftIntersectingFloatBox(CssBox box, CssLineBoxCoordinates coordinates)
@@ -511,27 +509,21 @@ namespace PeachPDF.Html.Core.Utils
             if (!targetBox.IsFloated) return false;
 
             // vertical conflict
-            if (coordinates.Top < targetBox.ActualBottom && targetBox.Location.Y <= coordinates.Top)
+            if (!(coordinates.Top < targetBox.ActualBottom) || !(targetBox.Location.Y <= coordinates.Top)) return false;
+
+            var targetRight = targetBox.ActualRight + targetBox.ActualMarginRight;
+            var targetLeft = targetBox.Location.X - targetBox.ActualMarginLeft;
+
+            var currentLeft = coordinates.Left - coordinates.MarginLeft;
+
+            switch (floatProp)
             {
-                var targetRight = targetBox.ActualRight + targetBox.ActualMarginRight;
-                var targetLeft = targetBox.Location.X - targetBox.ActualMarginLeft;
-
-                var currentLeft = coordinates.Left - coordinates.MarginLeft;
-
-                if (floatProp is CssConstants.Left && targetRight > currentLeft && targetLeft <= currentLeft)
-                {
+                case CssConstants.Left when targetRight > currentLeft && targetLeft <= currentLeft:
+                case CssConstants.Right when targetLeft > coordinates.FloatRightStartX + coordinates.MarginLeft + coordinates.ReferenceWidth + coordinates.MarginRight:
                     return true;
-                }
-
-                if (floatProp is CssConstants.Right && targetLeft > coordinates.FloatRightStartX + coordinates.MarginLeft + coordinates.ReferenceWidth + coordinates.MarginRight)
-                {
-                    return true;
-                }
+                default:
+                    return false;
             }
-
-
-
-            return false;
         }
     }
 }

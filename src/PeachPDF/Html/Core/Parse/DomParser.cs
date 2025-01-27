@@ -58,7 +58,6 @@ namespace PeachPDF.Html.Core.Parse
         public async Task<(CssBox cssBox, CssData cssData)> GenerateCssTree(string html, HtmlContainerInt htmlContainer, CssData cssData)
         {
             var root = HtmlParser.ParseDocument(html);
-            if (root is null) return (null, cssData);
 
             root.HtmlContainer = htmlContainer;
             const bool cssDataChanged = false;

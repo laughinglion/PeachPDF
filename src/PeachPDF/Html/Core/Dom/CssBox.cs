@@ -553,6 +553,10 @@ namespace PeachPDF.Html.Core.Dom
                 await MeasureWordsSize(g);
             }
 
+#if DEBUG
+            Console.WriteLine($"layout start: {ToString()}");
+#endif
+
             if (PageBreakBefore is CssConstants.Always)
             {
                 var previousSibling = DomUtils.GetPreviousSibling(this);
@@ -579,6 +583,11 @@ namespace PeachPDF.Html.Core.Dom
                 if (Display != CssConstants.TableCell && Display != CssConstants.Table)
                 {
                     var width = ContainingBlock.ClientRight - ContainingBlock.ClientLeft;
+
+                    if (Words.Count > 0)
+                    {
+                        width = Words.Sum(x => x.FullWidth);
+                    }
 
                     if (Width != CssConstants.Auto && !string.IsNullOrEmpty(Width))
                     {
@@ -645,6 +654,14 @@ namespace PeachPDF.Html.Core.Dom
                     {
                         ActualBottom = Location.Y;
                         await CssLayoutEngine.CreateLineBoxes(g, this); //This will automatically set the bottom of this block
+
+#if DEBUG
+                        foreach (var lineBox in LineBoxes)
+                        {
+                            Console.WriteLine($"layout linebox: {lineBox} [h: {lineBox.LineBottom}]");
+                        }
+#endif
+
                     }
                     else if (Boxes.Count > 0)
                     {
@@ -675,6 +692,11 @@ namespace PeachPDF.Html.Core.Dom
 
             var height = ActualBoxSizingHeight;
 
+            if (Words.Count > 0)
+            {
+                height = Math.Max(height, Words.Sum(w => w.Height));
+            }
+
             if (CssValueParser.IsValidLength(MinHeight))
             {
                 var minHeight = CssValueParser.ParseLength(MinHeight, ParentBox?.Size.Height ?? Size.Height, this) + ActualBoxSizeIncludedHeight;
@@ -700,7 +722,7 @@ namespace PeachPDF.Html.Core.Dom
             await CreateListItemBox(g);
 
 #if DEBUG
-            Console.WriteLine($"{ToString()} [x: {Location.X}, y: {Location.Y}, b: {ActualBottom}, r: {ActualRight}, h: {Size.Height}, w: {Size.Width}]");
+            Console.WriteLine($"layout finish: {ToString()} [x: {Location.X}, y: {Location.Y}, b: {ActualBottom}, r: {ActualRight}, h: {Size.Height}, w: {Size.Width}]");
 #endif
             if (IsFixed) return;
 
@@ -1553,7 +1575,7 @@ namespace PeachPDF.Html.Core.Dom
         /// <returns></returns>
         public override string ToString()
         {
-            var tag = HtmlTag != null ? $"<{HtmlTag.Name}#{_id}>" : "anon";
+            var tag = HtmlTag != null ? $"<{HtmlTag.Name}#{_id}>" : $"anon#{_id}";
 
             if (HtmlTag?.Attributes?.ContainsKey("class") ?? false)
             {

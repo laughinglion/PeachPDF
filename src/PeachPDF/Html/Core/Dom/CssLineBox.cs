@@ -172,7 +172,7 @@ namespace PeachPDF.Html.Core.Dom
         /// </summary>
         internal void AssignRectanglesToBoxes()
         {
-            foreach (CssBox b in Rectangles.Keys)
+            foreach (var b in Rectangles.Keys)
             {
                 b.Rectangles.Add(this, Rectangles[b]);
             }
