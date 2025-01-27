@@ -72,7 +72,7 @@ namespace PeachPDF.Html.Core.Handlers
         /// <param name="htmlContainer">the container of the html to handle load image for</param>
         public ImageLoadHandler(HtmlContainerInt htmlContainer)
         {
-            ArgChecker.AssertArgNotNull(htmlContainer, "htmlContainer");
+            ArgumentNullException.ThrowIfNull(htmlContainer);
 
             _htmlContainer = htmlContainer;
         }

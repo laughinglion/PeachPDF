@@ -43,7 +43,7 @@ namespace PeachPDF.Html.Core.Parse
         /// </summary>
         public DomParser(CssParser cssParser)
         {
-            ArgChecker.AssertArgNotNull(cssParser, "cssParser");
+            ArgumentNullException.ThrowIfNull(cssParser);
 
             _cssParser = cssParser;
         }
@@ -68,6 +68,8 @@ namespace PeachPDF.Html.Core.Parse
             var media = "print"; // TODO: fix this
 
             var cssValueParser = new CssValueParser(htmlContainer.Adapter);
+
+            CascadeApplyPageStyles(htmlContainer, root, cssData, cssValueParser);
 
             CascadeApplyStyles(cssValueParser, root, cssData, media);
 
@@ -129,6 +131,34 @@ namespace PeachPDF.Html.Core.Parse
             return (cssData, cssDataChanged);
         }
 
+        private static void CascadeApplyPageStyles(HtmlContainerInt htmlContainer, CssBox root, CssData cssData, CssValueParser valueParser)
+        {
+            foreach (var style in cssData.Stylesheets)
+            {
+                foreach (var pageRule in style.PageRules)
+                {
+                    if (pageRule.Style.MarginLeft.Length > 0)
+                    {
+                        htmlContainer.MarginLeft = CssValueParser.ParseLength(pageRule.Style.MarginLeft, htmlContainer.PageSize.Width, root);
+                    }
+
+                    if (pageRule.Style.MarginTop.Length > 0)
+                    {
+                        htmlContainer.MarginTop = CssValueParser.ParseLength(pageRule.Style.MarginTop, htmlContainer.PageSize.Width, root);
+                    }
+
+                    if (pageRule.Style.MarginBottom.Length > 0)
+                    {
+                        htmlContainer.MarginBottom = CssValueParser.ParseLength(pageRule.Style.MarginBottom, htmlContainer.PageSize.Width, root);
+                    }
+
+                    if (pageRule.Style.MarginRight.Length > 0)
+                    {
+                        htmlContainer.MarginRight = CssValueParser.ParseLength(pageRule.Style.MarginRight, htmlContainer.PageSize.Width, root);
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// Applies style to all boxes in the tree.<br/>
@@ -199,7 +229,7 @@ namespace PeachPDF.Html.Core.Parse
         /// <param name="cssData">the css data to use to get the matching css blocks</param>
         /// <param name="media">The media type to apply styles for</param>
         /// <returns>The list of applied important property names</returns>
-        private static ISet<string> AssignCssBlocks(CssValueParser valueParser, CssBox box, CssData cssData,string media)
+        private static HashSet<string> AssignCssBlocks(CssValueParser valueParser, CssBox box, CssData cssData,string media)
         {
             var combinedBlocks = new List<IStyleRule>();
             var styleRules = cssData.GetStyleRules(media, box);
@@ -222,7 +252,7 @@ namespace PeachPDF.Html.Core.Parse
         /// <param name="box">the css box to assign css to</param>
         /// <param name="stylesheetRule">the stylesheet rule to assign</param>
         /// <param name="importantPropertyNames">Carries the property names that have been marked important so they don't get re-applied</param>
-        private static void AssignCssBlock(CssValueParser valueParser, CssBox box, IStyleRule stylesheetRule, ISet<string> importantPropertyNames)
+        private static void AssignCssBlock(CssValueParser valueParser, CssBox box, IStyleRule stylesheetRule, HashSet<string> importantPropertyNames)
         {
             foreach (var prop in stylesheetRule.Style)
             {
@@ -243,7 +273,7 @@ namespace PeachPDF.Html.Core.Parse
                     importantPropertyNames.Add(prop.Name.ToLowerInvariant());
                 }
 
-                if (IsStyleOnElementAllowed(box, prop.Name, value))
+                if (IsStyleOnElementAllowed(box, prop.Name, value) && value is not null)
                 {
                     CssUtils.SetPropertyValue(valueParser ,box, prop.Name, value);
                 }

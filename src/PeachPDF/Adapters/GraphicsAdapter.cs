@@ -62,7 +62,7 @@ namespace PeachPDF.Adapters
         public GraphicsAdapter(RAdapter adapter, XGraphics g, bool releaseGraphics = false)
             : base(adapter, new RRect(0, 0, double.MaxValue, double.MaxValue))
         {
-            ArgChecker.AssertArgNotNull(g, "g");
+            ArgumentNullException.ThrowIfNull(g);
 
             _g = g;
             _releaseGraphics = releaseGraphics;

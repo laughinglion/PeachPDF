@@ -35,8 +35,8 @@ namespace PeachPDF.Html.Core.Dom
         /// <param name="imageWord">the image word to measure</param>
         public static void MeasureImageSize(CssRectImage imageWord)
         {
-            ArgChecker.AssertArgNotNull(imageWord, "imageWord");
-            ArgChecker.AssertArgNotNull(imageWord.OwnerBox, "imageWord.OwnerBox");
+            ArgumentNullException.ThrowIfNull(imageWord);
+            ArgumentNullException.ThrowIfNull(imageWord.OwnerBox);
 
             var width = new CssLength(imageWord.OwnerBox.Width);
             var height = new CssLength(imageWord.OwnerBox.Height);
@@ -124,8 +124,8 @@ namespace PeachPDF.Html.Core.Dom
         /// <param name="blockBox"></param>
         public static async ValueTask CreateLineBoxes(RGraphics g, CssBox blockBox)
         {
-            ArgChecker.AssertArgNotNull(g, "g");
-            ArgChecker.AssertArgNotNull(blockBox, "blockBox");
+            ArgumentNullException.ThrowIfNull(g);
+            ArgumentNullException.ThrowIfNull(blockBox);
 
             blockBox.LineBoxes.Clear();
 
@@ -179,8 +179,8 @@ namespace PeachPDF.Html.Core.Dom
         /// <param name="cell"></param>
         public static void ApplyCellVerticalAlignment(RGraphics g, CssBox cell)
         {
-            ArgChecker.AssertArgNotNull(g, "g");
-            ArgChecker.AssertArgNotNull(cell, "cell");
+            ArgumentNullException.ThrowIfNull(g);
+            ArgumentNullException.ThrowIfNull(cell);
 
             if (cell.VerticalAlign is CssConstants.Top or CssConstants.Baseline)
                 return;

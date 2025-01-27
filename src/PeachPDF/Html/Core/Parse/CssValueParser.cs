@@ -39,7 +39,7 @@ namespace PeachPDF.Html.Core.Parse
         /// </summary>
         public CssValueParser(RAdapter adapter)
         {
-            ArgChecker.AssertArgNotNull(adapter, "global");
+            ArgumentNullException.ThrowIfNull(adapter, "global");
 
             _adapter = adapter;
         }

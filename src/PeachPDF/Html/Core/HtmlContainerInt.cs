@@ -85,22 +85,22 @@ namespace PeachPDF.Html.Core
         /// <summary>
         /// the top margin between the page start and the text
         /// </summary>
-        private int _marginTop;
+        private double _marginTop;
 
         /// <summary>
         /// the bottom margin between the page end and the text
         /// </summary>
-        private int _marginBottom;
+        private double _marginBottom;
 
         /// <summary>
         /// the left margin between the page start and the text
         /// </summary>
-        private int _marginLeft;
+        private double _marginLeft;
 
         /// <summary>
         /// the right margin between the page end and the text
         /// </summary>
-        private int _marginRight;
+        private double _marginRight;
 
         #endregion
 
@@ -110,7 +110,7 @@ namespace PeachPDF.Html.Core
         /// </summary>
         public HtmlContainerInt(RAdapter adapter)
         {
-            ArgChecker.AssertArgNotNull(adapter, "global");
+            ArgumentNullException.ThrowIfNull(adapter);
 
             Adapter = adapter;
             CssParser = new CssParser(adapter,this);
@@ -171,7 +171,7 @@ namespace PeachPDF.Html.Core
         /// <summary>
         /// the top margin between the page start and the text
         /// </summary>
-        public int MarginTop
+        public double MarginTop
         {
             get => _marginTop;
             set
@@ -184,7 +184,7 @@ namespace PeachPDF.Html.Core
         /// <summary>
         /// the bottom margin between the page end and the text
         /// </summary>
-        public int MarginBottom
+        public double MarginBottom
         {
             get => _marginBottom;
             set
@@ -197,7 +197,7 @@ namespace PeachPDF.Html.Core
         /// <summary>
         /// the left margin between the page start and the text
         /// </summary>
-        public int MarginLeft
+        public double MarginLeft
         {
             get => _marginLeft;
             set
@@ -210,7 +210,7 @@ namespace PeachPDF.Html.Core
         /// <summary>
         /// the right margin between the page end and the text
         /// </summary>
-        public int MarginRight
+        public double MarginRight
         {
             get => _marginRight;
             set
@@ -218,16 +218,6 @@ namespace PeachPDF.Html.Core
                 if (value > -1)
                     _marginRight = value;
             }
-        }
-
-        /// <summary>
-        /// Set all 4 margins to the given value.
-        /// </summary>
-        /// <param name="value"></param>
-        public void SetMargins(int value)
-        {
-            if (value > -1)
-                _marginBottom = _marginLeft = _marginTop = _marginRight = value;
         }
 
         /// <summary>
@@ -311,7 +301,7 @@ namespace PeachPDF.Html.Core
         /// <param name="g">Device context to draw</param>
         public async ValueTask PerformLayout(RGraphics g)
         {
-            ArgChecker.AssertArgNotNull(g, "g");
+            ArgumentNullException.ThrowIfNull(g);
 
             ActualSize = RSize.Empty;
             if (Root is null) return;
@@ -336,7 +326,7 @@ namespace PeachPDF.Html.Core
         /// <param name="g">the device to use to render</param>
         public async ValueTask PerformPaint(RGraphics g)
         {
-            ArgChecker.AssertArgNotNull(g, "g");
+            ArgumentNullException.ThrowIfNull(g);
 
             g.PushClip(MaxSize.Height > 0
                 ? new RRect(Location.X, Location.Y, Math.Min(MaxSize.Width, PageSize.Width),

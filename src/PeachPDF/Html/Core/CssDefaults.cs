@@ -26,12 +26,17 @@ namespace PeachPDF.Html.Core
         public const string DefaultStyleSheet = """
                                                 
             html, address,
+            article, aside,
+            footer, header,
             blockquote,
             body, dd, div,
             dl, dt, fieldset, form,
             frame, frameset,
             h1, h2, h3, h4,
-            h5, h6, noframes,
+            h5, h6, 
+            hgroup, main,nav
+            section, search,
+            noframes,
             ol, p, ul, center,
             dir, menu, pre   { display: block }
             li              { display: list-item }

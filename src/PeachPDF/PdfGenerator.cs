@@ -155,8 +155,6 @@ namespace PeachPDF
                 orgPageSize = new XSize(orgPageSize.Height, orgPageSize.Width);
             }
 
-            var pageSize = new XSize(orgPageSize.Width - config.MarginLeft - config.MarginRight, orgPageSize.Height - config.MarginTop - config.MarginBottom);
-
             if (string.IsNullOrEmpty(html) && config.NetworkLoader is null) return;
 
             _pdfSharpAdapter.NetworkLoader = config.NetworkLoader ?? new DataUriNetworkLoader();
@@ -165,14 +163,19 @@ namespace PeachPDF
 
             using var container = new HtmlContainer(_pdfSharpAdapter);
 
-            container.Location = new XPoint(config.MarginLeft, config.MarginTop);
-            container.MaxSize = new XSize(pageSize.Width, 0);
-            await container.SetHtml(html, cssData);
-            container.PageSize = pageSize;
+
             container.MarginBottom = config.MarginBottom;
             container.MarginLeft = config.MarginLeft;
             container.MarginRight = config.MarginRight;
             container.MarginTop = config.MarginTop;
+
+            await container.SetHtml(html, cssData);
+
+            // Just in case @page rules got applied
+            var pageSize = new XSize(orgPageSize.Width - container.MarginLeft - container.MarginRight, orgPageSize.Height - container.MarginTop - container.MarginBottom);
+            container.PageSize = pageSize;
+            container.Location = new XPoint(container.MarginLeft, container.MarginTop);
+            container.MaxSize = new XSize(pageSize.Width, 0);
 
             // layout the HTML with the page width restriction to know how many pages are required
             using var measure = XGraphics.CreateMeasureContext(pageSize, XGraphicsUnit.Point, XPageDirection.Downwards);

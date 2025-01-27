@@ -106,7 +106,7 @@ namespace PeachPDF
         /// <summary>
         /// the top margin between the page start and the text
         /// </summary>
-        public int MarginTop
+        public double MarginTop
         {
             get => _htmlContainerInt.MarginTop;
             set
@@ -119,7 +119,7 @@ namespace PeachPDF
         /// <summary>
         /// the bottom margin between the page end and the text
         /// </summary>
-        public int MarginBottom
+        public double MarginBottom
         {
             get => _htmlContainerInt.MarginBottom;
             set
@@ -132,7 +132,7 @@ namespace PeachPDF
         /// <summary>
         /// the left margin between the page start and the text
         /// </summary>
-        public int MarginLeft
+        public double MarginLeft
         {
             get => _htmlContainerInt.MarginLeft;
             set
@@ -145,7 +145,7 @@ namespace PeachPDF
         /// <summary>
         /// the right margin between the page end and the text
         /// </summary>
-        public int MarginRight
+        public double MarginRight
         {
             get => _htmlContainerInt.MarginRight;
             set
@@ -211,7 +211,7 @@ namespace PeachPDF
         /// <param name="g">Device context to draw</param>
         public async ValueTask PerformLayout(XGraphics g)
         {
-            ArgChecker.AssertArgNotNull(g, "g");
+            ArgumentNullException.ThrowIfNull(g);
 
             using var ig = new GraphicsAdapter(_htmlContainerInt.Adapter, g);
             await _htmlContainerInt.PerformLayout(ig);
@@ -223,7 +223,7 @@ namespace PeachPDF
         /// <param name="g">the device to use to render</param>
         public async ValueTask PerformPaint(XGraphics g)
         {
-            ArgChecker.AssertArgNotNull(g, "g");
+            ArgumentNullException.ThrowIfNull(g);
 
             using var ig = new GraphicsAdapter(_htmlContainerInt.Adapter, g);
             await _htmlContainerInt.PerformPaint(ig);

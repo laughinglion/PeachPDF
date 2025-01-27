@@ -118,18 +118,33 @@ namespace PeachPDF.Html.Core.Parse
             {
                 if (!HtmlUtils.IsSingleTag(tagName) && curBox.ParentBox != null)
                 {
+#if DEBUG
+                    Console.WriteLine($"parse token, tag close: {tagName}. current box: {curBox}");
+#endif
                     // need to find the parent tag to go one level up
-                    curBox = DomUtils.FindParent(curBox.ParentBox, tagName, curBox);
+                    curBox = CloseElement(curBox, tagName);
+
                 }
             }
             else if (!string.IsNullOrEmpty(tagName))
             {
-                // Close <p> tags per https://html.spec.whatwg.org/dev/grouping-content.html#the-p-element
-                if (curBox.HtmlTag?.Name is "p")
+#if DEBUG
+                Console.WriteLine($"parse token, tag open: {tagName}. current box: {curBox}");
+#endif
+                while (true)
                 {
-                    if (HtmlUtils.ShouldTagCloseParagraph(tagName))
+                    if (curBox.HtmlTag is not null && HtmlUtils.CanEndTagBeOmitted(curBox.HtmlTag.Name, tagName))
                     {
-                        curBox = DomUtils.FindParent(curBox.ParentBox, tagName, curBox);
+                        var previousBox = curBox;
+                        curBox = CloseElement(curBox, curBox.HtmlTag.Name);
+
+#if DEBUG
+                        Console.WriteLine($"parse token, prev tag omitted, closing: {previousBox}. current box is now: {curBox}");
+#endif
+                    }
+                    else
+                    {
+                        break;
                     }
                 }
 
@@ -149,6 +164,17 @@ namespace PeachPDF.Html.Core.Parse
             }
         }
 
+        private static CssBox CloseElement(CssBox cssBox, string tagName)
+        {
+            var currentBox =  DomUtils.FindParent(cssBox.ParentBox, tagName, cssBox);
+
+#if DEBUG
+            Console.WriteLine($"parse token, closing: {cssBox}. current box is now: {currentBox}");
+#endif
+
+            return currentBox;
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -156,7 +182,7 @@ namespace PeachPDF.Html.Core.Parse
         /// <param name="name"></param>
         /// <param name="attributes"></param>
         /// <returns></returns>
-        private static bool ParseHtmlTag(HtmlTagToken token, out string name, out Dictionary<string, string> attributes)
+        private static bool ParseHtmlTag(HtmlTagToken token, out string name, out Dictionary<string, string>? attributes)
         {
             var isClosing = token.IsEndTag;
 

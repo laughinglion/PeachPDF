@@ -38,7 +38,7 @@ namespace PeachPDF.Html.Core.Dom
     {
         #region Fields and Consts
 
-        private uint _id = 0;
+        private readonly uint _id = 0;
 
         private static uint _idCounter = 0;
 
@@ -296,7 +296,7 @@ namespace PeachPDF.Html.Core.Dom
         /// <returns>the new box</returns>
         public static CssBox CreateBox(HtmlTag tag, CssBox parent = null)
         {
-            ArgChecker.AssertArgNotNull(tag, "tag");
+            ArgumentNullException.ThrowIfNull(tag);
 
             return tag.Name switch
             {
@@ -323,7 +323,7 @@ namespace PeachPDF.Html.Core.Dom
         /// <returns>the new box</returns>
         public static CssBox CreateBox(CssBox parent, HtmlTag tag = null, CssBox before = null)
         {
-            ArgChecker.AssertArgNotNull(parent, "parent");
+            ArgumentNullException.ThrowIfNull(parent);
 
             var newBox = new CssBox(parent, tag);
             newBox.InheritStyle();
@@ -363,7 +363,7 @@ namespace PeachPDF.Html.Core.Dom
         /// <returns>the new block box</returns>
         public static CssBox CreateBlock(CssBox parent, HtmlTag tag = null, CssBox before = null)
         {
-            ArgChecker.AssertArgNotNull(parent, "parent");
+            ArgumentNullException.ThrowIfNull(parent);
 
             var newBox = CreateBox(parent, tag, before);
             newBox.Display = CssConstants.Block;

@@ -337,6 +337,19 @@ namespace PeachPDF.Html.Core.Utils
             return str;
         }
 
+        // https://html.spec.whatwg.org/dev/dom.html#concept-element-tag-omission
+        public static bool CanEndTagBeOmitted(string currentTagName, string tagName)
+        {
+            return currentTagName switch
+            {
+                "p" => ShouldTagCloseParagraph(tagName),
+                "td" => ShouldTagCloseTableCell(tagName),
+                "tr" => ShouldTagCloseTableRow(tagName),
+                _ => false
+            };
+        }
+
+        // Close <p> tags per https://html.spec.whatwg.org/dev/grouping-content.html#the-p-element
         public static bool ShouldTagCloseParagraph(string tagName)
         {
             return tagName switch
@@ -347,6 +360,21 @@ namespace PeachPDF.Html.Core.Utils
                     or "search" or "section" or "table" or "ul" => true,
                 _ => false
             };
+        }
+
+        // Close <td> tags per https://html.spec.whatwg.org/dev/tables.html#the-td-element
+        public static bool ShouldTagCloseTableCell(string tagName)
+        {
+            return tagName switch
+            {
+                "td" or "th" or "tr" => true,
+                _ => false
+            };
+        }
+
+        public static bool ShouldTagCloseTableRow(string tagName)
+        {
+            return tagName is "tr";
         }
 
         #region Private methods
@@ -406,10 +434,10 @@ namespace PeachPDF.Html.Core.Utils
                 if (endIdx > -1 && endIdx - idx < 8)
                 {
                     var key = str.ToString(idx + 1, endIdx - idx - 1);
-                    if (_decodeOnly.TryGetValue(key, out char c))
+                    if (_decodeOnly.TryGetValue(key, out var c))
                     {
                         str = str.Remove(idx, endIdx - idx + 1);
-                        str = str.Insert(idx, c.ToString());
+                        str = str.Insert(idx, c);
                     }
                 }
 

@@ -19,6 +19,7 @@ using PeachPDF.Html.Core.Handlers;
 using PeachPDF.Html.Core.Utils;
 using System.Threading.Tasks;
 using PeachPDF.Html.Core.Entities;
+using System;
 
 namespace PeachPDF.Html.Core.Parse
 {
@@ -49,7 +50,7 @@ namespace PeachPDF.Html.Core.Parse
         /// </summary>
         public CssParser(RAdapter adapter, HtmlContainerInt? htmlContainer)
         {
-            ArgChecker.AssertArgNotNull(adapter, "global");
+            ArgumentNullException.ThrowIfNull(adapter, "global");
 
             _valueParser = new CssValueParser(adapter);
             _adapter = adapter;
