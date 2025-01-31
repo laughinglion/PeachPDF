@@ -12,6 +12,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using PeachPDF.Html.Adapters;
 using PeachPDF.Html.Adapters.Entities;
@@ -303,7 +304,11 @@ namespace PeachPDF.Html.Core.Dom
             else
             {
                 foreach (var b in _allRows)
-                    _columnCount = Math.Max(_columnCount, b.Boxes.Count);
+                {
+                    var rowColumnCount = b.Boxes.Sum(GetColSpan);
+                    _columnCount = Math.Max(_columnCount, rowColumnCount);
+                }
+                    
             }
 
             //Initialize column widths array with NaNs
