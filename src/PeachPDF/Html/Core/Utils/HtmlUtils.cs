@@ -303,6 +303,13 @@ namespace PeachPDF.Html.Core.Utils
             _decodeOnly["diams"] = Convert.ToChar(9830);
         }
 
+        public static string FixNewLines(string text)
+        {
+            text = text.Replace("\r\n", "\n");
+            text = text.Replace("\r", "\n");
+            return text;
+        }
+
         /// <summary>
         /// Is the given html tag is single tag or can have content.
         /// </summary>

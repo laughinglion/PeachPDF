@@ -61,20 +61,7 @@ namespace PeachPDF.Html.Core.Dom
         /// </summary>
         public RImage Image => _imageWord.Image;
 
-        public string ImageSource
-        {
-            get
-            {
-                var source = GetAttribute("src");
-
-                if (source.Length is 0)
-                {
-                    source = GetAttribute("data-cfsrc");
-                }
-
-                return source;
-            }
-        }
+        public string ImageSource => GetAttribute("src");
 
         /// <summary>
         /// Paints the fragment
@@ -177,15 +164,6 @@ namespace PeachPDF.Html.Core.Dom
         #region Private methods
 
         /// <summary>
-        /// Set error image border on the image box.
-        /// </summary>
-        private void SetErrorBorder()
-        {
-            SetAllBorders(CssConstants.Solid, "2px", "#A0A0A0");
-            BorderRightColor = BorderBottomColor = "#E3E3E3";
-        }
-
-        /// <summary>
         /// On image load process is complete with image or without update the image box.
         /// </summary>
         /// <param name="image">the image loaded or null if failed</param>
@@ -194,11 +172,6 @@ namespace PeachPDF.Html.Core.Dom
             _imageWord.Image = image;
             _imageLoadingComplete = true;
             _wordsSizeMeasured = false;
-
-            if (_imageLoadingComplete && image == null)
-            {
-                SetErrorBorder();
-            }
         }
 
         #endregion

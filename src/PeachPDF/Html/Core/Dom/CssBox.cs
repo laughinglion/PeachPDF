@@ -253,7 +253,7 @@ namespace PeachPDF.Html.Core.Dom
             get => _text;
             set
             {
-                _text = value;
+                _text = HtmlUtils.FixNewLines(value);
                 Words.Clear();
             }
         }
@@ -475,9 +475,10 @@ namespace PeachPDF.Html.Core.Dom
         {
             Words.Clear();
 
-            int startIdx = 0;
-            bool preserveSpaces = WhiteSpace is CssConstants.Pre or CssConstants.PreWrap;
-            bool respectNewLines = preserveSpaces || WhiteSpace == CssConstants.PreLine;
+            var startIdx = 0;
+            var preserveSpaces = WhiteSpace is CssConstants.Pre or CssConstants.PreWrap;
+            var respectNewLines = preserveSpaces || WhiteSpace == CssConstants.PreLine;
+
             while (startIdx < _text.Length)
             {
                 while (startIdx < _text.Length && _text[startIdx] == '\r')
@@ -605,7 +606,7 @@ namespace PeachPDF.Html.Core.Dom
 
                         var left = ContainingBlock.ClientLeft;
                         var top = (prevSibling == null && ContainingBlock != null ? ContainingBlock.ClientTop : ParentBox == null ? Location.Y : 0) + MarginTopCollapse(prevSibling) + (prevSibling != null ? prevSibling.ActualBottom + prevSibling.ActualBorderBottomWidth : 0);
-                        
+
                         Location = new RPoint(left + ActualMarginLeft, top);
                         ActualBottom = top;
 

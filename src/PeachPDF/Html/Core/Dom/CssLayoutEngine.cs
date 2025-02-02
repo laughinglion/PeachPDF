@@ -18,6 +18,7 @@ using PeachPDF.Html.Core.Entities;
 using PeachPDF.Html.Core.Utils;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -214,18 +215,18 @@ namespace PeachPDF.Html.Core.Dom
 
             //Get the start x and y of the blockBox
             var startX = containingBox.ClientLeft;
-            var startY = containingBox.ClientTop;
+            var startY = box.Location.Y;
 
             var currentBoxIdx = containingBox.Boxes.IndexOf(box);
 
-            if (box.Float is CssConstants.Left)
+            switch (box.Float)
             {
-                FloatBoxLeft(box, startX, startY, limitRight);
-            }
-
-            if (box.Float is CssConstants.Right)
-            {
-                FloatBoxRight(box, startX, startY, limitRight);
+                case CssConstants.Left:
+                    FloatBoxLeft(box, startX, startY, limitRight);
+                    break;
+                case CssConstants.Right:
+                    FloatBoxRight(box, startX, startY, limitRight);
+                    break;
             }
 
             if (box.Clear is not CssConstants.None)
