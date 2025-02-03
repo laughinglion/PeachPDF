@@ -1,6 +1,7 @@
 ## MIT License﻿
 
 Copyright (c) 2001-2024 empira Software GmbH, Troisdorf (Cologne Area), Germany
+Copyright (c) 2017-2025 Justin Haygood
 
 http://docs.pdfsharp.net
 
