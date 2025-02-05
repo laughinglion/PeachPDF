@@ -50,7 +50,5 @@ namespace PeachPDF.PdfSharpCore.Fonts
         /// </summary>
         /// <param name="fontFaceName">A face name previously retrieved by ResolveTypeface.</param>
         byte[] GetFont(string fontFaceName);
-
-        string DefaultFontName { get; }
     }
 }

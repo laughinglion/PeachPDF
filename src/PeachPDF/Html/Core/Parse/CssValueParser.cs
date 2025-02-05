@@ -11,10 +11,14 @@
 // "The Art of War"
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
+using PeachPDF.CSS;
 using PeachPDF.Html.Adapters;
 using PeachPDF.Html.Adapters.Entities;
 using PeachPDF.Html.Core.Dom;
+using PeachPDF.Html.Core.Entities;
 using PeachPDF.Html.Core.Utils;
 
 namespace PeachPDF.Html.Core.Parse
@@ -391,6 +395,60 @@ namespace PeachPDF.Html.Core.Parse
                 endIdx--;
 
             return startIdx <= endIdx ? propValue.Substring(startIdx, endIdx - startIdx + 1) : propValue;
+        }
+
+        public static CssFontFace GetFontFacePropertyValue(string propValue)
+        {
+            var lexer = new Lexer(new TextSource(propValue));
+
+            List<Token> tokens = [];
+
+            Token token;
+
+            do
+            {
+                token = lexer.Get();
+
+                if (token.Type != TokenType.EndOfFile && token.Type != TokenType.Whitespace)
+                {
+                    tokens.Add(token);
+                }
+
+            } while (token.Type != TokenType.EndOfFile);
+
+            var urlToken = tokens.OfType<UrlToken>().SingleOrDefault();
+            var formatToken = tokens.OfType<FunctionToken>().SingleOrDefault(x => x.Data == "format");
+            var techToken = tokens.OfType<FunctionToken>().SingleOrDefault(x => x.Data == "tech");
+            var localToken = tokens.OfType<FunctionToken>().SingleOrDefault(x => x.Data == "local");
+
+            return new CssFontFace(urlToken?.Data, formatToken?.ArgumentTokens?.FirstOrDefault()?.Data, techToken?.ArgumentTokens?.FirstOrDefault()?.Data, localToken?.ArgumentTokens?.FirstOrDefault()?.Data);
+        }
+
+        public static string GetFontFaceFamilyName(string propValue)
+        {
+            var lexer = new Lexer(new TextSource(propValue));
+
+            List<Token> tokens = [];
+
+            Token token;
+
+            do
+            {
+                token = lexer.Get();
+
+                if (token.Type != TokenType.EndOfFile && token.Type != TokenType.Whitespace)
+                {
+                    tokens.Add(token);
+                }
+
+            } while (token.Type != TokenType.EndOfFile);
+
+            if (tokens.Count == 1 && tokens[0] is StringToken stringToken)
+            {
+                return stringToken.Data;
+            }
+
+            return propValue;
         }
 
         #region Private methods

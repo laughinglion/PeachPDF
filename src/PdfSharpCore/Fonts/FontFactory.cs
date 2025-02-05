@@ -55,10 +55,11 @@ namespace PeachPDF.PdfSharpCore.Fonts
         /// <param name="familyName">Name of the font family.</param>
         /// <param name="fontResolvingOptions">The font resolving options.</param>
         /// <param name="typefaceKey">Typeface key if already known by caller, null otherwise.</param>
+        /// <param name="fontResolver">Font Resolver</param>
         /// <returns>
         /// Information about the typeface, or null if no typeface can be found.
         /// </returns>
-        public static FontResolverInfo ResolveTypeface(string familyName, FontResolvingOptions fontResolvingOptions, string typefaceKey)
+        public static FontResolverInfo ResolveTypeface(string familyName, FontResolvingOptions fontResolvingOptions, string typefaceKey, IFontResolver fontResolver)
         {
             if (string.IsNullOrEmpty(typefaceKey))
                 typefaceKey = XGlyphTypeface.ComputeKey(familyName, fontResolvingOptions);
@@ -74,7 +75,7 @@ namespace PeachPDF.PdfSharpCore.Fonts
                 // Case: This typeface was not resolved before.
 
                 // Is there a custom font resolver available?
-                IFontResolver customFontResolver = GlobalFontSettings.FontResolver;
+                IFontResolver customFontResolver = fontResolver;
                 if (customFontResolver != null)
                 {
                     // Case: Use custom font resolver.

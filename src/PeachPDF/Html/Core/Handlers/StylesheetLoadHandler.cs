@@ -13,7 +13,6 @@
 using PeachPDF.Html.Core.Entities;
 using PeachPDF.Html.Core.Utils;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 

@@ -50,8 +50,8 @@ namespace PeachPDF.PdfSharpCore.Drawing
         /// </summary>
         /// <param name="familyName">Name of the font family.</param>
         /// <param name="emSize">The em size.</param>
-        public XFont(string familyName, double emSize)
-            : this(familyName, emSize, XFontStyle.Regular, new XPdfFontOptions(GlobalFontSettings.DefaultFontEncoding))
+        public XFont(string familyName, double emSize, IFontResolver fontResolver)
+            : this(familyName, emSize, XFontStyle.Regular, new XPdfFontOptions(GlobalFontSettings.DefaultFontEncoding), fontResolver)
         { }
 
         /// <summary>
@@ -60,8 +60,8 @@ namespace PeachPDF.PdfSharpCore.Drawing
         /// <param name="familyName">Name of the font family.</param>
         /// <param name="emSize">The em size.</param>
         /// <param name="style">The font style.</param>
-        public XFont(string familyName, double emSize, XFontStyle style)
-            : this(familyName, emSize, style, new XPdfFontOptions(GlobalFontSettings.DefaultFontEncoding))
+        public XFont(string familyName, double emSize, XFontStyle style, IFontResolver fontResolver)
+            : this(familyName, emSize, style, new XPdfFontOptions(GlobalFontSettings.DefaultFontEncoding), fontResolver)
         { }
 
         /// <summary>
@@ -71,16 +71,16 @@ namespace PeachPDF.PdfSharpCore.Drawing
         /// <param name="emSize">The em size.</param>
         /// <param name="style">The font style.</param>
         /// <param name="pdfOptions">Additional PDF options.</param>
-        public XFont(string familyName, double emSize, XFontStyle style, XPdfFontOptions pdfOptions)
+        public XFont(string familyName, double emSize, XFontStyle style, XPdfFontOptions pdfOptions, IFontResolver fontResolver)
         {
             _familyName = familyName;
             _emSize = emSize;
             _style = style;
             _pdfOptions = pdfOptions;
-            Initialize();
+            Initialize(fontResolver);
         }
 
-        internal XFont(string familyName, double emSize, XFontStyle style, XPdfFontOptions pdfOptions, XStyleSimulations styleSimulations)
+        internal XFont(string familyName, double emSize, XFontStyle style, XPdfFontOptions pdfOptions, XStyleSimulations styleSimulations, IFontResolver fontResolver)
         {
             _familyName = familyName;
             _emSize = emSize;
@@ -88,14 +88,14 @@ namespace PeachPDF.PdfSharpCore.Drawing
             _pdfOptions = pdfOptions;
             OverrideStyleSimulations = true;
             StyleSimulations = styleSimulations;
-            Initialize();
+            Initialize(fontResolver);
         }
 
         /// <summary>
         /// Initializes this instance by computing the glyph typeface, font family, font source and TrueType fontface.
         /// (PDFsharp currently only deals with TrueType fonts.)
         /// </summary>
-        void Initialize()
+        void Initialize(IFontResolver fontResolver)
         {
 #if DEBUG
             if (_familyName == "Segoe UI Semilight" && (_style & XFontStyle.BoldItalic) == XFontStyle.Italic)
@@ -112,7 +112,7 @@ namespace PeachPDF.PdfSharpCore.Drawing
             }
 
             // In principle an XFont is an XGlyphTypeface plus an em-size.
-            _glyphTypeface = XGlyphTypeface.GetOrCreateFrom(_familyName, fontResolvingOptions);
+            _glyphTypeface = XGlyphTypeface.GetOrCreateFrom(_familyName, fontResolvingOptions, fontResolver);
             CreateDescriptorAndInitializeFontMetrics();
         }
 

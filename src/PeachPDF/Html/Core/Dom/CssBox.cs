@@ -548,15 +548,17 @@ namespace PeachPDF.Html.Core.Dom
         /// <param name="g">Device context to use</param>
         protected virtual async ValueTask PerformLayoutImp(RGraphics g)
         {
+#if DEBUG
+            Console.WriteLine($"layout start: {ToString()}");
+#endif
+
             if (Display != CssConstants.None)
             {
                 RectanglesReset();
                 await MeasureWordsSize(g);
             }
 
-#if DEBUG
-            Console.WriteLine($"layout start: {ToString()}");
-#endif
+
 
             if (PageBreakBefore is CssConstants.Always)
             {

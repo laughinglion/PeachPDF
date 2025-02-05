@@ -1373,50 +1373,6 @@ namespace PeachPDF.PdfSharpCore.Drawing  // #??? aufräumen
             }
         }
 
-        // ----- DrawBarCode --------------------------------------------------------------------------
-
-        /// <summary>
-        /// Draws the specified bar code.
-        /// </summary>
-        public void DrawBarCode(BarCodes.BarCode barcode, XPoint position)
-        {
-            barcode.Render(this, XBrushes.Black, null, position);
-        }
-
-        /// <summary>
-        /// Draws the specified bar code.
-        /// </summary>
-        public void DrawBarCode(BarCodes.BarCode barcode, XBrush brush, XPoint position)
-        {
-            barcode.Render(this, brush, null, position);
-        }
-
-        /// <summary>
-        /// Draws the specified bar code.
-        /// </summary>
-        public void DrawBarCode(BarCodes.BarCode barcode, XBrush brush, XFont font, XPoint position)
-        {
-            barcode.Render(this, brush, font, position);
-        }
-
-        // ----- DrawMatrixCode -----------------------------------------------------------------------
-
-        /// <summary>
-        /// Draws the specified data matrix code.
-        /// </summary>
-        public void DrawMatrixCode(BarCodes.MatrixCode matrixcode, XPoint position)
-        {
-            matrixcode.Render(this, XBrushes.Black, position);
-        }
-
-        /// <summary>
-        /// Draws the specified data matrix code.
-        /// </summary>
-        public void DrawMatrixCode(BarCodes.MatrixCode matrixcode, XBrush brush, XPoint position)
-        {
-            matrixcode.Render(this, brush, position);
-        }
-
         #endregion
 
         // --------------------------------------------------------------------------------------------

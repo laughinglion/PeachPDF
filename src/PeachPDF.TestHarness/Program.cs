@@ -10,20 +10,23 @@ PdfGenerateConfig pdfConfig = new()
 {
     PageSize = PageSize.Letter,
     PageOrientation = PageOrientation.Portrait,
-    MarginLeft = 0,
-    MarginRight = 0,
-    MarginTop = 0,
-    MarginBottom = 0,
-    DotsPerInch = 96,
-    NetworkLoader = new HttpClientNetworkLoader(httpClient, new Uri("https://www.w3.org/Style/CSS/Test/CSS1/current/test11.htm"))
+    NetworkLoader = new HttpClientNetworkLoader(httpClient, new Uri("http://www.example.com"))
 };
 
 PdfGenerator generator = new();
 
 var stream = new MemoryStream();
 
-var document = await generator.GeneratePdf(null, pdfConfig);
+var html = """
+           <link href="https://fonts.googleapis.com/css2?family=Playwrite+AR+Guides&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+           <style type="text/css">
+           p { font-family: "Playwrite AR Guides"; font-size: 48pt}
+           </style>
+           <p>Hello World!</p>
+           """;
+
+var document = await generator.GeneratePdf(html, pdfConfig);
 document.Save(stream);
 
-File.Delete("test11.pdf");
-File.WriteAllBytes("test11.pdf", stream.ToArray());
+File.Delete("test_google_font.pdf");
+File.WriteAllBytes("test_google_font.pdf", stream.ToArray());

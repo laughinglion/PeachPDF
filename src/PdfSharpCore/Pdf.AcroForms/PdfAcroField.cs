@@ -419,9 +419,6 @@ namespace PeachPDF.PdfSharpCore.Pdf.AcroForms
 
                         return new PdfCheckBoxField(dict);
 
-                    case "/Tx":
-                        return new PdfTextField(dict);
-
                     case "/Ch":
                         if ((flags & PdfAcroFieldFlags.Combo) != 0)
                             return new PdfComboBoxField(dict);

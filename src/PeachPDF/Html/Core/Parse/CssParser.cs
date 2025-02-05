@@ -12,14 +12,13 @@
 
 #nullable enable
 
-using ExCSS;
+using PeachPDF.CSS;
 using PeachPDF.Html.Adapters;
 using PeachPDF.Html.Adapters.Entities;
-using PeachPDF.Html.Core.Handlers;
-using PeachPDF.Html.Core.Utils;
-using System.Threading.Tasks;
 using PeachPDF.Html.Core.Entities;
+using PeachPDF.Html.Core.Handlers;
 using System;
+using System.Threading.Tasks;
 
 namespace PeachPDF.Html.Core.Parse
 {
@@ -98,7 +97,7 @@ namespace PeachPDF.Html.Core.Parse
         {
             if (!string.IsNullOrEmpty(stylesheet))
             {
-                await ParseExCssStyle(cssData, stylesheet);
+                await ParseStyle(cssData, stylesheet);
             }
         }
 
@@ -117,7 +116,7 @@ namespace PeachPDF.Html.Core.Parse
             return _valueParser.IsColorValid(colorValue);
         }
 
-        private async Task ParseExCssStyle(CssData data, string stylesheetText)
+        private async Task ParseStyle(CssData data, string stylesheetText)
         {
             var stylesheet = ParseStyleSheet(stylesheetText);
 
@@ -135,7 +134,7 @@ namespace PeachPDF.Html.Core.Parse
                     }
 
                     var importedStylesheet = await StylesheetLoadHandler.LoadStylesheet(_htmlContainer, importRule.Href);
-                    await ParseExCssStyle(data, importedStylesheet);
+                    await ParseStyle(data, importedStylesheet);
                 }
                 else
                 {

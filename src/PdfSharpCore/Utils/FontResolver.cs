@@ -1,17 +1,14 @@
 ﻿
-using System;
-using System.Linq;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Reflection;
-using PeachPDF.PdfSharpCore.Internal;
 using PeachPDF.PdfSharpCore.Drawing;
 using PeachPDF.PdfSharpCore.Fonts;
-
+using PeachPDF.PdfSharpCore.Internal;
 using SixLabors.Fonts;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.IO;
+using System.Linq;
 
 
 namespace PeachPDF.PdfSharpCore.Utils
@@ -20,38 +17,34 @@ namespace PeachPDF.PdfSharpCore.Utils
 
     public class FontResolver : IFontResolver
     {
-        public string DefaultFontName => "Arial";
-
-        private static readonly Dictionary<string, FontFamilyModel> InstalledFonts = [];
-
-        private static readonly string[] SSupportedFonts;
-        private static readonly Dictionary<string, byte[]> _CustomFonts = [];
         private static readonly Dictionary<string, string> _SystemFontPaths = [];
 
-        public static string[] SupportedFonts => SSupportedFonts;
+        private readonly Dictionary<string, byte[]> _CustomFonts = [];
+        private readonly Dictionary<string, FontFamilyModel> InstalledFonts = [];
+
+        public static string[] SupportedFonts { get; }
 
         static FontResolver()
         {
             string fontDir;
 
-            bool isOSX = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX);
+            var isOSX = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX);
             if (isOSX)
             {
                 fontDir = "/Library/Fonts/";
-                SSupportedFonts = System.IO.Directory.GetFiles(fontDir, "*.ttf", System.IO.SearchOption.AllDirectories);
-                SetupFontsFiles(SSupportedFonts);
+                SupportedFonts = Directory.GetFiles(fontDir, "*.ttf", System.IO.SearchOption.AllDirectories);
                 return;
             }
 
-            bool isLinux = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux);
+            var isLinux = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux);
             if (isLinux)
             {
-                SSupportedFonts = LinuxSystemFontResolver.Resolve();
-                SetupFontsFiles(SSupportedFonts);
+                SupportedFonts = LinuxSystemFontResolver.Resolve();
                 return;
             }
 
-            bool isWindows = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows);
+            var isWindows = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows);
+            
             if (isWindows)
             {
                 fontDir = System.Environment.ExpandEnvironmentVariables(@"%SystemRoot%\Fonts");
@@ -61,20 +54,25 @@ namespace PeachPDF.PdfSharpCore.Utils
                 fontPaths.AddRange(systemFontPaths);
 
                 var appdataFontDir = System.Environment.ExpandEnvironmentVariables(@"%LOCALAPPDATA%\Microsoft\Windows\Fonts");
-                if(System.IO.Directory.Exists(appdataFontDir))
+                if(Directory.Exists(appdataFontDir))
                 {
                     var appdataFontPaths = System.IO.Directory.GetFiles(appdataFontDir, "*.ttf", SearchOption.AllDirectories);
                     fontPaths.AddRange(appdataFontPaths);
                 }
 
-                SSupportedFonts = fontPaths.ToArray();
-                SetupFontsFiles(SSupportedFonts);
+                SupportedFonts = fontPaths.ToArray();
+                
                 return;
             }
 
             throw new System.NotImplementedException("FontResolver not implemented for this platform (PeachPDF.PdfSharpCore.Utils.FontResolver.cs).");
         }
 
+
+        public FontResolver()
+        {
+            SetupFontsFiles(SupportedFonts);
+        }
 
         private readonly struct FontFileInfo
         {
@@ -112,8 +110,7 @@ namespace PeachPDF.PdfSharpCore.Utils
             }
         }
 
-
-        public static void AddFont(Stream stream)
+        public void AddFont(Stream stream, string fontFamilyName)
         {
             var memoryStream = new MemoryStream();
             stream.CopyTo(memoryStream);
@@ -122,22 +119,21 @@ namespace PeachPDF.PdfSharpCore.Utils
             memoryStream.Seek(0, SeekOrigin.Begin);
 
             var fontFileInfo = FontFileInfo.Load(memoryStream);
-            var familyName = fontFileInfo.FamilyName;
 
-            if (InstalledFonts.TryGetValue(familyName.ToLower(), out var family))
+            if (InstalledFonts.TryGetValue(fontFamilyName.ToLower(), out var family))
             {
                 family.FontFiles[fontFileInfo.GuessFontStyle()] = fontFileInfo.FontDescription;
             }
             else
             {
-                var fontFamilyModel = DeserializeFontFamily(familyName.ToLower(), [fontFileInfo]);
-                InstalledFonts.Add(familyName.ToLower(), fontFamilyModel);
+                var fontFamilyModel = DeserializeFontFamily(fontFamilyName.ToLower(), [fontFileInfo]);
+                InstalledFonts.Add(fontFamilyName.ToLower(), fontFamilyModel);
             }
 
             _CustomFonts[fontFileInfo.FontDescription.FontNameInvariantCulture] = fontBytes;
         }
 
-        public static void SetupFontsFiles(string[] sSupportedFonts)
+        public void SetupFontsFiles(string[] sSupportedFonts)
         {
             var tempFontInfoList = new List<FontFileInfo>();
 
@@ -209,6 +205,11 @@ namespace PeachPDF.PdfSharpCore.Utils
             }
 
             throw new ArgumentOutOfRangeException(nameof(fontFaceName), "Unknown Font Face Name");
+        }
+
+        public bool HasFont(string fontFaceName)
+        {
+            return _CustomFonts.ContainsKey(fontFaceName) || _SystemFontPaths.ContainsKey(fontFaceName);
         }
 
         public bool NullIfFontNotFound { get; set; } = false;

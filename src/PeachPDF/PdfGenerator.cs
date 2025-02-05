@@ -52,9 +52,9 @@ namespace PeachPDF
         /// Add a font to be rendered
         /// </summary>
         /// <param name="stream">Font stream</param>
-        public void AddFontFromStream(Stream stream)
+        public async Task AddFontFromStream(Stream stream)
         {
-            _pdfSharpAdapter.AddFont(stream);
+            await _pdfSharpAdapter.AddFont(stream, null);
         }
 
         /// <summary>

@@ -180,6 +180,21 @@ namespace PeachPDF.Html.Adapters
             _fontsHandler.AddFontFamily(fontFamily);
         }
 
+        public async Task AddFontFamilyFromUrl(string fontFamilyName, string url, string? format)
+        {
+            var resourceStream = await GetResourceStream(new Uri(url));
+
+            if (resourceStream is not null)
+            {
+                await AddFontFromStream(fontFamilyName, resourceStream, format);
+            }
+        }
+
+        public async Task<bool> AddLocalFontFamily(string fontFamilyName, string localFontFaceName)
+        {
+            return await AddLocalFont(fontFamilyName, localFontFaceName);
+        }
+
         /// <summary>
         /// Adds a font mapping from <paramref name="fromFamily"/> to <paramref name="toFamily"/> iff the <paramref name="fromFamily"/> is not found.<br/>
         /// When the <paramref name="fromFamily"/> font is used in rendered html and is not found in existing 
@@ -329,6 +344,10 @@ namespace PeachPDF.Html.Adapters
         /// <param name="style">font style</param>
         /// <returns>font instance</returns>
         protected abstract RFont CreateFontInt(RFontFamily family, double size, RFontStyle style);
+
+        protected abstract Task AddFontFromStream(string fontFamilyName, Stream stream, string? format);
+
+        protected abstract Task<bool> AddLocalFont(string fontFamilyName, string localFontFaceName);
 
         #endregion
     }

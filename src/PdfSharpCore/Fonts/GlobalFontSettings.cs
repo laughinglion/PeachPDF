@@ -27,10 +27,9 @@
 // DEALINGS IN THE SOFTWARE.
 #endregion
 
-using System;
 using PeachPDF.PdfSharpCore.Internal;
 using PeachPDF.PdfSharpCore.Pdf;
-using PeachPDF.PdfSharpCore.Utils;
+using System;
 
 namespace PeachPDF.PdfSharpCore.Fonts
 {
@@ -39,54 +38,7 @@ namespace PeachPDF.PdfSharpCore.Fonts
     /// </summary>
     public static class GlobalFontSettings
     {
-        /// <summary>
-        /// The name of the default font.
-        /// </summary>
-        public const string DefaultFontName = "PlatformDefault";
-
-        /// <summary>
-        /// Gets or sets the global font resolver for the current application domain.
-        /// This static property should be set only once and before any font operation was executed by PeachPDF.PdfSharpCore.
-        /// If this is not easily to obtain, e.g. because your code is running on a web server, you must provide the
-        /// same instance of your font resolver in every subsequent setting of this property.
-        /// In a web application set the font resolver in Global.asax.
-        /// For .NetCore Apps, if a resolver is not set before the first get operation to this property,
-        /// the default Font resolver implementation: <see cref="T:PeachPDF.PdfSharpCore.Utils.PeachPDF.PdfSharpCore.Utils"/> is set and returned
-        /// </summary>
-        public static IFontResolver FontResolver
-        {
-            get 
-            {
-                try
-                {
-                    Lock.EnterFontFactory();
-                    if (_fontResolver == null) FontResolver = new FontResolver();
-                        return _fontResolver;
-                }
-                finally { Lock.ExitFontFactory(); }
-            }
-            set
-            {
-                // Cannot remove font resolver.
-                if (value == null)
-                    throw new ArgumentNullException();
-
-                try
-                {
-                    Lock.EnterFontFactory();
-                    // Ignore multiple setting e.g. in a web application.
-                    if (ReferenceEquals(_fontResolver, value))
-                        return;
-
-                    if (FontFactory.HasFontSources)
-                        throw new InvalidOperationException("Must not change font resolver after is was once used.");
-
-                    _fontResolver = value;
-                }
-                finally { Lock.ExitFontFactory(); }
-            }
-        }
-        static IFontResolver _fontResolver;
+        public const string DefaultFontName = "Arial";
 
         /// <summary>
         /// Gets or sets the default font encoding used for XFont objects where encoding is not explicitly specified.

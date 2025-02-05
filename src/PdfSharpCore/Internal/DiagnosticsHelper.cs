@@ -114,27 +114,4 @@ namespace PeachPDF.PdfSharpCore.Internal
                 Debugger.Break();
         }
     }
-
-    /// <summary>
-    /// Internal stuff for development of PeachPDF.PdfSharpCore.
-    /// </summary>
-    public static class FontsDevHelper
-    {
-        /// <summary>
-        /// Creates font and enforces bold/italic simulation.
-        /// </summary>
-        public static XFont CreateSpecialFont(string familyName, double emSize, XFontStyle style,
-            XPdfFontOptions pdfOptions, XStyleSimulations styleSimulations)
-        {
-            return new XFont(familyName, emSize, style, pdfOptions, styleSimulations);
-        }
-
-        /// <summary>
-        /// Dumps the font caches to a string.
-        /// </summary>
-        public static string GetFontCachesState()
-        {
-            return FontFactory.GetFontCachesState();
-        }
-    }
 }

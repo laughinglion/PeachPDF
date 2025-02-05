@@ -15,6 +15,7 @@
 using PeachPDF.Html.Adapters;
 using PeachPDF.Html.Core.Dom;
 using PeachPDF.Html.Core.Parse;
+using SixLabors.Fonts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -442,7 +443,7 @@ namespace PeachPDF.Html.Core.Utils
                     SetFontPropertyValue(valueParser, cssBox, value);
                     break;
                 case "font-family":
-                    cssBox.FontFamily = value;
+                    cssBox.FontFamily = valueParser.GetFontFamilyByName(value);
                     break;
                 case "font-size":
                     cssBox.FontSize = value;

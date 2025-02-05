@@ -14,6 +14,7 @@
 
 using PeachPDF.Html.Adapters;
 using PeachPDF.Html.Adapters.Entities;
+using PeachPDF.Network;
 using PeachPDF.PdfSharpCore.Drawing;
 using PeachPDF.PdfSharpCore.Pdf;
 using PeachPDF.PdfSharpCore.Utils;
@@ -25,8 +26,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using PeachPDF.Network;
-using PeachPDF.PdfSharpCore.Fonts;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace PeachPDF.Adapters
 {
@@ -36,6 +36,7 @@ namespace PeachPDF.Adapters
     internal sealed class PdfSharpAdapter : RAdapter
     {
         private readonly FontCollection _fontCollection;
+        private readonly FontResolver _fontResolver;
 
         /// <summary>
         /// Init color resolve.
@@ -48,7 +49,7 @@ namespace PeachPDF.Adapters
             AddFontFamilyMapping("fantasy", "Impact");
             AddFontFamilyMapping("Helvetica", "Arial");
 
-
+            _fontResolver = new FontResolver();
             var fonts = FontResolver.SupportedFonts;
 
             _fontCollection = new FontCollection();
@@ -64,6 +65,8 @@ namespace PeachPDF.Adapters
         public RNetworkLoader NetworkLoader { get; set;  } = new DataUriNetworkLoader();
 
         public override Uri? BaseUri => NetworkLoader.BaseUri;
+
+        internal FontResolver FontResolver => _fontResolver;
 
         public override async Task<Stream?> GetResourceStream(Uri uri)
         {
@@ -86,19 +89,21 @@ namespace PeachPDF.Adapters
             return mediaTypesAvailable.Contains("print") ? "print" : "all";
         }
 
-        public void AddFont(Stream stream)
+        public async Task AddFont(Stream stream, string? fontFamilyName)
         {
             var memoryStream = new MemoryStream();
-            stream.CopyTo(memoryStream);
+            await stream.CopyToAsync(memoryStream);
 
             memoryStream.Seek(0, SeekOrigin.Begin);
 
             var font = _fontCollection.Add(memoryStream);
-            AddFontFamily(new FontFamilyAdapter(new XFontFamily(font.Name)));
+            fontFamilyName ??= font.Name;
+
+            AddFontFamily(new FontFamilyAdapter(new XFontFamily(fontFamilyName)));
 
             memoryStream.Seek(0, SeekOrigin.Begin);
 
-            FontResolver.AddFont(memoryStream);
+            _fontResolver.AddFont(memoryStream, fontFamilyName);
         }
 
         protected override RColor GetColorInt(string colorName)
@@ -154,15 +159,36 @@ namespace PeachPDF.Adapters
         protected override RFont CreateFontInt(string family, double size, RFontStyle style)
         {
             var fontStyle = (XFontStyle)((int)style);
-            var xFont = new XFont(family, size, fontStyle, new XPdfFontOptions(PdfFontEncoding.Unicode));
+            var xFont = new XFont(family, size, fontStyle, new XPdfFontOptions(PdfFontEncoding.Unicode), _fontResolver);
             return new FontAdapter(xFont);
         }
 
         protected override RFont CreateFontInt(RFontFamily family, double size, RFontStyle style)
         {
             var fontStyle = (XFontStyle)((int)style);
-            var xFont = new XFont(((FontFamilyAdapter)family).FontFamily.Name, size, fontStyle, new XPdfFontOptions(PdfFontEncoding.Unicode));
+            var xFont = new XFont(((FontFamilyAdapter)family).FontFamily.Name, size, fontStyle, new XPdfFontOptions(PdfFontEncoding.Unicode), _fontResolver);
             return new FontAdapter(xFont);
+        }
+
+        protected override async Task AddFontFromStream(string fontFamilyName, Stream stream, string? format)
+        {
+            if (format is "truetype" or "woff" or "woff2" or "opentype")
+            {
+                await AddFont(stream, fontFamilyName);
+            }
+        }
+
+        protected override async Task<bool> AddLocalFont(string fontFamilyName, string localFontFaceName)
+        {
+            var hasLocalFont = _fontResolver.HasFont(localFontFaceName);
+
+            if (!hasLocalFont) return false;
+
+            var bytes = _fontResolver.GetFont(localFontFaceName);
+            var stream = new MemoryStream(bytes);
+            await AddFont(stream, fontFamilyName);
+
+            return true;
         }
     }
 }

@@ -80,7 +80,7 @@ namespace PeachPDF.PdfSharpCore.Drawing
             Initialize();
         }
 
-        public static XGlyphTypeface GetOrCreateFrom(string familyName, FontResolvingOptions fontResolvingOptions)
+        public static XGlyphTypeface GetOrCreateFrom(string familyName, FontResolvingOptions fontResolvingOptions, IFontResolver fontResolver)
         {
             // Check cache for requested type face.
             string typefaceKey = ComputeKey(familyName, fontResolvingOptions);
@@ -91,7 +91,7 @@ namespace PeachPDF.PdfSharpCore.Drawing
             }
 
             // Resolve typeface by FontFactory.
-            FontResolverInfo fontResolverInfo = FontFactory.ResolveTypeface(familyName, fontResolvingOptions, typefaceKey);
+            FontResolverInfo fontResolverInfo = FontFactory.ResolveTypeface(familyName, fontResolvingOptions, typefaceKey, fontResolver);
             if (fontResolverInfo == null)
             {
                 // No fallback - just stop.

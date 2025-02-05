@@ -19,7 +19,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-using ExCSS;
+using PeachPDF.CSS;
+using PeachPDF.Html.Adapters;
 
 namespace PeachPDF.Html.Core.Parse
 {
@@ -69,7 +70,9 @@ namespace PeachPDF.Html.Core.Parse
 
             var cssValueParser = new CssValueParser(htmlContainer.Adapter);
 
-            CascadeApplyPageStyles(htmlContainer, root, cssData, cssValueParser);
+            await CascadeApplyStyleFonts(cssData, htmlContainer.Adapter);
+
+            CascadeApplyPageStyles(htmlContainer, root, cssData);
 
             CascadeApplyStyles(cssValueParser, root, cssData, media);
 
@@ -90,6 +93,31 @@ namespace PeachPDF.Html.Core.Parse
 
 
         #region Private methods
+
+        private async Task CascadeApplyStyleFonts(CssData cssData, RAdapter adapter)
+        {
+            foreach (var stylesheet in cssData.Stylesheets)
+            {
+                foreach (var fontRule in stylesheet.FontfaceSetRules)
+                {
+                    var fontFamilyName = CssValueParser.GetFontFaceFamilyName(fontRule.Family);
+                    var fontFaceDefinition = CssValueParser.GetFontFacePropertyValue(fontRule.Source);
+
+                    var isLoaded = false;
+
+                    if (fontFaceDefinition.Local is not null)
+                    {
+                        isLoaded = await adapter.AddLocalFontFamily(fontFamilyName, fontFaceDefinition.Local);
+                    }
+
+                    if (!isLoaded && fontFaceDefinition.Url is not null)
+                    {
+                        
+                        await adapter.AddFontFamilyFromUrl(fontFamilyName, fontFaceDefinition.Url, fontFaceDefinition.Format);
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// Read styles defined inside the dom structure in links and style elements.<br/>
@@ -131,7 +159,7 @@ namespace PeachPDF.Html.Core.Parse
             return (cssData, cssDataChanged);
         }
 
-        private static void CascadeApplyPageStyles(HtmlContainerInt htmlContainer, CssBox root, CssData cssData, CssValueParser valueParser)
+        private static void CascadeApplyPageStyles(HtmlContainerInt htmlContainer, CssBox root, CssData cssData)
         {
             foreach (var style in cssData.Stylesheets)
             {
