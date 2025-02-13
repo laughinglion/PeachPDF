@@ -72,7 +72,7 @@ namespace PeachPDF.Html.Core.Handlers
         /// <param name="htmlContainer">the container of the html to handle load image for</param>
         public ImageLoadHandler(HtmlContainerInt htmlContainer)
         {
-            ArgChecker.AssertArgNotNull(htmlContainer, "htmlContainer");
+            ArgumentNullException.ThrowIfNull(htmlContainer);
 
             _htmlContainer = htmlContainer;
         }
@@ -94,22 +94,14 @@ namespace PeachPDF.Html.Core.Handlers
         /// on the main thread and not thread-pool.
         /// </remarks>
         /// <param name="src">the source of the image to load</param>
-        /// <param name="attributes">the collection of attributes on the element to use in event</param>
         /// <returns>the image object (null if failed)</returns>
-        public async ValueTask LoadImage(string src, Dictionary<string, string> attributes)
+        public async ValueTask LoadImage(string src)
         {
             try
             {
                 if (!string.IsNullOrEmpty(src))
                 {
-                    if (src.StartsWith("data:image", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        SetFromInlineData(src);
-                    }
-                    else
-                    {
-                        await SetImageFromPath(src);
-                    }
+                    await SetImageFromPath(src);
                 }
                 else
                 {
@@ -136,59 +128,34 @@ namespace PeachPDF.Html.Core.Handlers
         #region Private methods
 
         /// <summary>
-        /// Load the image from inline base64 encoded string data.
-        /// </summary>
-        /// <param name="src">the source that has the base64 encoded image</param>
-        private void SetFromInlineData(string src)
-        {
-            Image = GetImageFromData(src);
-            if (Image == null)
-                _htmlContainer.ReportError(HtmlRenderErrorType.Image, "Failed extract image from inline data");
-            _releaseImageObject = true;
-            ImageLoadComplete();
-        }
-
-        /// <summary>
-        /// Extract image object from inline base64 encoded data in the src of the html img element.
-        /// </summary>
-        /// <param name="src">the source that has the base64 encoded image</param>
-        /// <returns>image from base64 data string or null if failed</returns>
-        private RImage GetImageFromData(string src)
-        {
-            var s = src[(src.IndexOf(':') + 1)..].Split([','], 2);
-            if (s.Length != 2) return null;
-
-            int imagePartsCount = 0, base64PartsCount = 0;
-            foreach (var part in s[0].Split([';']))
-            {
-                var pPart = part.Trim();
-                if (pPart.StartsWith("image/", StringComparison.InvariantCultureIgnoreCase))
-                    imagePartsCount++;
-                if (pPart.Equals("base64", StringComparison.InvariantCultureIgnoreCase))
-                    base64PartsCount++;
-            }
-
-            if (imagePartsCount <= 0) return null;
-
-            byte[] imageData = base64PartsCount > 0 ? Convert.FromBase64String(s[1].Trim()) : new UTF8Encoding().GetBytes(Uri.UnescapeDataString(s[1].Trim()));
-            return LoadImageFromStream(new MemoryStream(imageData));
-        }
-
-        /// <summary>
         /// Load image from path of image file or URL.
         /// </summary>
         /// <param name="path">the file path or uri to load image from</param>
         private async ValueTask SetImageFromPath(string path)
         {
-            var uri = CommonUtils.TryGetUri(path);
+            var uri = new Uri(path, UriKind.RelativeOrAbsolute);
 
-            if (uri != null && uri.Scheme != "file")
+            if (!uri.IsAbsoluteUri)
+            {
+                var baseElement = DomUtils.GetBoxByTagName(_htmlContainer.Root, "base");
+                var baseUrl = "";
+
+                if (baseElement is not null)
+                {
+                    baseUrl = baseElement.HtmlTag.TryGetAttribute("href", "");
+                }
+
+                var baseUri = string.IsNullOrWhiteSpace(baseUrl) ? _htmlContainer.Adapter.BaseUri : new Uri(baseUrl);
+                uri = baseUri is null ? uri : new Uri(baseUri, uri);
+            }
+
+            if (!uri.IsAbsoluteUri || uri.Scheme != "file")
             {
                 await SetImageFromUrl(uri);
             }
             else
             {
-                var fileInfo = CommonUtils.TryGetFileInfo(uri != null ? uri.AbsolutePath : path);
+                var fileInfo = CommonUtils.TryGetFileInfo(uri.AbsolutePath);
                 if (fileInfo != null)
                 {
                     SetImageFromFile(fileInfo);
@@ -250,7 +217,7 @@ namespace PeachPDF.Html.Core.Handlers
             {
                 Image = _htmlContainer.Adapter.ImageFromStream(stream);
             }
-            catch (UnknownImageFormatException exception)
+            catch (UnknownImageFormatException)
             {
                 Image = _htmlContainer.Adapter.GetLoadingFailedImage();
             }
@@ -265,7 +232,7 @@ namespace PeachPDF.Html.Core.Handlers
         /// </summary>
         private async ValueTask SetImageFromUrl(Uri source)
         {
-            if (source.IsFile)
+            if (source.IsAbsoluteUri && source.IsFile)
             {
                 var filePath = CommonUtils.GetLocalfileName(source);
 
@@ -273,6 +240,8 @@ namespace PeachPDF.Html.Core.Handlers
                 {
                     SetImageFromFile(filePath);
                 }
+
+                return;
             }
 
             var stream = await _htmlContainer.Adapter.GetResourceStream(source);

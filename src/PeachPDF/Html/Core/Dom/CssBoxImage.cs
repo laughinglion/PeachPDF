@@ -10,12 +10,12 @@
 // - Sun Tsu,
 // "The Art of War"
 
-using System;
-using System.Threading.Tasks;
 using PeachPDF.Html.Adapters;
 using PeachPDF.Html.Adapters.Entities;
 using PeachPDF.Html.Core.Handlers;
 using PeachPDF.Html.Core.Utils;
+using System;
+using System.Threading.Tasks;
 
 namespace PeachPDF.Html.Core.Dom
 {
@@ -61,6 +61,8 @@ namespace PeachPDF.Html.Core.Dom
         /// </summary>
         public RImage Image => _imageWord.Image;
 
+        public string ImageSource => GetAttribute("src");
+
         /// <summary>
         /// Paints the fragment
         /// </summary>
@@ -71,12 +73,12 @@ namespace PeachPDF.Html.Core.Dom
             if (_imageLoadHandler == null)
             {
                 _imageLoadHandler = new ImageLoadHandler(HtmlContainer);
-                await _imageLoadHandler.LoadImage(GetAttribute("src"), HtmlTag?.Attributes);
+                await _imageLoadHandler.LoadImage(ImageSource);
                 OnLoadImageComplete(_imageLoadHandler.Image);
             }
 
             var rect = CommonUtils.GetFirstValueOrDefault(Rectangles);
-            RPoint offset = RPoint.Empty;
+            var offset = RPoint.Empty;
 
             if (!IsFixed)
                 offset = HtmlContainer.ScrollOffset;
@@ -85,10 +87,10 @@ namespace PeachPDF.Html.Core.Dom
 
             var clipped = RenderUtils.ClipGraphicsByOverflow(g, this);
 
-            PaintBackground(g, rect, true, true);
+            PaintBackground(g, rect, true);
             BordersDrawHandler.DrawBoxBorders(g, this, rect, true, true);
 
-            RRect r = _imageWord.Rectangle;
+            var r = _imageWord.Rectangle;
             r.Offset(offset);
             r.Height -= ActualBorderTopWidth + ActualBorderBottomWidth + ActualPaddingTop + ActualPaddingBottom;
             r.Y += ActualBorderTopWidth + ActualPaddingTop;
@@ -135,9 +137,9 @@ namespace PeachPDF.Html.Core.Dom
                     _imageLoadHandler = new ImageLoadHandler(HtmlContainer);
 
                     if (this.Content != null && this.Content != CssConstants.Normal)
-                        await _imageLoadHandler.LoadImage(this.Content, HtmlTag?.Attributes);
+                        await _imageLoadHandler.LoadImage(this.Content);
                     else
-                        await _imageLoadHandler.LoadImage(GetAttribute("src"), HtmlTag?.Attributes);
+                        await _imageLoadHandler.LoadImage(ImageSource);
 
                     OnLoadImageComplete(_imageLoadHandler.Image);
                 }
@@ -162,15 +164,6 @@ namespace PeachPDF.Html.Core.Dom
         #region Private methods
 
         /// <summary>
-        /// Set error image border on the image box.
-        /// </summary>
-        private void SetErrorBorder()
-        {
-            SetAllBorders(CssConstants.Solid, "2px", "#A0A0A0");
-            BorderRightColor = BorderBottomColor = "#E3E3E3";
-        }
-
-        /// <summary>
         /// On image load process is complete with image or without update the image box.
         /// </summary>
         /// <param name="image">the image loaded or null if failed</param>
@@ -179,11 +172,6 @@ namespace PeachPDF.Html.Core.Dom
             _imageWord.Image = image;
             _imageLoadingComplete = true;
             _wordsSizeMeasured = false;
-
-            if (_imageLoadingComplete && image == null)
-            {
-                SetErrorBorder();
-            }
         }
 
         #endregion

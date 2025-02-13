@@ -69,12 +69,12 @@ namespace PeachPDF.Html.Core.Dom
         {
             var rects = CommonUtils.GetFirstValueOrDefault(Rectangles);
 
-            RPoint offset = (HtmlContainer != null && !IsFixed) ? HtmlContainer.ScrollOffset : RPoint.Empty;
+            var offset = (HtmlContainer != null && !IsFixed) ? HtmlContainer.ScrollOffset : RPoint.Empty;
             rects.Offset(offset);
 
             var clipped = RenderUtils.ClipGraphicsByOverflow(g, this);
 
-            PaintBackground(g, rects, true, true);
+            PaintBackground(g, rects, true);
 
             BordersDrawHandler.DrawBoxBorders(g, this, rects, true, true);
 
@@ -87,7 +87,7 @@ namespace PeachPDF.Html.Core.Dom
             tmpRect.Y = Math.Floor(tmpRect.Y);
             var rect = tmpRect;
 
-            DrawImage(g, offset, rect);
+            DrawImage(g, rect);
 
             if (clipped)
                 g.PopClip();
@@ -98,7 +98,7 @@ namespace PeachPDF.Html.Core.Dom
         /// <summary>
         /// Draw video image over the iframe if found.
         /// </summary>
-        private void DrawImage(RGraphics g, RPoint offset, RRect rect)
+        private void DrawImage(RGraphics g, RRect rect)
         {
             if (_imageWord.Image == null) return;
 

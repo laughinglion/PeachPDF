@@ -17,10 +17,8 @@ namespace PeachPDF.Html.Adapters.Entities
     /// <summary>
     /// Stores an ordered pair of floating-point numbers, typically the width and height of a rectangle.
     /// </summary>
-    public struct RSize
+    public record struct RSize(double Width, double Height)
     {
-        #region Fields and Consts
-
         /// <summary>
         ///     Gets a <see cref="RSize" /> structure that has a
         ///     <see
@@ -42,9 +40,6 @@ namespace PeachPDF.Html.Adapters.Entities
         /// <filterpriority>1</filterpriority>
         public static readonly RSize Empty = new RSize();
 
-        #endregion
-
-
         /// <summary>
         ///     Initializes a new instance of the <see cref="RSize" /> structure from the specified existing
         ///     <see
@@ -57,36 +52,15 @@ namespace PeachPDF.Html.Adapters.Entities
         ///         cref="RSize" />
         ///     structure.
         /// </param>
-        public RSize(RSize size)
-        {
-            Width = size.Width;
-            Height = size.Height;
-        }
+        public RSize(RSize size) : this(size.Width, size.Height)
+        {}
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RSize" /> structure from the specified <see cref="RPoint" /> structure.
         /// </summary>
         /// <param name="pt">The <see cref="RPoint" /> structure from which to initialize this <see cref="RSize" /> structure.</param>
-        public RSize(RPoint pt)
-        {
-            Width = pt.X;
-            Height = pt.Y;
-        }
-
-        /// <summary>
-        ///     Initializes a new instance of the <see cref="RSize" /> structure from the specified dimensions.
-        /// </summary>
-        /// <param name="width">
-        ///     The width component of the new <see cref="RSize" /> structure.
-        /// </param>
-        /// <param name="height">
-        ///     The height component of the new <see cref="RSize" /> structure.
-        /// </param>
-        public RSize(double width, double height)
-        {
-            Width = width;
-            Height = height;
-        }
+        public RSize(RPoint pt) : this(pt.X, pt.Y)
+        {}
 
         /// <summary>
         ///     Gets a value that indicates whether this <see cref="RSize" /> structure has zero width and height.
@@ -105,24 +79,6 @@ namespace PeachPDF.Html.Adapters.Entities
                     return false;
             }
         }
-
-        /// <summary>
-        ///     Gets or sets the horizontal component of this <see cref="RSize" /> structure.
-        /// </summary>
-        /// <returns>
-        ///     The horizontal component of this <see cref="RSize" /> structure, typically measured in pixels.
-        /// </returns>
-        /// <filterpriority>1</filterpriority>
-        public double Width { get; set; }
-
-        /// <summary>
-        ///     Gets or sets the vertical component of this <see cref="RSize" /> structure.
-        /// </summary>
-        /// <returns>
-        ///     The vertical component of this <see cref="RSize" /> structure, typically measured in pixels.
-        /// </returns>
-        /// <filterpriority>1</filterpriority>
-        public double Height { get; set; }
 
         /// <summary>
         ///     Converts the specified <see cref="RSize" /> structure to a
@@ -179,48 +135,6 @@ namespace PeachPDF.Html.Adapters.Entities
         }
 
         /// <summary>
-        ///     Tests whether two <see cref="RSize" /> structures are equal.
-        /// </summary>
-        /// <returns>
-        ///     This operator returns true if <paramref name="sz1" /> and <paramref name="sz2" /> have equal width and height; otherwise, false.
-        /// </returns>
-        /// <param name="sz1">
-        ///     The <see cref="RSize" /> structure on the left side of the equality operator.
-        /// </param>
-        /// <param name="sz2">
-        ///     The <see cref="RSize" /> structure on the right of the equality operator.
-        /// </param>
-        /// <filterpriority>3</filterpriority>
-        public static bool operator ==(RSize sz1, RSize sz2)
-        {
-            if (Math.Abs(sz1.Width - sz2.Width) < 0.001)
-                return Math.Abs(sz1.Height - sz2.Height) < 0.001;
-            else
-                return false;
-        }
-
-        /// <summary>
-        ///     Tests whether two <see cref="RSize" /> structures are different.
-        /// </summary>
-        /// <returns>
-        ///     This operator returns true if <paramref name="sz1" /> and <paramref name="sz2" /> differ either in width or height; false if
-        ///     <paramref
-        ///         name="sz1" />
-        ///     and <paramref name="sz2" /> are equal.
-        /// </returns>
-        /// <param name="sz1">
-        ///     The <see cref="RSize" /> structure on the left of the inequality operator.
-        /// </param>
-        /// <param name="sz2">
-        ///     The <see cref="RSize" /> structure on the right of the inequality operator.
-        /// </param>
-        /// <filterpriority>3</filterpriority>
-        public static bool operator !=(RSize sz1, RSize sz2)
-        {
-            return !(sz1 == sz2);
-        }
-
-        /// <summary>
         ///     Adds the width and height of one <see cref="RSize" /> structure to the width and height of another
         ///     <see
         ///         cref="RSize" />
@@ -258,73 +172,6 @@ namespace PeachPDF.Html.Adapters.Entities
         public static RSize Subtract(RSize sz1, RSize sz2)
         {
             return new RSize(sz1.Width - sz2.Width, sz1.Height - sz2.Height);
-        }
-
-        /// <summary>
-        ///     Tests to see whether the specified object is a <see cref="RSize" /> structure with the same dimensions as this
-        ///     <see
-        ///         cref="RSize" />
-        ///     structure.
-        /// </summary>
-        /// <returns>
-        ///     This method returns true if <paramref name="obj" /> is a <see cref="RSize" /> and has the same width and height as this
-        ///     <see
-        ///         cref="RSize" />
-        ///     ; otherwise, false.
-        /// </returns>
-        /// <param name="obj">
-        ///     The <see cref="T:System.Object" /> to test.
-        /// </param>
-        /// <filterpriority>1</filterpriority>
-        public override bool Equals(object obj)
-        {
-            if (!(obj is RSize))
-                return false;
-            var sizeF = (RSize)obj;
-            if (Math.Abs(sizeF.Width - Width) < 0.001 && Math.Abs(sizeF.Height - Height) < 0.001)
-                return sizeF.GetType() == GetType();
-            else
-                return false;
-        }
-
-        /// <summary>
-        ///     Returns a hash code for this <see cref="RSize" /> structure.
-        /// </summary>
-        /// <returns>
-        ///     An integer value that specifies a hash value for this <see cref="RSize" /> structure.
-        /// </returns>
-        /// <filterpriority>1</filterpriority>
-        public override int GetHashCode()
-        {
-            return base.GetHashCode();
-        }
-
-        /// <summary>
-        ///     Converts a <see cref="RSize" /> structure to a <see cref="RPoint" /> structure.
-        /// </summary>
-        /// <returns>
-        ///     Returns a <see cref="RPoint" /> structure.
-        /// </returns>
-        public RPoint ToPointF()
-        {
-            return (RPoint)this;
-        }
-
-        /// <summary>
-        ///     Creates a human-readable string that represents this <see cref="RSize" /> structure.
-        /// </summary>
-        /// <returns>
-        ///     A string that represents this <see cref="RSize" /> structure.
-        /// </returns>
-        /// <filterpriority>1</filterpriority>
-        /// <PermissionSet>
-        ///     <IPermission
-        ///         class="System.Security.Permissions.SecurityPermission, mscorlib, Version=2.0.3600.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"
-        ///         version="1" Flags="UnmanagedCode" />
-        /// </PermissionSet>
-        public override string ToString()
-        {
-            return "{Width=" + Width + ", Height=" + Height + "}";
         }
     }
 }

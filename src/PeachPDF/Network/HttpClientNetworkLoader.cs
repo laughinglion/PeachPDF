@@ -9,6 +9,8 @@ namespace PeachPDF.Network
 {
     public class HttpClientNetworkLoader(HttpClient httpClient, Uri? primaryContentsUri) : RNetworkLoader
     {
+        public override Uri? BaseUri => primaryContentsUri;
+
         public override async Task<string> GetPrimaryContents()
         {
             if (primaryContentsUri is null)
@@ -29,7 +31,14 @@ namespace PeachPDF.Network
 
         public override async Task<Stream?> GetResourceStream(Uri uri)
         {
-            return await httpClient.GetStreamAsync(uri);
+            var response = await httpClient.GetAsync(uri);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            return await response.Content.ReadAsStreamAsync();
         }
     }
 }

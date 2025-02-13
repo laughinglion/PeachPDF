@@ -10,13 +10,14 @@
 // - Sun Tsu,
 // "The Art of War"
 
-using ExCSS;
+using PeachPDF.CSS;
 using PeachPDF.Html.Adapters;
 using PeachPDF.Html.Core.Dom;
 using PeachPDF.Html.Core.Parse;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace PeachPDF.Html.Core
 {
@@ -47,10 +48,10 @@ namespace PeachPDF.Html.Core
         /// <param name="stylesheet">the stylesheet source to parse</param>
         /// <param name="combineWithDefault">true - combine the parsed css data with default css data, false - return only the parsed css data</param>
         /// <returns>the parsed css data</returns>
-        public static CssData Parse(RAdapter adapter, string stylesheet, bool combineWithDefault = true)
+        public static async Task<CssData> Parse(RAdapter adapter, string stylesheet, bool combineWithDefault = true)
         {
-            var parser = new CssParser(adapter);
-            return parser.ParseStyleSheet(stylesheet, combineWithDefault);
+            var parser = new CssParser(adapter, null);
+            return await parser.ParseStyleSheet(stylesheet, combineWithDefault);
         }
 
         internal IEnumerable<IStyleRule> GetStyleRules(string media, CssBox box)
@@ -92,13 +93,14 @@ namespace PeachPDF.Html.Core
                 TypeSelector typeSelector => DoesSelectorMatch(typeSelector, box),
                 ComplexSelector complexSelector => DoesSelectorMatch(complexSelector, box),
                 CompoundSelector compoundSelector => DoesSelectorMatch(compoundSelector, box),
-                PseudoElementSelector pseudoElementSelector => DoesSelectorMatch(pseudoElementSelector, box),
+                PseudoElementSelector => false,
                 PseudoClassSelector pseudoClassSelector => DoesSelectorMatch(pseudoClassSelector, box),
                 AttrMatchSelector attrMatchSelector => DoesSelectorMatch(attrMatchSelector, box),
                 ClassSelector classSelector => DoesSelectorMatch(classSelector, box),
                 IdSelector idSelector => DoesSelectorMatch(idSelector, box),
                 AttrAvailableSelector attrAvailableSelector => DoesSelectorMatch(attrAvailableSelector, box),
                 AttrContainsSelector attrContainsSelector => DoesSelectorMatch(attrContainsSelector, box),
+                AttrListSelector attrListSelector => DoesSelectorMatch(attrListSelector, box),
                 _ => false
             };
         }
@@ -174,6 +176,26 @@ namespace PeachPDF.Html.Core
             return false;
         }
 
+        private static bool DoesSelectorMatch(AttrListSelector attrListSelector, CssBox box)
+        {
+            if (box.HtmlTag is null)
+            {
+                return false;
+            }
+
+            foreach (var attribute in box.HtmlTag.Attributes)
+            {
+                if (attribute.Key.Equals(attrListSelector.Attribute, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    var attributeValues = attribute.Value.Split(' ');
+
+                    return attributeValues.Any(value => value.Equals(attrListSelector.Value, StringComparison.InvariantCultureIgnoreCase));
+                }
+            }
+
+            return false;
+        }
+
         private static bool DoesSelectorMatch(AttrContainsSelector attrContainsSelector, CssBox box)
         {
             if (box.HtmlTag is null)
@@ -192,12 +214,6 @@ namespace PeachPDF.Html.Core
             return false;
         }
 
-        private static bool DoesSelectorMatch(PseudoElementSelector pseudoElementSelector, CssBox box)
-        {
-            // TODO: implement this
-            return false;
-        }
-
         private static bool DoesSelectorMatch(PseudoClassSelector pseudoClassSelector, CssBox box)
         {
             return pseudoClassSelector.Class == "link" && box.IsClickable;
@@ -205,62 +221,77 @@ namespace PeachPDF.Html.Core
 
         private static bool DoesSelectorMatch(ComplexSelector complexSelector, CssBox box)
         {
-            CssBox matchingAncestor = null;
+            var currentLevel = box;
+            var selectorsInReverse = complexSelector.Reverse();
 
-            foreach (var selector in complexSelector)
+            var isLowestItem = true;
+            var isMatch = false;
+
+            foreach (var selector in selectorsInReverse)
             {
                 if (selector.Selector is not null)
                 {
-                    var currentBox = box;
-                    bool isMatch;
-
-                    if (selector.Delimiter == ">")
+                    if (isLowestItem)
                     {
-                        if (currentBox.ParentBox is null)
-                        {
-                            return false;
-                        }
-
-                        isMatch = DoesSelectorMatch(selector.Selector, currentBox.ParentBox);
-                        matchingAncestor = currentBox.ParentBox;
+                        isMatch = DoesSelectorMatch(selector.Selector, currentLevel);
 
                         if (!isMatch)
                         {
                             return false;
                         }
+
+                        isLowestItem = false;
+                        currentLevel = box.ParentBox;
+                        continue;
                     }
-                    else
+
+                    if (currentLevel is null)
                     {
-                        do
-                        {
-                            isMatch = DoesSelectorMatch(selector.Selector, currentBox);
+                        return false;
+                    }
+
+                    switch (selector.Delimiter)
+                    {
+                        case ">":
+
+                            isMatch = DoesSelectorMatch(selector.Selector, currentLevel);
 
                             if (!isMatch)
                             {
-                                currentBox = currentBox.ParentBox;
+                                return false;
                             }
 
-                        } while (!isMatch && currentBox is not null && (matchingAncestor is not null && currentBox == matchingAncestor));
-
-                        if (!isMatch)
+                            break;
+                        case " " or null:
                         {
-                            return false;
+                            do
+                            {
+                                isMatch = DoesSelectorMatch(selector.Selector, currentLevel);
+
+                                if (!isMatch)
+                                {
+                                    currentLevel = currentLevel.ParentBox;
+                                }
+
+                            } while (!isMatch && currentLevel is not null);
+
+                            if (!isMatch)
+                            {
+                                return false;
+                            }
+
+                            break;
                         }
-
-                        matchingAncestor = currentBox;
                     }
-
-
                 }
                 else
                 {
-                    throw new NotImplementedException();
+                    return false;
                 }
             }
 
-            return false;
+            return isMatch;
         }
-
 
         public CssData Clone()
         {

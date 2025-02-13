@@ -12,15 +12,14 @@
 
 #nullable enable
 
+using PeachPDF.Html.Adapters.Entities;
+using PeachPDF.Html.Core;
+using PeachPDF.Html.Core.Handlers;
+using PeachPDF.Html.Core.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using PeachPDF.Html.Adapters.Entities;
-using PeachPDF.Html.Core;
-using PeachPDF.Html.Core.Entities;
-using PeachPDF.Html.Core.Handlers;
-using PeachPDF.Html.Core.Utils;
 
 namespace PeachPDF.Html.Adapters
 {
@@ -44,12 +43,12 @@ namespace PeachPDF.Html.Adapters
         /// <summary>
         /// cache of brush color to brush instance
         /// </summary>
-        private readonly Dictionary<RColor, RBrush> _brushesCache = new();
+        private readonly Dictionary<RColor, RBrush> _brushesCache = [];
 
         /// <summary>
         /// cache of pen color to pen instance
         /// </summary>
-        private readonly Dictionary<RColor, RPen> _penCache = new();
+        private readonly Dictionary<RColor, RPen> _penCache = [];
 
         /// <summary>
         /// cache of all the font used not to create same font again and again
@@ -85,10 +84,9 @@ namespace PeachPDF.Html.Adapters
         /// <summary>
         /// Get the default CSS stylesheet data.
         /// </summary>
-        public CssData DefaultCssData
-        {
-            get { return _defaultCssData ??= CssData.Parse(this, CssDefaults.DefaultStyleSheet, false); }
-        }
+        public async Task<CssData> GetDefaultCssData() => _defaultCssData ??= await CssData.Parse(this, CssDefaults.DefaultStyleSheet, false);
+
+        public abstract Uri? BaseUri { get; }
 
         /// <summary>
         /// Resolve color value from given color name.
@@ -180,6 +178,21 @@ namespace PeachPDF.Html.Adapters
         public void AddFontFamily(RFontFamily fontFamily)
         {
             _fontsHandler.AddFontFamily(fontFamily);
+        }
+
+        public async Task AddFontFamilyFromUrl(string fontFamilyName, string url, string? format)
+        {
+            var resourceStream = await GetResourceStream(new Uri(url));
+
+            if (resourceStream is not null)
+            {
+                await AddFontFromStream(fontFamilyName, resourceStream, format);
+            }
+        }
+
+        public async Task<bool> AddLocalFontFamily(string fontFamilyName, string localFontFaceName)
+        {
+            return await AddLocalFont(fontFamilyName, localFontFaceName);
         }
 
         /// <summary>
@@ -331,6 +344,10 @@ namespace PeachPDF.Html.Adapters
         /// <param name="style">font style</param>
         /// <returns>font instance</returns>
         protected abstract RFont CreateFontInt(RFontFamily family, double size, RFontStyle style);
+
+        protected abstract Task AddFontFromStream(string fontFamilyName, Stream stream, string? format);
+
+        protected abstract Task<bool> AddLocalFont(string fontFamilyName, string localFontFaceName);
 
         #endregion
     }

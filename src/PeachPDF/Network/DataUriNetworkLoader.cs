@@ -8,6 +8,8 @@ namespace PeachPDF.Network
 {
     public class DataUriNetworkLoader : RNetworkLoader
     {
+        public override Uri? BaseUri => null;
+
         public override Task<string> GetPrimaryContents()
         {
             return null!;
@@ -25,6 +27,8 @@ namespace PeachPDF.Network
             {
                 uriDataComponents[1] = uriDataComponents[1][7..];
             }
+
+            uriDataComponents[1] = Uri.UnescapeDataString(uriDataComponents[1]);
 
             var contents = Convert.FromBase64String(uriDataComponents[1]);
 

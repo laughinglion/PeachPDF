@@ -10,14 +10,14 @@
 // - Sun Tsu,
 // "The Art of War"
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+#nullable enable
+
 using PeachPDF.Html.Adapters.Entities;
 using PeachPDF.Html.Core.Dom;
 using PeachPDF.Html.Core.Entities;
-using PeachPDF.Html.Core.Parse;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace PeachPDF.Html.Core.Utils
 {
@@ -40,11 +40,13 @@ namespace PeachPDF.Html.Core.Utils
                 if (line.Value.Contains(location))
                     return true;
             }
+
             foreach (var childBox in box.Boxes)
             {
                 if (IsInBox(childBox, location))
                     return true;
             }
+
             return false;
         }
 
@@ -55,15 +57,7 @@ namespace PeachPDF.Html.Core.Utils
         /// <returns>true - only inline child boxes, false - otherwise</returns>
         public static bool ContainsInlinesOnly(CssBox box)
         {
-            foreach (CssBox b in box.Boxes)
-            {
-                if (!b.IsInline)
-                {
-                    return false;
-                }
-            }
-
-            return true;
+            return box.Boxes.All(b => b.IsInline);
         }
 
         /// <summary>
@@ -72,74 +66,72 @@ namespace PeachPDF.Html.Core.Utils
         /// <param name="root"></param>
         /// <param name="tagName"></param>
         /// <param name="box"></param>
-        public static CssBox FindParent(CssBox root, string tagName, CssBox box)
+        public static CssBox FindParent(CssBox root, string tagName, CssBox? box)
         {
-            if (box == null)
+            while (true)
             {
-                return root;
-            }
-            else if (box.HtmlTag != null && box.HtmlTag.Name.Equals(tagName, StringComparison.CurrentCultureIgnoreCase))
-            {
-                return box.ParentBox ?? root;
-            }
-            else
-            {
-                return FindParent(root, tagName, box.ParentBox);
-            }
-        }
-
-        /// <summary>
-        /// Gets the previous sibling of this box.
-        /// </summary>
-        /// <returns>Box before this one on the tree. Null if its the first</returns>
-        public static CssBox GetPreviousSibling(CssBox b)
-        {
-            if (b.ParentBox != null)
-            {
-                int index = b.ParentBox.Boxes.IndexOf(b);
-                if (index > 0)
+                if (box is null)
                 {
-                    int diff = 1;
-                    CssBox sib = b.ParentBox.Boxes[index - diff];
-
-                    while ((sib.Display == CssConstants.None || sib.Position == CssConstants.Absolute || sib.Position == CssConstants.Fixed) && index - diff - 1 >= 0)
-                    {
-                        sib = b.ParentBox.Boxes[index - ++diff];
-                    }
-
-                    return (sib.Display == CssConstants.None || sib.Position == CssConstants.Fixed) ? null : sib;
+                    return root;
                 }
+
+                if (box.HtmlTag != null && box.HtmlTag.Name.Equals(tagName, StringComparison.CurrentCultureIgnoreCase))
+                {
+                    return box.ParentBox ?? root;
+                }
+
+                box = box.ParentBox;
             }
-            return null;
         }
 
         /// <summary>
         /// Gets the previous sibling of this box.
         /// </summary>
         /// <returns>Box before this one on the tree. Null if its the first</returns>
-        public static CssBox GetPreviousContainingBlockSibling(CssBox b)
+        public static CssBox? GetPreviousSibling(CssBox b, bool includeFloats = true)
+        {
+            if (b.ParentBox == null) return null;
+
+            var index = b.ParentBox.Boxes.IndexOf(b);
+            if (index <= 0) return null;
+            var diff = 1;
+            var sib = b.ParentBox.Boxes[index - diff];
+
+            while ((sib.Display == CssConstants.None || sib.Position == CssConstants.Absolute || sib.Position == CssConstants.Fixed || (!includeFloats && sib.IsFloated)) && index - diff - 1 >= 0)
+            {
+                sib = b.ParentBox.Boxes[index - ++diff];
+            }
+
+            sib = sib.Display == CssConstants.None || sib.Position == CssConstants.Fixed || (!includeFloats && sib.IsFloated) ? null : sib;
+
+            return sib;
+        }
+
+        /// <summary>
+        /// Gets the previous sibling of this box.
+        /// </summary>
+        /// <returns>Box before this one on the tree. Null if its the first</returns>
+        public static CssBox? GetPreviousContainingBlockSibling(CssBox b)
         {
             var conBlock = b;
-            int index = conBlock.ParentBox.Boxes.IndexOf(conBlock);
+            var index = conBlock.ParentBox.Boxes.IndexOf(conBlock);
             while (conBlock.ParentBox != null && index < 1 && conBlock.Display != CssConstants.Block && conBlock.Display != CssConstants.Table && conBlock.Display != CssConstants.TableCell && conBlock.Display != CssConstants.ListItem)
             {
                 conBlock = conBlock.ParentBox;
                 index = conBlock.ParentBox != null ? conBlock.ParentBox.Boxes.IndexOf(conBlock) : -1;
             }
             conBlock = conBlock.ParentBox;
-            if (conBlock != null && index > 0)
+
+            if (conBlock == null || index <= 0) return null;
+            var diff = 1;
+            var sib = conBlock.Boxes[index - diff];
+
+            while ((sib.Display == CssConstants.None || sib.Position == CssConstants.Absolute || sib.Position == CssConstants.Fixed) && index - diff - 1 >= 0)
             {
-                int diff = 1;
-                CssBox sib = conBlock.Boxes[index - diff];
-
-                while ((sib.Display == CssConstants.None || sib.Position == CssConstants.Absolute || sib.Position == CssConstants.Fixed) && index - diff - 1 >= 0)
-                {
-                    sib = conBlock.Boxes[index - ++diff];
-                }
-
-                return sib.Display == CssConstants.None ? null : sib;
+                sib = conBlock.Boxes[index - ++diff];
             }
-            return null;
+
+            return sib.Display == CssConstants.None ? null : sib;
         }
 
         /// <summary>
@@ -148,55 +140,11 @@ namespace PeachPDF.Html.Core.Utils
         /// <param name="box">the box to check</param>
         public static bool IsBoxHasWhitespace(CssBox box)
         {
-            if (!box.Words[0].IsImage && box.Words[0].HasSpaceBefore && box.IsInline)
-            {
-                var sib = GetPreviousContainingBlockSibling(box);
-                if (sib != null && sib.IsInline)
-                    return true;
-            }
-            return false;
-        }
+            if (box.Words[0].IsImage || !box.Words[0].HasSpaceBefore || !box.IsInline) return false;
 
-        /// <summary>
-        /// Gets the next sibling of this box.
-        /// </summary>
-        /// <returns>Box before this one on the tree. Null if its the first</returns>
-        public static CssBox GetNextSibling(CssBox b)
-        {
-            CssBox sib = null;
-            if (b.ParentBox != null)
-            {
-                var index = b.ParentBox.Boxes.IndexOf(b) + 1;
-                while (index <= b.ParentBox.Boxes.Count - 1)
-                {
-                    var pSib = b.ParentBox.Boxes[index];
-                    if (pSib.Display != CssConstants.None && pSib.Position != CssConstants.Absolute && pSib.Position != CssConstants.Fixed)
-                    {
-                        sib = pSib;
-                        break;
-                    }
-                    index++;
-                }
-            }
-            return sib;
-        }
+            var sib = GetPreviousContainingBlockSibling(box);
 
-        /// <summary>
-        /// Get attribute value by given key starting search from given box, search up the tree until
-        /// attribute found or root.
-        /// </summary>
-        /// <param name="box">the box to start lookup at</param>
-        /// <param name="attribute">the attribute to get</param>
-        /// <returns>the value of the attribute or null if not found</returns>
-        public static string GetAttribute(CssBox box, string attribute)
-        {
-            string value = null;
-            while (box != null && value == null)
-            {
-                value = box.GetAttribute(attribute, null);
-                box = box.ParentBox;
-            }
-            return value;
+            return sib is { IsInline: true };
         }
 
         /// <summary>
@@ -207,19 +155,18 @@ namespace PeachPDF.Html.Core.Utils
         /// <param name="location">the location to find the box by</param>
         /// <param name="visible">Optional: if to get only visible boxes (default - true)</param>
         /// <returns>css link box if exists or null</returns>
-        public static CssBox GetCssBox(CssBox box, RPoint location, bool visible = true)
+        public static CssBox? GetCssBox(CssBox? box, RPoint location, bool visible = true)
         {
-            if (box != null)
+            if (box == null) return null;
+
+            if ((visible && box.Visibility != CssConstants.Visible) ||
+                (!box.Bounds.IsEmpty && !box.Bounds.Contains(location))) return null;
+
+            foreach (var childBox in box.Boxes)
             {
-                if ((!visible || box.Visibility == CssConstants.Visible) && (box.Bounds.IsEmpty || box.Bounds.Contains(location)))
+                if (CommonUtils.GetFirstValueOrDefault(box.Rectangles, box.Bounds).Contains(location))
                 {
-                    foreach (var childBox in box.Boxes)
-                    {
-                        if (CommonUtils.GetFirstValueOrDefault(box.Rectangles, box.Bounds).Contains(location))
-                        {
-                            return GetCssBox(childBox, location) ?? childBox;
-                        }
-                    }
+                    return GetCssBox(childBox, location) ?? childBox;
                 }
             }
 
@@ -231,19 +178,20 @@ namespace PeachPDF.Html.Core.Utils
         /// </summary>
         /// <param name="box">the box to start search from</param>
         /// <param name="linkBoxes">collection to add all link boxes to</param>
-        public static void GetAllLinkBoxes(CssBox box, List<CssBox> linkBoxes)
+        public static void GetAllLinkBoxes(CssBox? box, List<CssBox> linkBoxes)
         {
-            if (box != null)
+            switch (box)
             {
-                if (box.IsClickable && box.Visibility == CssConstants.Visible)
-                {
+                case null:
+                    return;
+                case { IsClickable: true, Visibility: CssConstants.Visible }:
                     linkBoxes.Add(box);
-                }
+                    break;
+            }
 
-                foreach (var childBox in box.Boxes)
-                {
-                    GetAllLinkBoxes(childBox, linkBoxes);
-                }
+            foreach (var childBox in box.Boxes)
+            {
+                GetAllLinkBoxes(childBox, linkBoxes);
             }
         }
 
@@ -254,25 +202,23 @@ namespace PeachPDF.Html.Core.Utils
         /// <param name="box">the box to start search from</param>
         /// <param name="location">the location to find the box by</param>
         /// <returns>css link box if exists or null</returns>
-        public static CssBox GetLinkBox(CssBox box, RPoint location)
+        public static CssBox? GetLinkBox(CssBox? box, RPoint location)
         {
-            if (box != null)
+            switch (box)
             {
-                if (box.IsClickable && box.Visibility == CssConstants.Visible)
-                {
-                    if (IsInBox(box, location))
-                        return box;
-                }
+                case null:
+                    return null;
+                case { IsClickable: true, Visibility: CssConstants.Visible } when IsInBox(box, location):
+                    return box;
+            }
 
-                if (box.ClientRectangle.IsEmpty || box.ClientRectangle.Contains(location))
-                {
-                    foreach (var childBox in box.Boxes)
-                    {
-                        var foundBox = GetLinkBox(childBox, location);
-                        if (foundBox != null)
-                            return foundBox;
-                    }
-                }
+            if (!box.ClientRectangle.IsEmpty && !box.ClientRectangle.Contains(location)) return null;
+
+            foreach (var childBox in box.Boxes)
+            {
+                var foundBox = GetLinkBox(childBox, location);
+                if (foundBox != null)
+                    return foundBox;
             }
 
             return null;
@@ -284,7 +230,7 @@ namespace PeachPDF.Html.Core.Utils
         /// <param name="box">the box to start search from</param>
         /// <param name="id">the id to find the box by</param>
         /// <returns>css box if exists or null</returns>
-        public static CssBox GetBoxById(CssBox box, string id)
+        public static CssBox? GetBoxById(CssBox? box, string? id)
         {
             if (box == null || string.IsNullOrEmpty(id)) return null;
 
@@ -309,7 +255,7 @@ namespace PeachPDF.Html.Core.Utils
         /// <param name="box">the box to start search from</param>
         /// <param name="tagName">the tag name to find the box by</param>
         /// <returns>css box if exists or null</returns>
-        public static CssBox GetBoxByTagName(CssBox box, string tagName)
+        public static CssBox? GetBoxByTagName(CssBox? box, string? tagName)
         {
             if (box == null || string.IsNullOrEmpty(tagName)) return null;
 
@@ -335,14 +281,14 @@ namespace PeachPDF.Html.Core.Utils
         /// <param name="box">the box to start search from</param>
         /// <param name="location">the location to find the box at</param>
         /// <returns>css word box if exists or null</returns>
-        public static CssLineBox GetCssLineBox(CssBox box, RPoint location)
+        public static CssLineBox? GetCssLineBox(CssBox? box, RPoint location)
         {
-            CssLineBox line = null;
+            CssLineBox? line = null;
             if (box != null)
             {
                 if (box.LineBoxes.Count > 0)
                 {
-                    if (box.HtmlTag == null || box.HtmlTag.Name != "td" || box.Bounds.Contains(location))
+                    if (box.HtmlTag is not { Name: "td" } || box.Bounds.Contains(location))
                     {
                         foreach (var lineBox in box.LineBoxes)
                         {
@@ -378,30 +324,28 @@ namespace PeachPDF.Html.Core.Utils
         /// <param name="box">the box to start search from</param>
         /// <param name="location">the location to find the box at</param>
         /// <returns>css word box if exists or null</returns>
-        public static CssRect GetCssBoxWord(CssBox box, RPoint location)
+        public static CssRect? GetCssBoxWord(CssBox? box, RPoint location)
         {
-            if (box != null && box.Visibility == CssConstants.Visible)
-            {
-                if (box.LineBoxes.Count > 0)
-                {
-                    foreach (var lineBox in box.LineBoxes)
-                    {
-                        var wordBox = GetCssBoxWord(lineBox, location);
-                        if (wordBox != null)
-                            return wordBox;
-                    }
-                }
+            if (box is not { Visibility: CssConstants.Visible }) return null;
 
-                if (box.ClientRectangle.IsEmpty || box.ClientRectangle.Contains(location))
+            if (box.LineBoxes.Count > 0)
+            {
+                foreach (var lineBox in box.LineBoxes)
                 {
-                    foreach (var childBox in box.Boxes)
-                    {
-                        var foundWord = GetCssBoxWord(childBox, location);
-                        if (foundWord != null)
-                        {
-                            return foundWord;
-                        }
-                    }
+                    var wordBox = GetCssBoxWord(lineBox, location);
+                    if (wordBox != null)
+                        return wordBox;
+                }
+            }
+
+            if (!box.ClientRectangle.IsEmpty && !box.ClientRectangle.Contains(location)) return null;
+
+            foreach (var childBox in box.Boxes)
+            {
+                var foundWord = GetCssBoxWord(childBox, location);
+                if (foundWord != null)
+                {
+                    return foundWord;
                 }
             }
 
@@ -415,7 +359,7 @@ namespace PeachPDF.Html.Core.Utils
         /// <param name="lineBox">the line box to search in</param>
         /// <param name="location">the location to find the box at</param>
         /// <returns>css word box if exists or null</returns>
-        public static CssRect GetCssBoxWord(CssLineBox lineBox, RPoint location)
+        public static CssRect? GetCssBoxWord(CssLineBox lineBox, RPoint location)
         {
             foreach (var rects in lineBox.Rectangles)
             {
@@ -431,31 +375,6 @@ namespace PeachPDF.Html.Core.Utils
                 }
             }
             return null;
-        }
-
-        /// <summary>
-        /// Find the css line box that the given word is in.
-        /// </summary>
-        /// <param name="word">the word to search for it's line box</param>
-        /// <returns>line box that the word is in</returns>
-        public static CssLineBox GetCssLineBoxByWord(CssRect word)
-        {
-            var box = word.OwnerBox;
-            while (box.LineBoxes.Count == 0)
-            {
-                box = box.ParentBox;
-            }
-            foreach (var lineBox in box.LineBoxes)
-            {
-                foreach (var lineWord in lineBox.Words)
-                {
-                    if (lineWord == word)
-                    {
-                        return lineBox;
-                    }
-                }
-            }
-            return box.LineBoxes[0];
         }
 
         /// <summary>
@@ -475,216 +394,136 @@ namespace PeachPDF.Html.Core.Utils
             return currentBox;
         }
 
-        /// <summary>
-        /// Generate html from the given DOM tree.<br/>
-        /// Generate all the style inside the html, in header or for every tag depending on <paramref name="styleGen"/> value.
-        /// </summary>
-        /// <param name="root">the box of the html generate html from</param>
-        /// <param name="styleGen">Optional: controls the way styles are generated when html is generated</param>
-        /// <returns>generated html</returns>
-        public static string GenerateHtml(CssBox root, HtmlGenerationStyle styleGen = HtmlGenerationStyle.Inline)
+        public static CssBox? GetFirstIntersectingFloatBox(CssBox reference, CssFloatCoordinates coordinates, string floatProp)
         {
-            var sb = new StringBuilder();
-            if (root != null)
+            while (true)
             {
-                WriteHtml(root.HtmlContainer.CssParser, sb, root, styleGen);
+                if (reference.ParentBox is null)
+                {
+                    return null;
+                }
+
+                var currentBoxIdx = reference.ParentBox.Boxes.IndexOf(reference);
+
+                for (var i = 0; i < currentBoxIdx; i++)
+                {
+                    var next = GetNextIntersectingFloatBox(reference.ParentBox.Boxes[i], coordinates, floatProp);
+
+                    if (next is not null)
+                    {
+                        return next;
+                    }
+                }
+
+                reference = reference.ParentBox;
             }
-            return sb.ToString();
         }
 
-        /// <summary>
-        /// Generate textual tree representation of the css boxes tree starting from the given root.<br/>
-        /// Used for debugging html parsing.
-        /// </summary>
-        /// <param name="root">the root to generate tree from</param>
-        /// <returns>generated tree</returns>
-        public static string GenerateBoxTree(CssBox root)
+        public static CssBox? GetLastLeftIntersectingFloatBox(CssBox box, CssLineBoxCoordinates coordinates)
         {
-            var sb = new StringBuilder();
-            GenerateBoxTree(root, sb, 0);
-            return sb.ToString();
-        }
+            var left = coordinates.CurrentX;
+            CssBox? lastIntersectingFloat = null;
 
-
-        #region Private methods
-        /// <summary>
-        /// Write the given html DOM sub-tree into the given string builder.<br/>
-        /// </summary>
-        /// <param name="cssParser">used to parse CSS data</param>
-        /// <param name="sb">the string builder to write html into</param>
-        /// <param name="box">the html sub-tree to write</param>
-        /// <param name="styleGen">Controls the way styles are generated when html is generated</param>
-        private static void WriteHtml(CssParser cssParser, StringBuilder sb, CssBox box, HtmlGenerationStyle styleGen)
-        {
-            if (box.HtmlTag != null) return;
-            if (box.HtmlTag != null)
+            do
             {
-                if (box.HtmlTag.Name != "link" || !box.HtmlTag.Attributes.ContainsKey("href") ||
-                    (!box.HtmlTag.Attributes["href"].StartsWith("property") && !box.HtmlTag.Attributes["href"].StartsWith("method")))
+                CssFloatCoordinates floatCoordinates = new()
                 {
-                    WriteHtmlTag(cssParser, sb, box, styleGen);
+                    Left = left,
+                    Top = coordinates.CurrentY,
+                    MarginLeft = box.ActualMarginLeft,
+                    MarginRight = box.ActualMarginRight,
+                    MaxBottom = coordinates.MaxBottom,
+                    ReferenceWidth = 0,
+                    Right = coordinates.MaxRight
+                };
+
+                var intersectingFloat = GetFirstIntersectingFloatBox(box, floatCoordinates, CssConstants.Left);
+
+                if (intersectingFloat is null)
+                {
+                    break;
                 }
 
-                if (styleGen == HtmlGenerationStyle.InHeader && box.HtmlTag.Name == "html" && box.HtmlContainer.CssData != null)
+                left = intersectingFloat.ActualRight + intersectingFloat.ActualMarginRight;
+                lastIntersectingFloat = intersectingFloat;
+
+            } while (true);
+
+            return lastIntersectingFloat;
+        }
+
+        public static CssBox? GetLastRightIntersectingFloatBox(CssBox box, CssLineBoxCoordinates coordinates, double referenceWidth)
+        {
+            var left = coordinates.CurrentX;
+            CssBox? lastIntersectingFloat = null;
+
+            do
+            {
+                CssFloatCoordinates floatCoordinates = new()
                 {
-                    sb.AppendLine("<head>");
-                    WriteStylesheet(sb, box.HtmlContainer.CssData);
-                    sb.AppendLine("</head>");
+                    Left = left,
+                    Top = coordinates.CurrentY,
+                    MarginLeft = box.ActualMarginLeft,
+                    MarginRight = box.ActualMarginRight,
+                    MaxBottom = coordinates.MaxBottom,
+                    ReferenceWidth = referenceWidth,
+                    Right = left + referenceWidth
+                };
+
+                var intersectingFloat = GetFirstIntersectingFloatBox(box, floatCoordinates, CssConstants.Left);
+
+                if (intersectingFloat is null)
+                {
+                    break;
                 }
+
+                left = intersectingFloat.ActualRight + intersectingFloat.ActualMarginRight;
+                lastIntersectingFloat = intersectingFloat;
+
+            } while (true);
+
+            return lastIntersectingFloat;
+        }
+
+        private static CssBox? GetNextIntersectingFloatBox(CssBox box, CssFloatCoordinates coordinates, string floatProp)
+        {
+            if (IsFloatIntersecting(coordinates, floatProp, box))
+            {
+                return box;
             }
 
             foreach (var childBox in box.Boxes)
             {
-                WriteHtml(cssParser, sb, childBox, styleGen);
-            }
-
-            if (box.HtmlTag is { IsSingle: false })
-            {
-                sb.AppendFormat("</{0}>", box.HtmlTag.Name);
-            }
-        }
-
-        /// <summary>
-        /// Write the given html tag with all its attributes and styles.
-        /// </summary>
-        /// <param name="cssParser">used to parse CSS data</param>
-        /// <param name="sb">the string builder to write html into</param>
-        /// <param name="box">the css box with the html tag to write</param>
-        /// <param name="styleGen">Controls the way styles are generated when html is generated</param>
-        private static void WriteHtmlTag(CssParser cssParser, StringBuilder sb, CssBox box, HtmlGenerationStyle styleGen)
-        {
-            sb.AppendFormat("<{0}", box.HtmlTag.Name);
-
-            // collect all element style properties including from stylesheet
-            var tagStyles = new Dictionary<string, string>();
-            var tagCssBlock = box.HtmlContainer.CssData.GetStyleRules("all", box);
-            if (tagCssBlock != null)
-            {
-                // TODO:a handle selectors
-                foreach (var cssBlock in tagCssBlock)
-                    foreach (var prop in cssBlock.Style)
-                        tagStyles[prop.Name] = prop.Value;
-            }
-
-            if (box.HtmlTag.HasAttributes())
-            {
-                sb.Append(' ');
-                foreach (var att in box.HtmlTag.Attributes)
+                var foundBox = GetNextIntersectingFloatBox(childBox, coordinates, floatProp);
+                if (foundBox != null)
                 {
-                    // handle image tags by inserting the image using base64 data
-                    if (styleGen == HtmlGenerationStyle.Inline && att.Key == HtmlConstants.Style)
-                    {
-                        // if inline style add the styles to the collection
-                        var block = cssParser.ParseStyleSheet(box.HtmlTag.TryGetAttribute("style"));
-                        foreach (var prop in block.StyleRules.SelectMany(a => a.Style))
-                            tagStyles[prop.Name] = prop.Value;
-                    }
-                    else if (styleGen == HtmlGenerationStyle.Inline && att.Key == HtmlConstants.Class)
-                    {
-                        // if inline style convert the style class to actual properties and add to collection
-                        var cssBlocks = box.HtmlContainer.CssData.GetStyleRules("all", box);
-                        if (cssBlocks != null)
-                        {
-                            // TODO:a handle selectors
-                            foreach (var cssBlock in cssBlocks)
-                                foreach (var prop in cssBlock.Style)
-                                    tagStyles[prop.Name] = prop.Value;
-                        }
-                    }
-                    else
-                    {
-                        sb.AppendFormat("{0}=\"{1}\" ", att.Key, att.Value);
-                    }
-                }
-
-                sb.Remove(sb.Length - 1, 1);
-            }
-
-            // if inline style insert the style tag with all collected style properties
-            if (styleGen == HtmlGenerationStyle.Inline && tagStyles.Count > 0)
-            {
-                var cleanTagStyles = StripDefaultStyles(box, tagStyles);
-                if (cleanTagStyles.Count > 0)
-                {
-                    sb.Append(" style=\"");
-                    foreach (var style in cleanTagStyles)
-                        sb.AppendFormat("{0}: {1}; ", style.Key, style.Value);
-                    sb.Remove(sb.Length - 1, 1);
-                    sb.Append('"');
+                    return foundBox;
                 }
             }
 
-            sb.AppendFormat("{0}>", box.HtmlTag.IsSingle ? "/" : "");
+            return null;
         }
 
-        /// <summary>
-        /// Clean the given style collection by removing default styles so only custom styles remain.<br/>
-        /// Return new collection where the old remains unchanged.
-        /// </summary>
-        /// <param name="box">the box the styles apply to, used to know the default style</param>
-        /// <param name="tagStyles">the collection of styles to clean</param>
-        /// <returns>new cleaned styles collection</returns>
-        private static Dictionary<string, string> StripDefaultStyles(CssBox box, Dictionary<string, string> tagStyles)
+        private static bool IsFloatIntersecting(CssFloatCoordinates coordinates, string floatProp, CssBox targetBox)
         {
-            // ReSharper disable PossibleMultipleEnumeration
-            var cleanTagStyles = new Dictionary<string, string>();
-            var defaultBlocks = box.HtmlContainer.Adapter.DefaultCssData.GetStyleRules("all", box);
-            foreach (var style in tagStyles)
+            if (!targetBox.IsFloated) return false;
+
+            // vertical conflict
+            if (!(coordinates.Top < targetBox.ActualBottom) || !(targetBox.Location.Y <= coordinates.Top)) return false;
+
+            var targetRight = targetBox.ActualRight + targetBox.ActualMarginRight;
+            var targetLeft = targetBox.Location.X - targetBox.ActualMarginLeft;
+
+            var currentLeft = coordinates.Left - coordinates.MarginLeft;
+
+            switch (floatProp)
             {
-                bool isDefault = false;
-                foreach (var defaultBlock in defaultBlocks)
-                {
-                    var styleDictionary = defaultBlock.Style.ToDictionary(a => a.Name, a => a.Value);
-
-                    if (styleDictionary.TryGetValue(style.Key, out string value) && value.Equals(style.Value, StringComparison.OrdinalIgnoreCase))
-                    {
-                        isDefault = true;
-                        break;
-                    }
-                }
-
-                if (!isDefault)
-                    cleanTagStyles[style.Key] = style.Value;
-            }
-            return cleanTagStyles;
-            // ReSharper restore PossibleMultipleEnumeration
-        }
-
-        /// <summary>
-        /// Write stylesheet data inline into the html.
-        /// </summary>
-        /// <param name="sb">the string builder to write stylesheet into</param>
-        /// <param name="cssData">the css data to write to the head</param>
-        private static void WriteStylesheet(StringBuilder sb, CssData cssData)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Generate textual tree representation of the css boxes tree starting from the given root.<br/>
-        /// Used for debugging html parsing.
-        /// </summary>
-        /// <param name="box">the box to generate for</param>
-        /// <param name="builder">the string builder to generate to</param>
-        /// <param name="indent">the current indent level to set indent of generated text</param>
-        private static void GenerateBoxTree(CssBox box, StringBuilder builder, int indent)
-        {
-            builder.AppendFormat("{0}<{1}", new string(' ', 2 * indent), box.Display);
-            if (box.HtmlTag != null)
-                builder.AppendFormat(" element=\"{0}\"", box.HtmlTag != null ? box.HtmlTag.Name : string.Empty);
-            if (box.Words.Count > 0)
-                builder.AppendFormat(" words=\"{0}\"", box.Words.Count);
-            builder.AppendFormat("{0}>\r\n", box.Boxes.Count > 0 ? "" : "/");
-            if (box.Boxes.Count > 0)
-            {
-                foreach (var childBox in box.Boxes)
-                {
-                    GenerateBoxTree(childBox, builder, indent + 1);
-                }
-                builder.AppendFormat("{0}</{1}>\r\n", new string(' ', 2 * indent), box.Display);
+                case CssConstants.Left when targetRight > currentLeft && targetLeft <= currentLeft:
+                case CssConstants.Right when targetLeft > coordinates.FloatRightStartX + coordinates.MarginLeft + coordinates.ReferenceWidth + coordinates.MarginRight:
+                    return true;
+                default:
+                    return false;
             }
         }
-
-        #endregion
     }
 }

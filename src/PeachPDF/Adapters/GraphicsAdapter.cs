@@ -62,7 +62,7 @@ namespace PeachPDF.Adapters
         public GraphicsAdapter(RAdapter adapter, XGraphics g, bool releaseGraphics = false)
             : base(adapter, new RRect(0, 0, double.MaxValue, double.MaxValue))
         {
-            ArgChecker.AssertArgNotNull(g, "g");
+            ArgumentNullException.ThrowIfNull(g);
 
             _g = g;
             _releaseGraphics = releaseGraphics;
@@ -108,7 +108,8 @@ namespace PeachPDF.Adapters
             if (!(font.Height < 0)) return Utils.Convert(size);
 
             var height = realFont.Height;
-            var descent = realFont.Size * realFont.FontFamily.GetCellDescent(realFont.Style) / realFont.FontFamily.GetEmHeight(realFont.Style);
+            var fontResolver = ((PdfSharpAdapter)_adapter).FontResolver;
+            var descent = realFont.Size * realFont.FontFamily.GetCellDescent(realFont.Style, fontResolver) / realFont.FontFamily.GetEmHeight(realFont.Style, fontResolver);
             fontAdapter.SetMetrics(height, (int)Math.Round((height - descent + 1f)));
 
             return Utils.Convert(size);

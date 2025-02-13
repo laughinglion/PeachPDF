@@ -373,32 +373,6 @@ namespace PeachPDF.PdfSharpCore.Drawing
             }
         }
 
-        /// <summary>
-        /// Adds a text string to this path.
-        /// </summary>
-        public void AddString(string s, XFontFamily family, XFontStyle style, double emSize, XRect layoutRect,
-            XStringFormat format)
-        {
-            if (s == null)
-                throw new ArgumentNullException("s");
-
-            if (family == null)
-                throw new ArgumentNullException("family");
-
-            if (format == null)
-                format = XStringFormats.Default;
-
-            if (format.LineAlignment == XLineAlignment.BaseLine && layoutRect.Height != 0)
-                throw new InvalidOperationException(
-                    "DrawString: With XLineAlignment.BaseLine the height of the layout rectangle must be 0.");
-
-            if (s.Length == 0)
-                return;
-
-            XFont font = new XFont(family.Name, emSize, style);
-            DiagnosticsHelper.HandleNotImplemented("XGraphicsPath.AddString");
-        }
-
         // --------------------------------------------------------------------------------------------
 
         /// <summary>

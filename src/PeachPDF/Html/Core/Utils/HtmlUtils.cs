@@ -23,25 +23,28 @@ namespace PeachPDF.Html.Core.Utils
         /// <summary>
         /// List of html tags that don't have content
         /// </summary>
-        private static readonly HashSet<string> _list = new(
-            new[]
+        private static readonly HashSet<string> _list =
+        [
+
+            ..new[]
             {
                 "area", "base", "basefont", "br", "col",
                 "frame", "hr", "img", "input", "isindex",
                 "link", "meta", "param"
             }
-            );
+
+        ];
 
         /// <summary>
         /// the html encode\decode pairs
         /// </summary>
-        private static readonly KeyValuePair<string, string>[] _encodeDecode = new[]
-        {
-            new KeyValuePair<string, string>("&lt;", "<"),
-            new KeyValuePair<string, string>("&gt;", ">"),
-            new KeyValuePair<string, string>("&quot;", "\""),
-            new KeyValuePair<string, string>("&amp;", "&"),
-        };
+        private static readonly KeyValuePair<string, string>[] _encodeDecode =
+        [
+            new("&lt;", "<"),
+            new("&gt;", ">"),
+            new("&quot;", "\""),
+            new("&amp;", "&")
+        ];
 
         /// <summary>
         /// the html decode only pairs
@@ -300,6 +303,13 @@ namespace PeachPDF.Html.Core.Utils
             _decodeOnly["diams"] = Convert.ToChar(9830);
         }
 
+        public static string FixNewLines(string text)
+        {
+            text = text.Replace("\r\n", "\n");
+            text = text.Replace("\r", "\n");
+            return text;
+        }
+
         /// <summary>
         /// Is the given html tag is single tag or can have content.
         /// </summary>
@@ -334,34 +344,47 @@ namespace PeachPDF.Html.Core.Utils
             return str;
         }
 
-        /// <summary>
-        /// Encode regular string into html encoded string.<br/>
-        /// Handles &lt;, &gt;, "&amp;.
-        /// </summary>
-        /// <param name="str">the string to encode</param>
-        /// <returns>encoded string</returns>
-        public static string EncodeHtml(string str)
+        // https://html.spec.whatwg.org/dev/dom.html#concept-element-tag-omission
+        public static bool CanEndTagBeOmitted(string currentTagName, string tagName)
         {
-            if (!string.IsNullOrEmpty(str))
+            return currentTagName switch
             {
-                for (int i = _encodeDecode.Length - 1; i >= 0; i--)
-                {
-                    str = str.Replace(_encodeDecode[i].Value, _encodeDecode[i].Key);
-                }
-            }
-            return str;
+                "p" => ShouldTagCloseParagraph(tagName),
+                "td" => ShouldTagCloseTableCell(tagName),
+                "tr" => ShouldTagCloseTableRow(tagName),
+                _ => false
+            };
         }
 
+        // Close <p> tags per https://html.spec.whatwg.org/dev/grouping-content.html#the-p-element
+        public static bool ShouldTagCloseParagraph(string tagName)
+        {
+            return tagName switch
+            {
+                "address" or "article" or "aside" or "blockquote" or "details" or "dialog" or "div" or "dl"
+                    or "fieldset" or "figcaption" or "figure" or "footer" or "form" or "h1" or "h2" or "h3" or "h4"
+                    or "h5" or "h6" or "header" or "hgroup" or "hr" or "main" or "menu" or "nav" or "ol" or "p" or "pre"
+                    or "search" or "section" or "table" or "ul" => true,
+                _ => false
+            };
+        }
+
+        // Close <td> tags per https://html.spec.whatwg.org/dev/tables.html#the-td-element
+        public static bool ShouldTagCloseTableCell(string tagName)
+        {
+            return tagName switch
+            {
+                "td" or "th" or "tr" => true,
+                _ => false
+            };
+        }
+
+        public static bool ShouldTagCloseTableRow(string tagName)
+        {
+            return tagName is "tr";
+        }
 
         #region Private methods
-
-        /// <summary>
-        /// Decode html special charecters encoded using char entity code (&#8364;)
-        /// </summary>
-        /// <param name="str">the string to decode</param>
-        /// <returns>decoded string</returns>
-        private static string DecodeHtmlCharByCode(string str) => DecodeHtmlCharByCode(new StringBuilder(str))?.ToString();
-
         private static StringBuilder DecodeHtmlCharByCode(StringBuilder str)
         {
             var idx = FindIndexOf(str, "&#", 0, true);
@@ -395,7 +418,7 @@ namespace PeachPDF.Html.Core.Utils
             var comparableValue = ignoreCase ? value.ToLower() : value;
             var isEqual =
                 ignoreCase
-                ? new Func<char, char, bool>((x, y) => char.ToLower(x) == y)
+                ? (x, y) => char.ToLower(x) == y
                 : new Func<char, char, bool>((x, y) => x == y);
             for (int i = startIndex; i < max; ++i)
                 if (isEqual(reference[i], comparableValue[0]))
@@ -409,13 +432,6 @@ namespace PeachPDF.Html.Core.Utils
             return -1;
         }
 
-        /// <summary>
-        /// Decode html special charecters encoded using char entity name (&#euro;)
-        /// </summary>
-        /// <param name="str">the string to decode</param>
-        /// <returns>decoded string</returns>
-        private static string DecodeHtmlCharByName(string str) => DecodeHtmlCharByName(new StringBuilder(str))?.ToString();
-
         private static StringBuilder DecodeHtmlCharByName(StringBuilder str)
         {
             var idx = FindIndexOf(str, "&", 0);
@@ -425,10 +441,10 @@ namespace PeachPDF.Html.Core.Utils
                 if (endIdx > -1 && endIdx - idx < 8)
                 {
                     var key = str.ToString(idx + 1, endIdx - idx - 1);
-                    if (_decodeOnly.TryGetValue(key, out char c))
+                    if (_decodeOnly.TryGetValue(key, out var c))
                     {
                         str = str.Remove(idx, endIdx - idx + 1);
-                        str = str.Insert(idx, c.ToString());
+                        str = str.Insert(idx, c);
                     }
                 }
 

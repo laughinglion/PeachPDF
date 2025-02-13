@@ -18,6 +18,7 @@ using PeachPDF.Html.Core.Parse;
 using PeachPDF.Html.Core.Utils;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 
 namespace PeachPDF.Html.Core
@@ -84,22 +85,22 @@ namespace PeachPDF.Html.Core
         /// <summary>
         /// the top margin between the page start and the text
         /// </summary>
-        private int _marginTop;
+        private double _marginTop;
 
         /// <summary>
         /// the bottom margin between the page end and the text
         /// </summary>
-        private int _marginBottom;
+        private double _marginBottom;
 
         /// <summary>
         /// the left margin between the page start and the text
         /// </summary>
-        private int _marginLeft;
+        private double _marginLeft;
 
         /// <summary>
         /// the right margin between the page end and the text
         /// </summary>
-        private int _marginRight;
+        private double _marginRight;
 
         #endregion
 
@@ -109,10 +110,10 @@ namespace PeachPDF.Html.Core
         /// </summary>
         public HtmlContainerInt(RAdapter adapter)
         {
-            ArgChecker.AssertArgNotNull(adapter, "global");
+            ArgumentNullException.ThrowIfNull(adapter);
 
             Adapter = adapter;
-            CssParser = new CssParser(adapter);
+            CssParser = new CssParser(adapter,this);
         }
 
         /// <summary>
@@ -170,7 +171,7 @@ namespace PeachPDF.Html.Core
         /// <summary>
         /// the top margin between the page start and the text
         /// </summary>
-        public int MarginTop
+        public double MarginTop
         {
             get => _marginTop;
             set
@@ -183,7 +184,7 @@ namespace PeachPDF.Html.Core
         /// <summary>
         /// the bottom margin between the page end and the text
         /// </summary>
-        public int MarginBottom
+        public double MarginBottom
         {
             get => _marginBottom;
             set
@@ -196,7 +197,7 @@ namespace PeachPDF.Html.Core
         /// <summary>
         /// the left margin between the page start and the text
         /// </summary>
-        public int MarginLeft
+        public double MarginLeft
         {
             get => _marginLeft;
             set
@@ -209,7 +210,7 @@ namespace PeachPDF.Html.Core
         /// <summary>
         /// the right margin between the page end and the text
         /// </summary>
-        public int MarginRight
+        public double MarginRight
         {
             get => _marginRight;
             set
@@ -217,16 +218,6 @@ namespace PeachPDF.Html.Core
                 if (value > -1)
                     _marginRight = value;
             }
-        }
-
-        /// <summary>
-        /// Set all 4 margins to the given value.
-        /// </summary>
-        /// <param name="value"></param>
-        public void SetMargins(int value)
-        {
-            if (value > -1)
-                _marginBottom = _marginLeft = _marginTop = _marginRight = value;
         }
 
         /// <summary>
@@ -244,7 +235,7 @@ namespace PeachPDF.Html.Core
             Clear();
             if (string.IsNullOrEmpty(htmlSource)) return;
 
-            CssData = baseCssData ?? Adapter.DefaultCssData;
+            CssData = baseCssData ?? await Adapter.GetDefaultCssData();
 
             DomParser parser = new(CssParser);
             (Root,CssData) = await parser.GenerateCssTree(htmlSource, this, CssData);
@@ -259,31 +250,6 @@ namespace PeachPDF.Html.Core
 
             Root.Dispose();
             Root = null;
-        }
-
-        /// <summary>
-        /// Get html from the current DOM tree with style if requested.
-        /// </summary>
-        /// <param name="styleGen">Optional: controls the way styles are generated when html is generated (default: <see cref="HtmlGenerationStyle.Inline"/>)</param>
-        /// <returns>generated html</returns>
-        public string GetHtml(HtmlGenerationStyle styleGen = HtmlGenerationStyle.Inline)
-        {
-            return DomUtils.GenerateHtml(Root, styleGen);
-        }
-
-        /// <summary>
-        /// Get attribute value of element at the given x,y location by given key.<br/>
-        /// If more than one element exist with the attribute at the location the inner most is returned.
-        /// </summary>
-        /// <param name="location">the location to find the attribute at</param>
-        /// <param name="attribute">the attribute key to get value by</param>
-        /// <returns>found attribute value or null if not found</returns>
-        public string GetAttributeAt(RPoint location, string attribute)
-        {
-            ArgChecker.AssertArgNotNullOrEmpty(attribute, "attribute");
-
-            var cssBox = DomUtils.GetCssBox(Root, OffsetByScroll(location));
-            return cssBox != null ? DomUtils.GetAttribute(cssBox, attribute) : null;
         }
 
         /// <summary>
@@ -335,7 +301,7 @@ namespace PeachPDF.Html.Core
         /// <param name="g">Device context to draw</param>
         public async ValueTask PerformLayout(RGraphics g)
         {
-            ArgChecker.AssertArgNotNull(g, "g");
+            ArgumentNullException.ThrowIfNull(g);
 
             ActualSize = RSize.Empty;
             if (Root is null) return;
@@ -358,16 +324,19 @@ namespace PeachPDF.Html.Core
         /// Render the html using the given device.
         /// </summary>
         /// <param name="g">the device to use to render</param>
-        public void PerformPaint(RGraphics g)
+        public async ValueTask PerformPaint(RGraphics g)
         {
-            ArgChecker.AssertArgNotNull(g, "g");
+            ArgumentNullException.ThrowIfNull(g);
 
             g.PushClip(MaxSize.Height > 0
                 ? new RRect(Location.X, Location.Y, Math.Min(MaxSize.Width, PageSize.Width),
                     Math.Min(MaxSize.Height, PageSize.Height))
                 : new RRect(MarginLeft, MarginTop, PageSize.Width, PageSize.Height));
 
-            Root?.Paint(g);
+            if (Root is not null)
+            {
+                await Root.Paint(g);
+            }
 
             g.PopClip();
         }
@@ -388,6 +357,7 @@ namespace PeachPDF.Html.Core
         /// <param name="type">the type of error to report</param>
         /// <param name="message">the error message</param>
         /// <param name="exception">optional: the exception that occured</param>
+        [DoesNotReturn]
         internal void ReportError(HtmlRenderErrorType type, string message, Exception exception = null)
         {
             throw new HtmlRenderException(message, type, exception);

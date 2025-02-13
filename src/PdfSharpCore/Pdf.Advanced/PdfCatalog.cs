@@ -58,28 +58,16 @@ namespace PeachPDF.PdfSharpCore.Pdf.Advanced
         /// </summary>
         public string Version
         {
-            get { return _version; }
+            get => _version;
             set
             {
-                switch (value)
+                _version = value switch
                 {
-                    case "1.0":
-                    case "1.1":
-                    case "1.2":
-                        throw new InvalidOperationException("Unsupported PDF version.");
-
-                    case "1.3":
-                    case "1.4":
-                        _version = value;
-                        break;
-
-                    case "1.5":
-                    case "1.6":
-                        throw new InvalidOperationException("Unsupported PDF version.");
-
-                    default:
-                        throw new ArgumentException("Invalid version.");
-                }
+                    "1.0" or "1.1" or "1.2" => throw new InvalidOperationException("Unsupported PDF version."),
+                    "1.3" or "1.4" => value,
+                    "1.5" or "1.6" => throw new InvalidOperationException("Unsupported PDF version."),
+                    _ => throw new ArgumentException("Invalid version.")
+                };
             }
         }
         string _version = "1.3";
@@ -127,9 +115,7 @@ namespace PeachPDF.PdfSharpCore.Pdf.Advanced
         {
             get
             {
-                if (_viewerPreferences == null)
-                    _viewerPreferences = (PdfViewerPreferences)Elements.GetValue(Keys.ViewerPreferences, VCF.CreateIndirect);
-                return _viewerPreferences;
+                return _viewerPreferences ??= (PdfViewerPreferences)Elements.GetValue(Keys.ViewerPreferences, VCF.CreateIndirect);
             }
         }
         PdfViewerPreferences _viewerPreferences;
@@ -141,19 +127,35 @@ namespace PeachPDF.PdfSharpCore.Pdf.Advanced
         {
             get
             {
-               if (_outline == null)
-                {
-                    ////// Ensure that the page tree exists.
-                    ////// ReSharper disable once UnusedVariable because we need dummy to call the getter.
-                    ////PdfPages dummy = Pages;
-
-                    // Now create the outline item tree.
-                    _outline = (PdfOutline)Elements.GetValue(Keys.Outlines, VCF.CreateIndirect);
-                }
-               return _outline.Outlines;
+                _outline ??= (PdfOutline)Elements.GetValue(Keys.Outlines, VCF.CreateIndirect);
+                return _outline.Outlines;
             }
         }
         PdfOutline _outline;
+
+        /// <summary>
+        /// Gets the name dictionary of this document.
+        /// </summary>
+        public PdfNameDictionary Names
+        {
+            get
+            {
+                if (_names == null)
+                {
+                    var dict = Elements.GetDictionary(Keys.Names);
+                    if (dict != null)
+                        _names = new PdfNameDictionary(dict);
+                    else
+                    {
+                        _names = new PdfNameDictionary(Owner);
+                        Owner.Internals.AddObject(_names);
+                        Elements.SetReference(Keys.Names, _names.Reference);
+                    }
+                }
+                return _names;
+            }
+        }
+        PdfNameDictionary? _names;
 
         /// <summary>
         /// Gets the AcroForm dictionary of this document.
@@ -191,15 +193,13 @@ namespace PeachPDF.PdfSharpCore.Pdf.Advanced
         /// </summary>
         internal override void PrepareForSave()
         {
-            if (_pages != null)
-                _pages.PrepareForSave();
+            _pages?.PrepareForSave();
 
-            if (_outline != null && _outline.Outlines.Count > 0)
-            {
-                if (Elements[Keys.PageMode] == null)
-                    PageMode = PdfPageMode.UseOutlines;
-                _outline.PrepareForSave();
-            }
+            if (_outline == null || _outline.Outlines.Count <= 0) return;
+
+            if (Elements[Keys.PageMode] == null)
+                PageMode = PdfPageMode.UseOutlines;
+            _outline.PrepareForSave();
         }
 
         internal override void WriteObject(PdfWriter writer)
@@ -414,7 +414,7 @@ namespace PeachPDF.PdfSharpCore.Pdf.Advanced
             /// </summary>
             public static DictionaryMeta Meta
             {
-                get { return _meta ?? (_meta = CreateMeta(typeof(Keys))); }
+                get { return _meta ??= CreateMeta(typeof(Keys)); }
             }
             static DictionaryMeta _meta;
         }

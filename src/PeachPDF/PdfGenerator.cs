@@ -12,14 +12,14 @@
 
 using PeachPDF.Adapters;
 using PeachPDF.Html.Core;
-using PeachPDF.Html.Core.Entities;
 using PeachPDF.Html.Core.Utils;
+using PeachPDF.Network;
 using PeachPDF.PdfSharpCore;
 using PeachPDF.PdfSharpCore.Drawing;
 using PeachPDF.PdfSharpCore.Pdf;
-using System;
+using PeachPDF.PdfSharpCore.Pdf.Advanced;
+using System.IO;
 using System.Threading.Tasks;
-using PeachPDF.Network;
 
 namespace PeachPDF
 {
@@ -49,6 +49,15 @@ namespace PeachPDF
         }
 
         /// <summary>
+        /// Add a font to be rendered
+        /// </summary>
+        /// <param name="stream">Font stream</param>
+        public async Task AddFontFromStream(Stream stream)
+        {
+            await _pdfSharpAdapter.AddFont(stream, null);
+        }
+
+        /// <summary>
         /// Parse the given stylesheet to <see cref="CssData"/> object.<br/>
         /// If <paramref name="combineWithDefault"/> is true the parsed css blocks are added to the 
         /// default css data (as defined by W3), merged if class name already exists. If false only the data in the given stylesheet is returned.
@@ -57,9 +66,9 @@ namespace PeachPDF
         /// <param name="stylesheet">the stylesheet source to parse</param>
         /// <param name="combineWithDefault">true - combine the parsed css data with default css data, false - return only the parsed css data</param>
         /// <returns>the parsed css data</returns>
-        public CssData ParseStyleSheet(string stylesheet, bool combineWithDefault = true)
+        public async Task<CssData> ParseStyleSheet(string stylesheet, bool combineWithDefault = true)
         {
-            return CssData.Parse(_pdfSharpAdapter, stylesheet, combineWithDefault);
+            return await CssData.Parse(_pdfSharpAdapter, stylesheet, combineWithDefault);
         }
 
         /// <summary>
@@ -69,8 +78,6 @@ namespace PeachPDF
         /// <param name="pageSize">the page size to use for each page in the generated pdf </param>
         /// <param name="margin">the margin to use between the HTML and the edges of each page</param>
         /// <param name="cssData">optional: the style to use for html rendering (default - use W3 default style)</param>
-        /// <param name="stylesheetLoad">optional: can be used to overwrite stylesheet resolution logic</param>
-        /// <param name="imageLoad">optional: can be used to overwrite image resolution logic</param>
         /// <returns>the generated image of the html</returns>
         public async Task<PdfDocument> GeneratePdf(string html, PageSize pageSize, int margin = 20, CssData cssData = null)
         {
@@ -148,8 +155,6 @@ namespace PeachPDF
                 orgPageSize = new XSize(orgPageSize.Height, orgPageSize.Width);
             }
 
-            var pageSize = new XSize(orgPageSize.Width - config.MarginLeft - config.MarginRight, orgPageSize.Height - config.MarginTop - config.MarginBottom);
-
             if (string.IsNullOrEmpty(html) && config.NetworkLoader is null) return;
 
             _pdfSharpAdapter.NetworkLoader = config.NetworkLoader ?? new DataUriNetworkLoader();
@@ -158,14 +163,19 @@ namespace PeachPDF
 
             using var container = new HtmlContainer(_pdfSharpAdapter);
 
-            container.Location = new XPoint(config.MarginLeft, config.MarginTop);
-            container.MaxSize = new XSize(pageSize.Width, 0);
-            await container.SetHtml(html, cssData);
-            container.PageSize = pageSize;
+
             container.MarginBottom = config.MarginBottom;
             container.MarginLeft = config.MarginLeft;
             container.MarginRight = config.MarginRight;
             container.MarginTop = config.MarginTop;
+
+            await container.SetHtml(html, cssData);
+
+            // Just in case @page rules got applied
+            var pageSize = new XSize(orgPageSize.Width - container.MarginLeft - container.MarginRight, orgPageSize.Height - container.MarginTop - container.MarginBottom);
+            container.PageSize = pageSize;
+            container.Location = new XPoint(container.MarginLeft, container.MarginTop);
+            container.MaxSize = new XSize(pageSize.Width, 0);
 
             // layout the HTML with the page width restriction to know how many pages are required
             using var measure = XGraphics.CreateMeasureContext(pageSize, XGraphicsUnit.Point, XPageDirection.Downwards);
@@ -184,7 +194,7 @@ namespace PeachPDF
                 g.IntersectClip(new XRect(0, 0, page.Width, page.Height));
 
                 container.ScrollOffset = new XPoint(0, scrollOffset);
-                container.PerformPaint(g);
+                await container.PerformPaint(g);
                 scrollOffset -= pageSize.Height;
             }
 
@@ -214,12 +224,21 @@ namespace PeachPDF
                     {
                         // create link to another page in the document
                         var anchorRect = container.GetElementRectangle(link.AnchorId);
+
                         if (anchorRect.HasValue)
                         {
                             // document links to the same page as the link is not allowed
-                            int anchorPageIdx = (int)(anchorRect.Value.Top / pageSize.Height);
-                            if (i != anchorPageIdx)
-                                document.Pages[i].AddDocumentLink(new PdfRectangle(xRect), anchorPageIdx);
+                            int anchorPageNumber = 0;
+                            var top = anchorRect.Value.Top;
+
+                            while (top > pageSize.Height)
+                            {
+                                top -= pageSize.Height;
+                                anchorPageNumber++;
+                            }
+
+                            document.AddNamedDestination(link.AnchorId, anchorPageNumber, PdfNamedDestinationParameters.CreatePosition(anchorRect.Value.Left, top));
+                            document.Pages[i].AddDocumentLink(new PdfRectangle(xRect), link.AnchorId);
                         }
                     }
                     else

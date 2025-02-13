@@ -10,6 +10,9 @@
 // - Sun Tsu,
 // "The Art of War"
 
+using PeachPDF.Html.Core.Utils;
+using System.Collections.Generic;
+
 namespace PeachPDF.Html.Core
 {
     internal static class CssDefaults
@@ -23,12 +26,17 @@ namespace PeachPDF.Html.Core
         public const string DefaultStyleSheet = """
                                                 
             html, address,
+            article, aside,
+            footer, header,
             blockquote,
             body, dd, div,
             dl, dt, fieldset, form,
             frame, frameset,
             h1, h2, h3, h4,
-            h5, h6, noframes,
+            h5, h6, 
+            hgroup, main,nav
+            section, search,
+            noframes,
             ol, p, ul, center,
             dir, menu, pre   { display: block }
             li              { display: list-item }
@@ -91,7 +99,7 @@ namespace PeachPDF.Html.Core
             center          { text-align: center }
             :link, :visited { text-decoration: underline }
             :focus          { outline: thin dotted invert }
-
+            
             /* Begin bidirectionality settings (do not change) */
             BDO[DIR="ltr"]  { direction: ltr; unicode-bidi: bidi-override }
             BDO[DIR="rtl"]  { direction: rtl; unicode-bidi: bidi-override }
@@ -116,15 +124,40 @@ namespace PeachPDF.Html.Core
             base, param     { display:none }
             hr              { border-top-color: #9A9A9A; border-left-color: #9A9A9A; border-bottom-color: #EEEEEE; border-right-color: #EEEEEE; }
             pre             { font-size: 10pt; margin-top: 15px; }
-            
-            /*This is the background of the HtmlToolTip*/
-            .htmltooltip {
-                border:solid 1px #767676;
-                background-color:white;
-                background-gradient:#E4E5F0;
-                padding: 8px; 
-                Font: 9pt Tahoma;
-            }
         """;
+
+        public static Dictionary<string, string> InitialValues = new()
+        {
+            { "background-attachment", CssConstants.Scroll },
+            { "background-clip", CssConstants.BorderBox },
+            { "background-color", CssConstants.Transparent },
+            { "background-image", CssConstants.None },
+            { "background-origin", CssConstants.PaddingBox },
+            { "background-position", "0% 0%"},
+            { "background-repeat", CssConstants.Repeat },
+            { "background-size", $"{CssConstants.Auto} {CssConstants.Auto}"},
+            { "border-bottom-color", CssConstants.CurrentColor },
+            { "border-bottom-style", CssConstants.None },
+            { "border-bottom-width", CssConstants.Medium },
+            { "border-left-color", CssConstants.CurrentColor },
+            { "border-left-style", CssConstants.None },
+            { "border-left-width", CssConstants.Medium },
+            { "border-right-color", CssConstants.CurrentColor },
+            { "border-right-style", CssConstants.None },
+            { "border-right-width", CssConstants.Medium },
+            { "border-top-color", CssConstants.CurrentColor },
+            { "border-top-style", CssConstants.None },
+            { "border-top-width", CssConstants.Medium },
+            { "box-sizing", CssConstants.ContentBox },
+            { "font-stretch", CssConstants.Normal },
+            { "font-style", CssConstants.Normal },
+            { "font-variant", CssConstants.Normal },
+            { "font-weight", CssConstants.Normal },
+            { "line-height", CssConstants.Normal },
+            { "list-style-image", CssConstants.None },
+            { "list-style-position", CssConstants.Outside },
+            { "text-decoration-color", CssConstants.CurrentColor },
+            { "text-decoration-style", CssConstants.Solid }
+        };
     }
 }

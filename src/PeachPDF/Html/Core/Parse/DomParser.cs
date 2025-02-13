@@ -19,7 +19,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-using ExCSS;
+using PeachPDF.CSS;
+using PeachPDF.Html.Adapters;
 
 namespace PeachPDF.Html.Core.Parse
 {
@@ -43,7 +44,7 @@ namespace PeachPDF.Html.Core.Parse
         /// </summary>
         public DomParser(CssParser cssParser)
         {
-            ArgChecker.AssertArgNotNull(cssParser, "cssParser");
+            ArgumentNullException.ThrowIfNull(cssParser);
 
             _cssParser = cssParser;
         }
@@ -58,7 +59,6 @@ namespace PeachPDF.Html.Core.Parse
         public async Task<(CssBox cssBox, CssData cssData)> GenerateCssTree(string html, HtmlContainerInt htmlContainer, CssData cssData)
         {
             var root = HtmlParser.ParseDocument(html);
-            if (root is null) return (null, cssData);
 
             root.HtmlContainer = htmlContainer;
             const bool cssDataChanged = false;
@@ -68,7 +68,13 @@ namespace PeachPDF.Html.Core.Parse
             //var media = htmlContainer.GetCssMediaType(cssData.MediaBlocks.Keys);
             var media = "print"; // TODO: fix this
 
-            CascadeApplyStyles(root, cssData, media);
+            var cssValueParser = new CssValueParser(htmlContainer.Adapter);
+
+            await CascadeApplyStyleFonts(cssData, htmlContainer.Adapter);
+
+            CascadeApplyPageStyles(htmlContainer, root, cssData);
+
+            CascadeApplyStyles(cssValueParser, root, cssData, media);
 
             CorrectTextBoxes(root);
 
@@ -88,6 +94,31 @@ namespace PeachPDF.Html.Core.Parse
 
         #region Private methods
 
+        private async Task CascadeApplyStyleFonts(CssData cssData, RAdapter adapter)
+        {
+            foreach (var stylesheet in cssData.Stylesheets)
+            {
+                foreach (var fontRule in stylesheet.FontfaceSetRules)
+                {
+                    var fontFamilyName = CssValueParser.GetFontFaceFamilyName(fontRule.Family);
+                    var fontFaceDefinition = CssValueParser.GetFontFacePropertyValue(fontRule.Source);
+
+                    var isLoaded = false;
+
+                    if (fontFaceDefinition.Local is not null)
+                    {
+                        isLoaded = await adapter.AddLocalFontFamily(fontFamilyName, fontFaceDefinition.Local);
+                    }
+
+                    if (!isLoaded && fontFaceDefinition.Url is not null)
+                    {
+                        
+                        await adapter.AddFontFamilyFromUrl(fontFamilyName, fontFaceDefinition.Url, fontFaceDefinition.Format);
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// Read styles defined inside the dom structure in links and style elements.<br/>
         /// If the html tag is "style" tag parse it content and add to the css data for all future tags parsing.<br/>
@@ -106,9 +137,9 @@ namespace PeachPDF.Html.Core.Parse
                     box.GetAttribute("rel", string.Empty).Equals("stylesheet", StringComparison.CurrentCultureIgnoreCase))
                 {
                     CloneCssData(ref cssData, ref cssDataChanged);
-                    var stylesheet = await StylesheetLoadHandler.LoadStylesheet(htmlContainer, box.GetAttribute("href", string.Empty), box.HtmlTag.Attributes);
+                    var stylesheet = await StylesheetLoadHandler.LoadStylesheet(htmlContainer, box.GetAttribute("href", string.Empty));
                     if (stylesheet != null)
-                        _cssParser.ParseStyleSheet(cssData, stylesheet);
+                        await _cssParser.ParseStyleSheet(cssData, stylesheet);
                 }
 
                 // Check for the <style> tag
@@ -116,7 +147,7 @@ namespace PeachPDF.Html.Core.Parse
                 {
                     CloneCssData(ref cssData, ref cssDataChanged);
                     foreach (var child in box.Boxes)
-                        _cssParser.ParseStyleSheet(cssData, child.Text);
+                        await _cssParser.ParseStyleSheet(cssData, child.Text);
                 }
             }
 
@@ -128,6 +159,34 @@ namespace PeachPDF.Html.Core.Parse
             return (cssData, cssDataChanged);
         }
 
+        private static void CascadeApplyPageStyles(HtmlContainerInt htmlContainer, CssBox root, CssData cssData)
+        {
+            foreach (var style in cssData.Stylesheets)
+            {
+                foreach (var pageRule in style.PageRules)
+                {
+                    if (pageRule.Style.MarginLeft.Length > 0)
+                    {
+                        htmlContainer.MarginLeft = CssValueParser.ParseLength(pageRule.Style.MarginLeft, htmlContainer.PageSize.Width, root);
+                    }
+
+                    if (pageRule.Style.MarginTop.Length > 0)
+                    {
+                        htmlContainer.MarginTop = CssValueParser.ParseLength(pageRule.Style.MarginTop, htmlContainer.PageSize.Width, root);
+                    }
+
+                    if (pageRule.Style.MarginBottom.Length > 0)
+                    {
+                        htmlContainer.MarginBottom = CssValueParser.ParseLength(pageRule.Style.MarginBottom, htmlContainer.PageSize.Width, root);
+                    }
+
+                    if (pageRule.Style.MarginRight.Length > 0)
+                    {
+                        htmlContainer.MarginRight = CssValueParser.ParseLength(pageRule.Style.MarginRight, htmlContainer.PageSize.Width, root);
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// Applies style to all boxes in the tree.<br/>
@@ -135,15 +194,22 @@ namespace PeachPDF.Html.Core.Parse
         /// If the html tag has "class" attribute and the class name has style defined apply that style on the tag css box.<br/>
         /// If the html tag has "style" attribute parse it and apply the parsed style on the tag css box.<br/>
         /// </summary>
+        /// <param name="valueParser">the css value parser to use</param>
         /// <param name="box">the box to apply the style to</param>
         /// <param name="cssData">the style data for the html</param>
         /// <param name="media">The media type to apply styles to</param>
-        private void CascadeApplyStyles(CssBox box, CssData cssData, string media)
+        private static void CascadeApplyStyles(CssValueParser valueParser, CssBox box, CssData cssData, string media)
         {
+            // Set initial styles
+            foreach (var style in CssDefaults.InitialValues)
+            {
+                CssUtils.SetPropertyValue(valueParser, box, style.Key, style.Value);
+            }
+
             box.InheritStyle();
 
             // try assign style using all wildcard
-            AssignCssBlocks(box, cssData, media);
+            var importantPropertyNames = AssignCssBlocks(valueParser, box, cssData, media);
 
             if (box.HtmlTag != null)
             {
@@ -155,9 +221,8 @@ namespace PeachPDF.Html.Core.Parse
                     var styleAttributeText = box.HtmlTag.TryGetAttribute("style");
                     var stylesheet = "* { " + styleAttributeText + " }";
 
-                    var block = _cssParser.ParseStyleSheet(stylesheet);
-                    if (block != null)
-                        AssignCssBlock(box, block.StyleRules.Single());
+                    var block = CssParser.ParseStyleSheet(stylesheet);
+                    AssignCssBlock(valueParser, box, block.StyleRules.Single(), importantPropertyNames);
                 }
             }
 
@@ -180,46 +245,65 @@ namespace PeachPDF.Html.Core.Parse
 
             foreach (var childBox in box.Boxes)
             {
-                CascadeApplyStyles(childBox, cssData, media);
+                CascadeApplyStyles(valueParser, childBox, cssData, media);
             }
         }
 
         /// <summary>
         /// Assigns the given css style blocks to the given css box checking if matching.
         /// </summary>
+        /// <param name="valueParser">the css value parser to use</param>
         /// <param name="box">the css box to assign css to</param>
         /// <param name="cssData">the css data to use to get the matching css blocks</param>
         /// <param name="media">The media type to apply styles for</param>
-        private static void AssignCssBlocks(CssBox box, CssData cssData, string media)
+        /// <returns>The list of applied important property names</returns>
+        private static HashSet<string> AssignCssBlocks(CssValueParser valueParser, CssBox box, CssData cssData,string media)
         {
             var combinedBlocks = new List<IStyleRule>();
             var styleRules = cssData.GetStyleRules(media, box);
             combinedBlocks.AddRange(styleRules);
 
+            HashSet<string> importantPropertyNames = [];
+
             foreach (var block in combinedBlocks)
             {
-                AssignCssBlock(box, block);
+                AssignCssBlock(valueParser, box, block, importantPropertyNames);
             }
+
+            return importantPropertyNames;
         }
 
         /// <summary>
         /// Assigns the given css style block properties to the given css box.
         /// </summary>
+        /// <param name="valueParser">the css value parser to use</param>
         /// <param name="box">the css box to assign css to</param>
         /// <param name="stylesheetRule">the stylesheet rule to assign</param>
-        private static void AssignCssBlock(CssBox box, IStyleRule stylesheetRule)
+        /// <param name="importantPropertyNames">Carries the property names that have been marked important so they don't get re-applied</param>
+        private static void AssignCssBlock(CssValueParser valueParser, CssBox box, IStyleRule stylesheetRule, HashSet<string> importantPropertyNames)
         {
             foreach (var prop in stylesheetRule.Style)
             {
-                var value = prop.Value;
+                var value = prop.Value switch
+                {
+                    CssConstants.Inherit when box.ParentBox != null => CssUtils.GetPropertyValue(box.ParentBox, prop.Name),
+                    CssConstants.Initial => CssDefaults.InitialValues[prop.Name],
+                    _ => prop.Value
+                };
 
-                if (prop.Value == CssConstants.Inherit && box.ParentBox != null)
+                if (importantPropertyNames.Contains(prop.Name.ToLowerInvariant()))
                 {
-                    value = CssUtils.GetPropertyValue(box.ParentBox, prop.Name);
+                    continue;
                 }
-                if (IsStyleOnElementAllowed(box, prop.Name, value))
+
+                if (prop.IsImportant)
                 {
-                    CssUtils.SetPropertyValue(box, prop.Name, value);
+                    importantPropertyNames.Add(prop.Name.ToLowerInvariant());
+                }
+
+                if (IsStyleOnElementAllowed(box, prop.Name, value) && value is not null)
+                {
+                    CssUtils.SetPropertyValue(valueParser ,box, prop.Name, value);
                 }
             }
         }
@@ -273,7 +357,7 @@ namespace PeachPDF.Html.Core.Parse
         /// </summary>
         /// <param name="tag"></param>
         /// <param name="box"></param>
-        private void TranslateAttributes(HtmlTag tag, CssBox box)
+        private static void TranslateAttributes(HtmlTag tag, CssBox box)
         {
             if (!tag.HasAttributes()) return;
 
@@ -328,7 +412,6 @@ namespace PeachPDF.Html.Core.Parse
                     case HtmlConstants.Face:
                         //box.FontFamily = _cssParser.ParseFontFamily(value);
                         throw new NotImplementedException();
-                        break;
                     case HtmlConstants.Height:
                         box.Height = TranslateLength(value);
                         break;

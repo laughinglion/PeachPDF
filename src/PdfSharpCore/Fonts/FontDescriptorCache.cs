@@ -96,7 +96,7 @@ namespace PeachPDF.PdfSharpCore.Fonts
         /// Gets the FontDescriptor identified by the specified FontSelector. If no such object 
         /// exists, a new FontDescriptor is created and added to the stock.
         /// </summary>
-        public static FontDescriptor GetOrCreateDescriptor(string fontFamilyName, XFontStyle style)
+        public static FontDescriptor GetOrCreateDescriptor(string fontFamilyName, XFontStyle style, IFontResolver fontResolver)
         {
             if (string.IsNullOrEmpty(fontFamilyName))
                 throw new ArgumentNullException("fontFamilyName");
@@ -109,7 +109,7 @@ namespace PeachPDF.PdfSharpCore.Fonts
                 FontDescriptor descriptor;
                 if (!Singleton._cache.TryGetValue(fontDescriptorKey, out descriptor))
                 {
-                    XFont font = new XFont(fontFamilyName, 10, style);
+                    XFont font = new XFont(fontFamilyName, 10, style, fontResolver);
                     descriptor = GetOrCreateDescriptorFor(font);
                     if (Singleton._cache.ContainsKey(fontDescriptorKey))
                         Singleton.GetType();

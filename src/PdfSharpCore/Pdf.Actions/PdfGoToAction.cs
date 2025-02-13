@@ -27,6 +27,8 @@
 // DEALINGS IN THE SOFTWARE.
 #endregion
 
+using PeachPDF.PdfSharpCore.Pdf.IO;
+
 namespace PeachPDF.PdfSharpCore.Pdf.Actions
 {
     /// <summary>
@@ -52,10 +54,32 @@ namespace PeachPDF.PdfSharpCore.Pdf.Actions
             Inititalize();
         }
 
+        /// <summary>
+        /// Creates a link within the current document.
+        /// </summary>
+        /// <param name="destinationName">The Named Destination’s name in the target document.</param>
+        public static PdfGoToAction CreateGoToAction(string destinationName)
+        {
+            var action = new PdfGoToAction
+            {
+                _destinationName = destinationName
+            };
+            return action;
+        }
+
+        string _destinationName = default!;
+
         void Inititalize()
         {
             Elements.SetName(PdfAction.Keys.Type, "/Action");
-            Elements.SetName(PdfAction.Keys.S, "/Goto");
+            Elements.SetName(PdfAction.Keys.S, "/GoTo");
+        }
+
+        internal override void WriteObject(PdfWriter writer)
+        {
+            Elements.SetString(Keys.D, _destinationName);
+
+            base.WriteObject(writer);
         }
 
         /// <summary>

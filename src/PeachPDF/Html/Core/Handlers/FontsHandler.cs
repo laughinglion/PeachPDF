@@ -53,7 +53,7 @@ namespace PeachPDF.Html.Core.Handlers
         /// </summary>
         public FontsHandler(RAdapter adapter)
         {
-            ArgChecker.AssertArgNotNull(adapter, "global");
+            ArgumentNullException.ThrowIfNull(adapter, "global");
 
             _adapter = adapter;
         }
@@ -82,7 +82,7 @@ namespace PeachPDF.Html.Core.Handlers
         /// <param name="fontFamily">The font family to add.</param>
         public void AddFontFamily(RFontFamily fontFamily)
         {
-            ArgChecker.AssertArgNotNull(fontFamily, "family");
+            ArgumentNullException.ThrowIfNull(fontFamily, "family");
 
             _existingFontFamilies[fontFamily.Name] = fontFamily;
         }
@@ -155,14 +155,14 @@ namespace PeachPDF.Html.Core.Handlers
                 }
                 else
                 {
-                    _fontsCache[family][size] = new Dictionary<RFontStyle, RFont>();
+                    _fontsCache[family][size] = [];
                 }
             }
             else
             {
                 _fontsCache[family] = new Dictionary<double, Dictionary<RFontStyle, RFont>>
                 {
-                    [size] = new Dictionary<RFontStyle, RFont>()
+                    [size] = new()
                 };
             }
             return font;

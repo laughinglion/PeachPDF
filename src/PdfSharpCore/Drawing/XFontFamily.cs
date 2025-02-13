@@ -117,9 +117,9 @@ namespace PeachPDF.PdfSharpCore.Drawing
         /// <summary>
         /// Returns the cell ascent, in design units, of the XFontFamily object of the specified style.
         /// </summary>
-        public int GetCellAscent(XFontStyle style)
+        public int GetCellAscent(XFontStyle style, IFontResolver fontResolver)
         {
-            OpenTypeDescriptor descriptor = (OpenTypeDescriptor)FontDescriptorCache.GetOrCreateDescriptor(Name, style);
+            OpenTypeDescriptor descriptor = (OpenTypeDescriptor)FontDescriptorCache.GetOrCreateDescriptor(Name, style, fontResolver);
             int result = descriptor.Ascender;
             return result;
         }
@@ -127,9 +127,9 @@ namespace PeachPDF.PdfSharpCore.Drawing
         /// <summary>
         /// Returns the cell descent, in design units, of the XFontFamily object of the specified style.
         /// </summary>
-        public int GetCellDescent(XFontStyle style)
+        public int GetCellDescent(XFontStyle style, IFontResolver fontResolver)
         {
-            OpenTypeDescriptor descriptor = (OpenTypeDescriptor)FontDescriptorCache.GetOrCreateDescriptor(Name, style);
+            OpenTypeDescriptor descriptor = (OpenTypeDescriptor)FontDescriptorCache.GetOrCreateDescriptor(Name, style, fontResolver);
             int result = descriptor.Descender;
             return result;
         }
@@ -137,9 +137,9 @@ namespace PeachPDF.PdfSharpCore.Drawing
         /// <summary>
         /// Gets the height, in font design units, of the em square for the specified style.
         /// </summary>
-        public int GetEmHeight(XFontStyle style)
+        public int GetEmHeight(XFontStyle style, IFontResolver fontResolver)
         {
-            OpenTypeDescriptor descriptor = (OpenTypeDescriptor)FontDescriptorCache.GetOrCreateDescriptor(Name, style);
+            OpenTypeDescriptor descriptor = (OpenTypeDescriptor)FontDescriptorCache.GetOrCreateDescriptor(Name, style, fontResolver);
             int result = descriptor.UnitsPerEm;
 #if DEBUG_
             int headValue = descriptor.FontFace.head.unitsPerEm;
@@ -152,9 +152,9 @@ namespace PeachPDF.PdfSharpCore.Drawing
         /// Returns the line spacing, in design units, of the FontFamily object of the specified style.
         /// The line spacing is the vertical distance between the base lines of two consecutive lines of text.
         /// </summary>
-        public int GetLineSpacing(XFontStyle style)
+        public int GetLineSpacing(XFontStyle style, IFontResolver fontResolver)
         {
-            OpenTypeDescriptor descriptor = (OpenTypeDescriptor)FontDescriptorCache.GetOrCreateDescriptor(Name, style);
+            OpenTypeDescriptor descriptor = (OpenTypeDescriptor)FontDescriptorCache.GetOrCreateDescriptor(Name, style, fontResolver);
             int result = descriptor.LineSpacing;
             return result;
         }

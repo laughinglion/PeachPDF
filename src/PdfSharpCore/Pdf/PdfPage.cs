@@ -434,6 +434,18 @@ namespace PeachPDF.PdfSharpCore.Pdf
         }
 
         /// <summary>
+        /// Adds an internal document link.
+        /// </summary>
+        /// <param name="rect">The link area in default page coordinates.</param>
+        /// <param name="destinationName">The Named Destination’s name.</param>
+        public PdfLinkAnnotation AddDocumentLink(PdfRectangle rect, string destinationName)
+        {
+            var annotation = PdfLinkAnnotation.CreateDocumentLink(rect, destinationName);
+            Annotations.Add(annotation);
+            return annotation;
+        }
+
+        /// <summary>
         /// Adds a link to the Web.
         /// </summary>
         /// <param name="rect">The rect.</param>

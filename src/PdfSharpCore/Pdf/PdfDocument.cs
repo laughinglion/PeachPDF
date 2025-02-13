@@ -801,6 +801,9 @@ namespace PeachPDF.PdfSharpCore.Pdf
             return Catalog.Pages.Insert(index, page, annotationCopying);
         }
 
+        public void AddNamedDestination(string destinationName, int destinationPage, PdfNamedDestinationParameters parameters)
+            => Internals.Catalog.Names.AddNamedDestination(destinationName, destinationPage, parameters);
+
         /// <summary>
         /// Marks the acroform fields readonly 
         /// </summary>

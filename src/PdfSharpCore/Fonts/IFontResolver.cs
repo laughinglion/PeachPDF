@@ -48,9 +48,7 @@ namespace PeachPDF.PdfSharpCore.Fonts
         /// <summary>
         /// Gets the bytes of a physical font with specified face name.
         /// </summary>
-        /// <param name="faceName">A face name previously retrieved by ResolveTypeface.</param>
-        byte[] GetFont(string faceName);
-
-        string DefaultFontName { get; }
+        /// <param name="fontFaceName">A face name previously retrieved by ResolveTypeface.</param>
+        byte[] GetFont(string fontFaceName);
     }
 }
